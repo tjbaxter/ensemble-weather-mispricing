@@ -1,0 +1,16 @@
+.DS_Store
+logs/
+
+# Python local/runtime artifacts
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Weather bot local artifacts
+weather-bot/.env
+weather-bot/logs/
+weather-bot/.venv/
+weather-bot/__pycache__/

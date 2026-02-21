@@ -1,0 +1,26 @@
+[Unit]
+Description=Weather Trading Bot
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__WORKDIR__
+EnvironmentFile=/etc/weather-bot.env
+Environment=PYTHONUNBUFFERED=1
+ExecStartPre=/usr/bin/mkdir -p __WORKDIR__/logs
+ExecStart=__WORKDIR__/venv/bin/python3 __WORKDIR__/main.py
+Restart=always
+RestartSec=20
+TimeoutStopSec=20
+StandardOutput=append:__WORKDIR__/logs/bot.log
+StandardError=append:__WORKDIR__/logs/bot_error.log
+
+# Soft resource guards; tune upward if needed.
+MemoryMax=768M
+CPUQuota=75%
+
+[Install]
+WantedBy=multi-user.target
