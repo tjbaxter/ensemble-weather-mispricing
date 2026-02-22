@@ -12,16 +12,21 @@ from config.settings import (
     ENSEMBLE_STD_SKIP_THRESHOLD,
     FIXED_ORDER_USD,
     FIXED_SIZE_BANKROLL_THRESHOLD,
+    HIGH_DELTA_SIZE_MULTIPLIER,
+    HIGH_DELTA_THRESHOLD_DEG,
     HOURS_BEFORE_RESOLUTION_CUTOFF,
     KELLY_FRACTION,
     LADDER_MAX_TOTAL_COST,
     LADDER_MIN_EDGE,
     LADDER_WIDTH,
     MAX_POSITION_SIZE,
+    HARD_MAX_YES_ENTRY_PRICE,
+    HARD_MIN_YES_ENTRY_PRICE,
     METAR_DANGER_POST_MINUTE,
     METAR_DANGER_PRE_MINUTE,
     MIN_FORECAST_CONFIDENCE,
     MIN_ORDER_USD,
+    OVERROUND_REJECT_YES_THRESHOLD,
     SOFT_MAX_NO_PRICE,
     SOFT_MAX_YES_PRICE,
     SOFT_MIN_NO_PRICE,
@@ -95,6 +100,25 @@ def generate_signals(
         if ensemble_skip:
             continue
 
+        # --- Overround filter ---
+        # If the crowd has collectively bid all YES bucket prices above 115%,
+        # the market is structurally overpriced for YES. Block BUY_YES entirely.
+        bucket_yes_sum = sum(info["price"] for info in market["buckets"].values())
+        market_overround = bucket_yes_sum > OVERROUND_REJECT_YES_THRESHOLD
+
+        # --- High-Delta regime detection ---
+        # Compare AI model vs crowd's weather app (WU = IBM GRAF).
+        # WU crowd temp is the exact forecast retail traders see on wunderground.com.
+        # Falls back to GFS+ECMWF blend if WU fetch failed.
+        ai_temp = forecast_bundle.get("primary_model_temp")
+        wu_crowd_temp = forecast_bundle.get("wu_crowd_temp")
+        baseline_temp = wu_crowd_temp if wu_crowd_temp is not None else forecast_bundle.get("baseline_model_temp")
+        high_delta = (
+            ai_temp is not None
+            and baseline_temp is not None
+            and abs(ai_temp - baseline_temp) >= HIGH_DELTA_THRESHOLD_DEG
+        )
+
         if ENABLE_LADDER_STRATEGY and forecast:
             center_bucket = max(forecast.items(), key=lambda kv: kv[1])[0]
             market_prices = {bucket: info["price"] for bucket, info in market["buckets"].items()}
@@ -117,6 +141,8 @@ def generate_signals(
                 if ladder_size >= max(MIN_ORDER_USD, PRACTICAL_MIN_ORDER_USD):
                     each_size = round(ladder_size / len(ladder), 2)
                     for item in ladder:
+                        if item["price"] < HARD_MIN_YES_ENTRY_PRICE or item["price"] > HARD_MAX_YES_ENTRY_PRICE:
+                            continue
                         bucket = item["bucket"]
                         token_info = market["buckets"][bucket]
                         signals.append(
@@ -150,6 +176,16 @@ def generate_signals(
             if action == "NO_TRADE":
                 continue
 
+            # Overround guard: structurally broken market, reject BUY_YES
+            if action == "BUY_YES" and market_overround:
+                continue
+
+            if action == "BUY_YES":
+                if market_prob < HARD_MIN_YES_ENTRY_PRICE:
+                    continue
+                if market_prob > HARD_MAX_YES_ENTRY_PRICE:
+                    continue
+
             effective_edge, _guardrail_penalized = _effective_edge_with_soft_guardrails(action, market_prob, edge)
             if effective_edge <= ALPHA_THRESHOLD:
                 continue
@@ -160,6 +196,7 @@ def generate_signals(
                 win_prob=win_prob,
                 edge=effective_edge,
                 rounding_confidence=rounding_confidence,
+                high_delta=high_delta,
             )
             if size < max(MIN_ORDER_USD, PRACTICAL_MIN_ORDER_USD):
                 continue
@@ -198,10 +235,13 @@ def _compute_size(
     win_prob: float,
     edge: float,
     rounding_confidence: str,
+    high_delta: bool = False,
 ) -> float:
     if bankroll <= FIXED_SIZE_BANKROLL_THRESHOLD:
-        return FIXED_ORDER_USD
-    return kelly_size(
+        # In fixed-size mode, double up on high-delta regime signals
+        base = FIXED_ORDER_USD * (HIGH_DELTA_SIZE_MULTIPLIER if high_delta else 1.0)
+        return min(base, MAX_POSITION_SIZE * (HIGH_DELTA_SIZE_MULTIPLIER if high_delta else 1.0))
+    size = kelly_size(
         market_price=market_prob,
         win_prob=win_prob,
         bankroll=bankroll,
@@ -210,6 +250,9 @@ def _compute_size(
         max_position=MAX_POSITION_SIZE,
         rounding_confidence=rounding_confidence,
     )
+    if high_delta:
+        size = min(size * HIGH_DELTA_SIZE_MULTIPLIER, MAX_POSITION_SIZE * HIGH_DELTA_SIZE_MULTIPLIER)
+    return size
 
 
 def summarize_top_missed_edges(
@@ -270,6 +313,34 @@ def summarize_top_missed_edges(
                         "market": market,
                         "bucket": bucket,
                         "reason": reason,
+                        "forecast_prob": forecast_prob,
+                        "market_prob": market_prob,
+                    }
+                )
+                continue
+
+            if action == "BUY_YES" and market_prob < HARD_MIN_YES_ENTRY_PRICE:
+                reason_counts["price_floor"] = reason_counts.get("price_floor", 0) + 1
+                misses.append(
+                    {
+                        "edge": raw_edge,
+                        "market": market,
+                        "bucket": bucket,
+                        "reason": "price_floor",
+                        "forecast_prob": forecast_prob,
+                        "market_prob": market_prob,
+                    }
+                )
+                continue
+
+            if action == "BUY_YES" and market_prob > HARD_MAX_YES_ENTRY_PRICE:
+                reason_counts["price_ceiling"] = reason_counts.get("price_ceiling", 0) + 1
+                misses.append(
+                    {
+                        "edge": raw_edge,
+                        "market": market,
+                        "bucket": bucket,
+                        "reason": "price_ceiling",
                         "forecast_prob": forecast_prob,
                         "market_prob": market_prob,
                     }

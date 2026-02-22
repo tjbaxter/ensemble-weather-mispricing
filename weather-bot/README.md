@@ -51,6 +51,24 @@ weather-bot/
 4. Optional live-only dependency (later milestone):
    - `python3 -m pip install -r requirements-live.txt`
 
+## Streamlit Dashboard
+
+Run a local terminal-style dashboard for PnL, open positions, and mode flags:
+
+- `streamlit run dashboard.py`
+
+What it shows:
+
+- Realized PnL and cumulative equity curve from `logs/trades.csv`
+- Open positions and exposure from `data/positions.json`
+- Counts resolving today/tomorrow
+- Paper/Live mode controls that update `.env` by default
+
+Notes:
+
+- To edit VM mode flags directly, select `/etc/weather-bot.env` in the dashboard (requires sudo/root write permission).
+- After changing mode flags, restart the bot process/service manually.
+
 ## Quick Market Check
 
 Before running the main loop for long sessions, check if tradable weather markets are currently active:

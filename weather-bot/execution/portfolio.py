@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+import json
+from pathlib import Path
 from statistics import mean, pstdev
 
 
@@ -35,9 +37,12 @@ class Portfolio:
     positions: list[Position] = field(default_factory=list)
     trade_history: list[ClosedTrade] = field(default_factory=list)
     daily_realized_pnl: dict[str, float] = field(default_factory=dict)
+    positions_path: str = "data/positions.json"
 
     def __post_init__(self) -> None:
-        self.current_cash = self.initial_bankroll
+        self._positions_file = Path(self.positions_path)
+        self.positions = self._load_positions()
+        self.current_cash = max(0.0, self.initial_bankroll - self.active_exposure())
 
     def open_position(self, signal: dict, fill_price: float) -> Position:
         shares = signal["size_usd"] / fill_price
@@ -57,6 +62,7 @@ class Portfolio:
             timestamp=datetime.now(UTC),
         )
         self.positions.append(pos)
+        self._save_positions()
         return pos
 
     def resolve_position(self, position: Position, won: bool) -> ClosedTrade:
@@ -67,6 +73,7 @@ class Portfolio:
         closed = ClosedTrade(**position.__dict__, won=won, pnl=pnl)
         self.trade_history.append(closed)
         self.positions.remove(position)
+        self._save_positions()
 
         key = datetime.now(UTC).date().isoformat()
         self.daily_realized_pnl[key] = self.daily_realized_pnl.get(key, 0.0) + pnl
@@ -123,3 +130,64 @@ class Portfolio:
             "sharpe_ratio": sharpe,
             "roi": total_pnl / self.initial_bankroll if self.initial_bankroll else 0.0,
         }
+
+    def holds_market_bucket(self, market_id: str, bucket: str) -> bool:
+        return any(p.market_id == market_id and p.bucket == bucket for p in self.positions)
+
+    def _load_positions(self) -> list[Position]:
+        try:
+            if not self._positions_file.exists():
+                return []
+            payload = json.loads(self._positions_file.read_text(encoding="utf-8"))
+            if not isinstance(payload, list):
+                return []
+            loaded: list[Position] = []
+            for item in payload:
+                if not isinstance(item, dict):
+                    continue
+                try:
+                    loaded.append(
+                        Position(
+                            market_id=str(item["market_id"]),
+                            token_id=str(item["token_id"]),
+                            side=str(item["side"]),
+                            city=str(item["city"]),
+                            station_icao=str(item["station_icao"]),
+                            date=str(item["date"]),
+                            bucket=str(item["bucket"]),
+                            fill_price=float(item["fill_price"]),
+                            fill_size=float(item["fill_size"]),
+                            cost=float(item["cost"]),
+                            timestamp=datetime.fromisoformat(str(item["timestamp"])),
+                        )
+                    )
+                except (KeyError, TypeError, ValueError):
+                    continue
+            return loaded
+        except (OSError, json.JSONDecodeError):
+            return []
+
+    def _save_positions(self) -> None:
+        try:
+            self._positions_file.parent.mkdir(parents=True, exist_ok=True)
+            payload = [
+                {
+                    "market_id": p.market_id,
+                    "token_id": p.token_id,
+                    "side": p.side,
+                    "city": p.city,
+                    "station_icao": p.station_icao,
+                    "date": p.date,
+                    "bucket": p.bucket,
+                    "fill_price": p.fill_price,
+                    "fill_size": p.fill_size,
+                    "cost": p.cost,
+                    "timestamp": p.timestamp.isoformat(),
+                }
+                for p in self.positions
+            ]
+            tmp = self._positions_file.with_suffix(self._positions_file.suffix + ".tmp")
+            tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+            tmp.replace(self._positions_file)
+        except OSError:
+            return

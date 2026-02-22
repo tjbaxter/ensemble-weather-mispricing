@@ -18,6 +18,8 @@ from config.settings import (
     ENSEMBLE_DAILY_API_URL,
     ENSEMBLE_PRIMARY_MODEL,
     ENSEMBLE_STD_SKIP_THRESHOLD,
+    HIGH_DELTA_MEAN_SHIFT_DEG,
+    HIGH_DELTA_THRESHOLD_DEG,
     MET_OFFICE_API_URL,
     NOAA_API_URL,
     NWS_CACHE_TTL_SECONDS,
@@ -25,6 +27,7 @@ from config.settings import (
 from data.forecast_ensemble import EnsembleForecastClient
 from data.metar_parser import parse_metar_temp_c
 from data.probability import ensemble_to_bucket_probs
+from data.wu_forecast import get_wu_daily_high
 from data.wu_rounding import is_boundary_temperature, predict_wu_display_celsius, predict_wu_display_fahrenheit
 
 
@@ -101,7 +104,7 @@ class StationForecaster:
         models = [ENSEMBLE_PRIMARY_MODEL, *ENSEMBLE_ADDITIONAL_MODELS]
         if ENABLE_ENSEMBLE_FORECASTS:
             try:
-                members, model_used = await self.ensemble.get_weighted_daily_max_members(
+                members, model_used, primary_temp, baseline_temp = await self.ensemble.get_weighted_daily_max_members(
                     station=station,
                     target_date=target_date.isoformat(),
                     models=models,
@@ -109,10 +112,29 @@ class StationForecaster:
             except httpx.HTTPError:
                 members = []
                 model_used = ""
+                primary_temp = None
+                baseline_temp = None
             if members:
-                probs = ensemble_to_bucket_probs(members, bucket_labels)
                 temp_mean = float(mean(members))
                 ensemble_std = float(pstdev(members)) if len(members) > 1 else 0.0
+
+                # Apply AI mean-reversion bias correction during high-delta regime.
+                # AI models (trained with MSE loss) systematically under-predict rapid
+                # warming peaks and over-predict rapid cooling troughs. Shift the
+                # distribution centre to correct — letting EV logic pick ONE bucket,
+                # not a spread. Factor starts at 1.0°C empirical; update from calibration.
+                adjusted_mean = temp_mean
+                if primary_temp is not None and baseline_temp is not None:
+                    delta = primary_temp - baseline_temp
+                    if abs(delta) >= HIGH_DELTA_THRESHOLD_DEG:
+                        direction = 1.0 if delta > 0 else -1.0
+                        adjusted_mean = temp_mean + direction * HIGH_DELTA_MEAN_SHIFT_DEG
+
+                # Shift all ensemble members by the bias correction offset so
+                # the KDE distribution centre moves without changing its shape.
+                mean_shift = adjusted_mean - temp_mean
+                shifted_members = [m + mean_shift for m in members] if mean_shift != 0.0 else members
+                probs = ensemble_to_bucket_probs(shifted_members, bucket_labels)
                 unit = station["resolution_unit"]
                 display_temp = (
                     predict_wu_display_fahrenheit(temp_mean)
@@ -126,6 +148,15 @@ class StationForecaster:
                     confidence = "MEDIUM"
                 else:
                     confidence = "LOW"
+                # Fetch WU crowd baseline (what retail traders see on wunderground.com)
+                wu_crowd_temp = await get_wu_daily_high(
+                    self.http,
+                    lat=float(station["lat"]),
+                    lon=float(station["lon"]),
+                    target_date=target_date,
+                    unit=station.get("resolution_unit", "C"),
+                )
+
                 return {
                     "probs": probs,
                     "rounding_confidence": confidence,
@@ -136,6 +167,9 @@ class StationForecaster:
                     "forecast_model": model_used,
                     "ensemble_member_count": len(members),
                     "ensemble_endpoint": ENSEMBLE_DAILY_API_URL,
+                    "primary_model_temp": primary_temp,    # ncep_aigfs025 raw mean
+                    "baseline_model_temp": baseline_temp,  # GFS+ECMWF blend (approx IBM GRAF)
+                    "wu_crowd_temp": wu_crowd_temp,        # WU actual forecast = exact crowd baseline
                 }
 
         point_mean = await self._fetch_station_daily_high_forecast(station, target_date)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -17,9 +17,9 @@ from config.settings import (
     MAX_DAILY_EXPOSURE,
     MAX_DRAWDOWN_PCT,
     MAX_POSITIONS_PER_MARKET,
-    MODEL_RUN_BOOST_ENABLED,
     MODEL_RUN_BOOST_SCAN_INTERVAL_SECONDS,
     MODEL_RUN_BOOST_WINDOW_MINUTES,
+    MODEL_RUN_TRIGGER_TIMES_UTC,
     SCAN_INTERVAL_SECONDS,
 )
 from data.accuweather import AccuWeatherClient
@@ -107,7 +107,12 @@ class PaperTrader:
         skipped_position_limit = 0
         skipped_daily_exposure = 0
         skipped_execution = 0
+        skipped_already_held = 0
         for signal in signals:
+            if self.portfolio.holds_market_bucket(signal.market_id, signal.bucket):
+                self.logger.log_signal(signal.to_dict(), "already_held")
+                skipped_already_held += 1
+                continue
             if self._existing_positions(signal.market_id) >= MAX_POSITIONS_PER_MARKET:
                 self.logger.log_signal(signal.to_dict(), "skip_position_limit")
                 skipped_position_limit += 1
@@ -150,6 +155,7 @@ class PaperTrader:
             f"hydrated={len(markets)} "
             f"signals={len(signals)} "
             f"trades_executed={trades_executed} "
+            f"skip_already_held={skipped_already_held} "
             f"skip_position_limit={skipped_position_limit} "
             f"skip_daily_exposure={skipped_daily_exposure} "
             f"skip_execution={skipped_execution} "
@@ -204,7 +210,8 @@ class PaperTrader:
             try:
                 snapshot = await self.accuweather_client.get_daily_high_snapshot(station)
             except httpx.HTTPError as exc:
-                self.logger.warning(f"AccuWeather fetch failed for {station_icao}: {exc}")
+                status = getattr(getattr(exc, "response", None), "status_code", "n/a")
+                self.logger.warning(f"AccuWeather fetch failed for {station_icao}: status={status}")
                 continue
             if snapshot is None:
                 continue
@@ -272,15 +279,51 @@ class PaperTrader:
             forecast_bundle["observed_high_display"] = observed_high
             forecast_bundle["intraday_adjusted"] = True
 
+    async def _trigger_run(self, label: str) -> None:
+        """Force a forecast refresh and full scan at a model-run boundary."""
+        self.last_forecast_refresh = 0.0  # bypass cache — always pull fresh model data
+        self.logger.info(f"MODEL_RUN_TRIGGER source={label} forcing full forecast refresh")
+        await self.run_once()
+
     async def run_forever(self) -> None:
-        self.logger.info("Starting paper trader loop.")
+        """
+        Event-driven main loop.
+
+        Sleeps until the next model-run availability window, fires immediately
+        when fresh Open-Meteo data is expected, then runs fast follow-up scans
+        for MODEL_RUN_BOOST_WINDOW_MINUTES to catch market repricing lag.
+        Between windows the bot sleeps entirely — no wasted API quota.
+        """
+        self.logger.info("Starting paper trader — event-driven scheduler active.")
         try:
+            # Immediate startup scan so the bot is live right away
+            await self._trigger_run("STARTUP")
+
             while True:
-                await self.run_once()
-                interval, trigger = _current_scan_interval_seconds(datetime.now(UTC))
-                if trigger:
-                    self.logger.info(f"SCAN_MODE boosted interval={interval}s trigger={trigger}")
-                await asyncio.sleep(interval)
+                next_dt, label = _next_model_run_trigger(datetime.now(UTC))
+                sleep_secs = max(0.0, (next_dt - datetime.now(UTC)).total_seconds())
+                self.logger.info(
+                    f"SCHEDULER next={label} "
+                    f"at={next_dt.strftime('%Y-%m-%d %H:%M UTC')} "
+                    f"sleep={sleep_secs/60:.1f}min"
+                )
+                await asyncio.sleep(sleep_secs)
+
+                # Trigger: force-refresh forecasts and scan immediately
+                await self._trigger_run(label)
+
+                # Boost window: fast follow-up scans to catch market repricing lag
+                boost_end = datetime.now(UTC) + timedelta(minutes=MODEL_RUN_BOOST_WINDOW_MINUTES)
+                scan_num = 1
+                while datetime.now(UTC) < boost_end:
+                    await asyncio.sleep(MODEL_RUN_BOOST_SCAN_INTERVAL_SECONDS)
+                    self.logger.info(
+                        f"BOOST_SCAN source={label} scan={scan_num} "
+                        f"remaining={int((boost_end - datetime.now(UTC)).total_seconds() / 60)}min"
+                    )
+                    await self.run_once()
+                    scan_num += 1
+
         finally:
             await self.close()
 
@@ -346,25 +389,20 @@ def _is_winning_bucket(bucket_label: str, observed_temp: int) -> bool:
     return observed_temp == int(clean)
 
 
-def _current_scan_interval_seconds(now_utc: datetime) -> tuple[int, str | None]:
-    if not MODEL_RUN_BOOST_ENABLED:
-        return SCAN_INTERVAL_SECONDS, None
+def _next_model_run_trigger(now_utc: datetime) -> tuple[datetime, str]:
+    """
+    Return the next (datetime, label) from MODEL_RUN_TRIGGER_TIMES_UTC.
 
-    runs = {
-        "gfs": (0, 6, 12, 18),
-        "ecmwf": (0, 12),
-        "icon": (0, 6, 12, 18),
-    }
-    availability_delay_minutes = {
-        "gfs": 210,
-        "ecmwf": 420,
-        "icon": 180,
-    }
-    for model, hours in runs.items():
-        for run_hour in hours:
-            run_start = now_utc.replace(hour=run_hour, minute=0, second=0, microsecond=0)
-            available_at = run_start.timestamp() + (availability_delay_minutes[model] * 60)
-            window_end = available_at + (MODEL_RUN_BOOST_WINDOW_MINUTES * 60)
-            if available_at <= now_utc.timestamp() <= window_end:
-                return MODEL_RUN_BOOST_SCAN_INTERVAL_SECONDS, model
-    return SCAN_INTERVAL_SECONDS, None
+    Searches today and tomorrow so we always find a future trigger even if
+    called in the last seconds before midnight UTC.
+    """
+    candidates: list[tuple[datetime, str]] = []
+    for delta_days in (0, 1):
+        base = now_utc.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=delta_days)
+        for hour, minute, label in MODEL_RUN_TRIGGER_TIMES_UTC:
+            candidate = base.replace(hour=hour, minute=minute)
+            # Only include strictly future triggers
+            if candidate > now_utc:
+                candidates.append((candidate, label))
+    candidates.sort(key=lambda x: x[0])
+    return candidates[0]

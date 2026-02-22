@@ -165,7 +165,7 @@ STATIONS = {
         "market_label": "Seoul",
         "icao": "RKSI",
         "resolution_unit": "C",
-        "lat": 37.4691,
+        "lat": 37.4492,  # Incheon Intl Airport — exact WU RKSI station coords
         "lon": 126.4510,
         "timezone": "Asia/Seoul",
         "station_standard_offset_hours": 9,

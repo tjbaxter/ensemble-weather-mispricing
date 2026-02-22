@@ -1,0 +1,2393 @@
+{
+  "overall": [
+    {
+      "engine": "ncep_aigfs025",
+      "total": 47,
+      "agree_right": 6,
+      "agree_wrong": 5,
+      "disagree_model": 9,
+      "disagree_crowd": 27,
+      "n_disagree": 36,
+      "disagree_alpha": 0.25,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": 0.0,
+      "pnl_B_trades": 36,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": 0.0,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-02-10",
+          "city": "NYC",
+          "model_pred": 37.0,
+          "model_bucket": "36+",
+          "crowd_bucket": "33",
+          "actual": "36+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-02-06",
+          "city": "NYC",
+          "model_pred": 32.9,
+          "model_bucket": "32-33",
+          "crowd_bucket": "30",
+          "actual": "32-33",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-02-04",
+          "city": "NYC",
+          "model_pred": 32.3,
+          "model_bucket": "32-33",
+          "crowd_bucket": "31",
+          "actual": "32-33",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-29",
+          "city": "NYC",
+          "model_pred": 24.3,
+          "model_bucket": "24-25",
+          "crowd_bucket": "23",
+          "actual": "24-25",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-28",
+          "city": "NYC",
+          "model_pred": 24.7,
+          "model_bucket": "24-25",
+          "crowd_bucket": "24",
+          "actual": "24-25",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-23",
+          "city": "NYC",
+          "model_pred": 38.4,
+          "model_bucket": "36+",
+          "crowd_bucket": "36",
+          "actual": "36+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-22",
+          "city": "NYC",
+          "model_pred": 47.9,
+          "model_bucket": "46+",
+          "crowd_bucket": "44",
+          "actual": "46+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-14",
+          "city": "NYC",
+          "model_pred": 50.6,
+          "model_bucket": "50-51",
+          "crowd_bucket": "49",
+          "actual": "50-51",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-06",
+          "city": "NYC",
+          "model_pred": 38.8,
+          "model_bucket": "38-39",
+          "crowd_bucket": "41",
+          "actual": "38-39",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    },
+    {
+      "engine": "ensemble_elite3",
+      "total": 360,
+      "agree_right": 37,
+      "agree_wrong": 99,
+      "disagree_model": 36,
+      "disagree_crowd": 188,
+      "n_disagree": 224,
+      "disagree_alpha": 0.16071428571428573,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": -400.0,
+      "pnl_B_trades": 224,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": -0.357,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-02-12",
+          "city": "NYC",
+          "model_pred": 36.1,
+          "model_bucket": "36-37",
+          "crowd_bucket": "34",
+          "actual": "36-37",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-02-08",
+          "city": "NYC",
+          "model_pred": 18.4,
+          "model_bucket": "18-19",
+          "crowd_bucket": "17",
+          "actual": "18-19",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-28",
+          "city": "NYC",
+          "model_pred": 24.4,
+          "model_bucket": "24-25",
+          "crowd_bucket": "24",
+          "actual": "24-25",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-27",
+          "city": "NYC",
+          "model_pred": 22.1,
+          "model_bucket": "22-23",
+          "crowd_bucket": "19",
+          "actual": "22-23",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-24",
+          "city": "NYC",
+          "model_pred": 18.1,
+          "model_bucket": "18-19",
+          "crowd_bucket": "17",
+          "actual": "18-19",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-23",
+          "city": "NYC",
+          "model_pred": 37.3,
+          "model_bucket": "36+",
+          "crowd_bucket": "36",
+          "actual": "36+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-07",
+          "city": "NYC",
+          "model_pred": 48.8,
+          "model_bucket": "48-49",
+          "crowd_bucket": "48",
+          "actual": "48-49",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-02",
+          "city": "NYC",
+          "model_pred": 30.8,
+          "model_bucket": "30-31",
+          "crowd_bucket": "30",
+          "actual": "30-31",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-15",
+          "city": "NYC",
+          "model_pred": 28.5,
+          "model_bucket": "28-29",
+          "crowd_bucket": "28",
+          "actual": "28-29",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-14",
+          "city": "NYC",
+          "model_pred": 34.5,
+          "model_bucket": "34-35",
+          "crowd_bucket": "34",
+          "actual": "34-35",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-13",
+          "city": "NYC",
+          "model_pred": 40.5,
+          "model_bucket": "40-41",
+          "crowd_bucket": "39",
+          "actual": "40-41",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-02",
+          "city": "NYC",
+          "model_pred": 41.3,
+          "model_bucket": "41-42",
+          "crowd_bucket": "43",
+          "actual": "41-42",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-22",
+          "city": "NYC",
+          "model_pred": 51.0,
+          "model_bucket": "51-52",
+          "crowd_bucket": "50",
+          "actual": "51-52",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-29",
+          "city": "NYC",
+          "model_pred": 54.3,
+          "model_bucket": "54-55",
+          "crowd_bucket": "55",
+          "actual": "54-55",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-21",
+          "city": "NYC",
+          "model_pred": 68.7,
+          "model_bucket": "68-69",
+          "crowd_bucket": "71",
+          "actual": "68-69",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-20",
+          "city": "NYC",
+          "model_pred": 72.2,
+          "model_bucket": "72-73",
+          "crowd_bucket": "74",
+          "actual": "72-73",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-15",
+          "city": "NYC",
+          "model_pred": 79.0,
+          "model_bucket": "79-80",
+          "crowd_bucket": "81",
+          "actual": "79-80",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-16",
+          "city": "NYC",
+          "model_pred": 74.1,
+          "model_bucket": "74-75",
+          "crowd_bucket": "75",
+          "actual": "74-75",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-07",
+          "city": "NYC",
+          "model_pred": 69.8,
+          "model_bucket": "69-70",
+          "crowd_bucket": "70",
+          "actual": "69-70",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-31",
+          "city": "NYC",
+          "model_pred": 76.4,
+          "model_bucket": "76-77",
+          "crowd_bucket": "78",
+          "actual": "76-77",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    },
+    {
+      "engine": "icon_seamless",
+      "total": 360,
+      "agree_right": 32,
+      "agree_wrong": 95,
+      "disagree_model": 37,
+      "disagree_crowd": 196,
+      "n_disagree": 233,
+      "disagree_alpha": 0.15879828326180256,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": -425.0,
+      "pnl_B_trades": 233,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": -0.365,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-02-11",
+          "city": "NYC",
+          "model_pred": 40.1,
+          "model_bucket": "40-41",
+          "crowd_bucket": "40",
+          "actual": "40-41",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-02-09",
+          "city": "NYC",
+          "model_pred": 30.7,
+          "model_bucket": "30-31",
+          "crowd_bucket": "28",
+          "actual": "30-31",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-28",
+          "city": "NYC",
+          "model_pred": 24.2,
+          "model_bucket": "24-25",
+          "crowd_bucket": "24",
+          "actual": "24-25",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-26",
+          "city": "NYC",
+          "model_pred": 28.1,
+          "model_bucket": "28-29",
+          "crowd_bucket": "29",
+          "actual": "28-29",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-15",
+          "city": "NYC",
+          "model_pred": 28.3,
+          "model_bucket": "28-29",
+          "crowd_bucket": "28",
+          "actual": "28-29",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-30",
+          "city": "NYC",
+          "model_pred": 47.2,
+          "model_bucket": "47-48",
+          "crowd_bucket": "47",
+          "actual": "47-48",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-25",
+          "city": "NYC",
+          "model_pred": 56.3,
+          "model_bucket": "56-57",
+          "crowd_bucket": "55",
+          "actual": "56-57",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-23",
+          "city": "NYC",
+          "model_pred": 49.9,
+          "model_bucket": "49-50",
+          "crowd_bucket": "48",
+          "actual": "49-50",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-20",
+          "city": "NYC",
+          "model_pred": 47.1,
+          "model_bucket": "47-48",
+          "crowd_bucket": "46",
+          "actual": "47-48",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-18",
+          "city": "NYC",
+          "model_pred": 46.6,
+          "model_bucket": "46-47",
+          "crowd_bucket": "46",
+          "actual": "46-47",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-13",
+          "city": "NYC",
+          "model_pred": 51.0,
+          "model_bucket": "51-52",
+          "crowd_bucket": "50",
+          "actual": "51-52",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-12",
+          "city": "NYC",
+          "model_pred": 49.0,
+          "model_bucket": "49-50",
+          "crowd_bucket": "48",
+          "actual": "49-50",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-11",
+          "city": "NYC",
+          "model_pred": 42.2,
+          "model_bucket": "42-43",
+          "crowd_bucket": "40",
+          "actual": "42-43",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-04",
+          "city": "NYC",
+          "model_pred": 59.5,
+          "model_bucket": "59-60",
+          "crowd_bucket": "58",
+          "actual": "59-60",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-15",
+          "city": "NYC",
+          "model_pred": 79.5,
+          "model_bucket": "79-80",
+          "crowd_bucket": "81",
+          "actual": "79-80",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-01",
+          "city": "NYC",
+          "model_pred": 76.6,
+          "model_bucket": "76-77",
+          "crowd_bucket": "77",
+          "actual": "76-77",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-29",
+          "city": "NYC",
+          "model_pred": 77.6,
+          "model_bucket": "77-78",
+          "crowd_bucket": "78",
+          "actual": "77-78",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-21",
+          "city": "NYC",
+          "model_pred": 72.6,
+          "model_bucket": "72-73",
+          "crowd_bucket": "70",
+          "actual": "72-73",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-08",
+          "city": "NYC",
+          "model_pred": 79.8,
+          "model_bucket": "79-80",
+          "crowd_bucket": "80",
+          "actual": "79-80",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-04",
+          "city": "NYC",
+          "model_pred": 88.1,
+          "model_bucket": "88-89",
+          "crowd_bucket": "90",
+          "actual": "88-89",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    },
+    {
+      "engine": "ensemble_avg",
+      "total": 360,
+      "agree_right": 48,
+      "agree_wrong": 171,
+      "disagree_model": 22,
+      "disagree_crowd": 119,
+      "n_disagree": 141,
+      "disagree_alpha": 0.15602836879432624,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": -265.0,
+      "pnl_B_trades": 141,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": -0.376,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-01-07",
+          "city": "NYC",
+          "model_pred": 48.3,
+          "model_bucket": "48-49",
+          "crowd_bucket": "48",
+          "actual": "48-49",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-31",
+          "city": "NYC",
+          "model_pred": 32.0,
+          "model_bucket": "32-33",
+          "crowd_bucket": "32",
+          "actual": "32-33",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-07",
+          "city": "NYC",
+          "model_pred": 70.0,
+          "model_bucket": "69-70",
+          "crowd_bucket": "70",
+          "actual": "69-70",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-02",
+          "city": "NYC",
+          "model_pred": 77.0,
+          "model_bucket": "76-77",
+          "crowd_bucket": "77",
+          "actual": "76-77",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-07",
+          "city": "NYC",
+          "model_pred": 80.9,
+          "model_bucket": "80-81",
+          "crowd_bucket": "81",
+          "actual": "80-81",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-02",
+          "city": "NYC",
+          "model_pred": 79.7,
+          "model_bucket": "79-80",
+          "crowd_bucket": "80",
+          "actual": "79-80",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-21",
+          "city": "NYC",
+          "model_pred": 84.1,
+          "model_bucket": "84-85",
+          "crowd_bucket": "83",
+          "actual": "84-85",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-11",
+          "city": "NYC",
+          "model_pred": 84.0,
+          "model_bucket": "83-84",
+          "crowd_bucket": "84",
+          "actual": "83-84",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-08",
+          "city": "NYC",
+          "model_pred": 93.2,
+          "model_bucket": "92+",
+          "crowd_bucket": "92",
+          "actual": "92+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-19",
+          "city": "NYC",
+          "model_pred": 87.2,
+          "model_bucket": "87-88",
+          "crowd_bucket": "88",
+          "actual": "87-88",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-11",
+          "city": "NYC",
+          "model_pred": 82.8,
+          "model_bucket": "82-83",
+          "crowd_bucket": "83",
+          "actual": "82-83",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-10",
+          "city": "NYC",
+          "model_pred": 75.4,
+          "model_bucket": "75-76",
+          "crowd_bucket": "76",
+          "actual": "75-76",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-05",
+          "city": "NYC",
+          "model_pred": 87.1,
+          "model_bucket": "87-88",
+          "crowd_bucket": "87",
+          "actual": "87-88",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-03",
+          "city": "NYC",
+          "model_pred": 78.5,
+          "model_bucket": "78-79",
+          "crowd_bucket": "79",
+          "actual": "78-79",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-02",
+          "city": "NYC",
+          "model_pred": 71.9,
+          "model_bucket": "71-72",
+          "crowd_bucket": "72",
+          "actual": "71-72",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-05-20",
+          "city": "NYC",
+          "model_pred": 65.8,
+          "model_bucket": "65-66",
+          "crowd_bucket": "66",
+          "actual": "65-66",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-05-19",
+          "city": "NYC",
+          "model_pred": 70.0,
+          "model_bucket": "69-70",
+          "crowd_bucket": "70",
+          "actual": "69-70",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-05-05",
+          "city": "NYC",
+          "model_pred": 63.0,
+          "model_bucket": "63-64",
+          "crowd_bucket": "63",
+          "actual": "63-64",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-04-27",
+          "city": "NYC",
+          "model_pred": 58.2,
+          "model_bucket": "58-59",
+          "crowd_bucket": "58",
+          "actual": "58-59",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-04-16",
+          "city": "NYC",
+          "model_pred": 50.5,
+          "model_bucket": "50-51",
+          "crowd_bucket": "51",
+          "actual": "50-51",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    },
+    {
+      "engine": "gem_global",
+      "total": 360,
+      "agree_right": 34,
+      "agree_wrong": 72,
+      "disagree_model": 35,
+      "disagree_crowd": 219,
+      "n_disagree": 254,
+      "disagree_alpha": 0.1377952755905512,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": -570.0,
+      "pnl_B_trades": 254,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": -0.449,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-02-19",
+          "city": "NYC",
+          "model_pred": 36.0,
+          "model_bucket": "36-37",
+          "crowd_bucket": "40",
+          "actual": "36-37",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-24",
+          "city": "NYC",
+          "model_pred": 18.4,
+          "model_bucket": "18-19",
+          "crowd_bucket": "17",
+          "actual": "18-19",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-23",
+          "city": "NYC",
+          "model_pred": 40.4,
+          "model_bucket": "40-41",
+          "crowd_bucket": "38",
+          "actual": "40-41",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-11",
+          "city": "NYC",
+          "model_pred": 40.8,
+          "model_bucket": "40-41",
+          "crowd_bucket": "39",
+          "actual": "40-41",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-01",
+          "city": "NYC",
+          "model_pred": 43.2,
+          "model_bucket": "43-44",
+          "crowd_bucket": "41",
+          "actual": "43-44",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-30",
+          "city": "NYC",
+          "model_pred": 47.1,
+          "model_bucket": "47-48",
+          "crowd_bucket": "47",
+          "actual": "47-48",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-19",
+          "city": "NYC",
+          "model_pred": 47.3,
+          "model_bucket": "47-48",
+          "crowd_bucket": "45",
+          "actual": "47-48",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-17",
+          "city": "NYC",
+          "model_pred": 44.6,
+          "model_bucket": "44-45",
+          "crowd_bucket": "43",
+          "actual": "44-45",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-13",
+          "city": "NYC",
+          "model_pred": 51.3,
+          "model_bucket": "51-52",
+          "crowd_bucket": "50",
+          "actual": "51-52",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-08",
+          "city": "NYC",
+          "model_pred": 65.3,
+          "model_bucket": "65-66",
+          "crowd_bucket": "62",
+          "actual": "65-66",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-07",
+          "city": "NYC",
+          "model_pred": 59.6,
+          "model_bucket": "59-60",
+          "crowd_bucket": "59",
+          "actual": "59-60",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-25",
+          "city": "NYC",
+          "model_pred": 59.2,
+          "model_bucket": "59-60",
+          "crowd_bucket": "57",
+          "actual": "59-60",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-20",
+          "city": "NYC",
+          "model_pred": 67.6,
+          "model_bucket": "67-68",
+          "crowd_bucket": "67",
+          "actual": "67-68",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-14",
+          "city": "NYC",
+          "model_pred": 60.9,
+          "model_bucket": "60-61",
+          "crowd_bucket": "62",
+          "actual": "60-61",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-12",
+          "city": "NYC",
+          "model_pred": 62.9,
+          "model_bucket": "62-63",
+          "crowd_bucket": "61",
+          "actual": "62-63",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-10",
+          "city": "NYC",
+          "model_pred": 62.6,
+          "model_bucket": "62-63",
+          "crowd_bucket": "62",
+          "actual": "62-63",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-08",
+          "city": "NYC",
+          "model_pred": 71.2,
+          "model_bucket": "71-72",
+          "crowd_bucket": "70",
+          "actual": "71-72",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-16",
+          "city": "NYC",
+          "model_pred": 74.4,
+          "model_bucket": "74-75",
+          "crowd_bucket": "75",
+          "actual": "74-75",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-07",
+          "city": "NYC",
+          "model_pred": 69.7,
+          "model_bucket": "69-70",
+          "crowd_bucket": "70",
+          "actual": "69-70",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-30",
+          "city": "NYC",
+          "model_pred": 76.2,
+          "model_bucket": "76-77",
+          "crowd_bucket": "76",
+          "actual": "76-77",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    },
+    {
+      "engine": "kma_gdps",
+      "total": 356,
+      "agree_right": 34,
+      "agree_wrong": 96,
+      "disagree_model": 30,
+      "disagree_crowd": 196,
+      "n_disagree": 226,
+      "disagree_alpha": 0.13274336283185842,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": -530.0,
+      "pnl_B_trades": 226,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": -0.469,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-02-01",
+          "city": "NYC",
+          "model_pred": 24.6,
+          "model_bucket": "24-25",
+          "crowd_bucket": "22",
+          "actual": "24-25",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-23",
+          "city": "NYC",
+          "model_pred": 36.5,
+          "model_bucket": "36+",
+          "crowd_bucket": "36",
+          "actual": "36+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-19",
+          "city": "NYC",
+          "model_pred": 58.0,
+          "model_bucket": "58-59",
+          "crowd_bucket": "56",
+          "actual": "58-59",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-15",
+          "city": "NYC",
+          "model_pred": 28.4,
+          "model_bucket": "28-29",
+          "crowd_bucket": "28",
+          "actual": "28-29",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-14",
+          "city": "NYC",
+          "model_pred": 34.0,
+          "model_bucket": "34-35",
+          "crowd_bucket": "34",
+          "actual": "34-35",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-12",
+          "city": "NYC",
+          "model_pred": 35.7,
+          "model_bucket": "35-36",
+          "crowd_bucket": "34",
+          "actual": "35-36",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-30",
+          "city": "NYC",
+          "model_pred": 47.2,
+          "model_bucket": "47-48",
+          "crowd_bucket": "47",
+          "actual": "47-48",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-16",
+          "city": "NYC",
+          "model_pred": 55.0,
+          "model_bucket": "55-56",
+          "crowd_bucket": "55",
+          "actual": "55-56",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-14",
+          "city": "NYC",
+          "model_pred": 81.9,
+          "model_bucket": "81-82",
+          "crowd_bucket": "83",
+          "actual": "81-82",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-05",
+          "city": "NYC",
+          "model_pred": 82.5,
+          "model_bucket": "82-83",
+          "crowd_bucket": "81",
+          "actual": "82-83",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-02",
+          "city": "NYC",
+          "model_pred": 76.8,
+          "model_bucket": "76-77",
+          "crowd_bucket": "77",
+          "actual": "76-77",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-29",
+          "city": "NYC",
+          "model_pred": 77.1,
+          "model_bucket": "77-78",
+          "crowd_bucket": "78",
+          "actual": "77-78",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-28",
+          "city": "NYC",
+          "model_pred": 76.4,
+          "model_bucket": "76-77",
+          "crowd_bucket": "78",
+          "actual": "76-77",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-27",
+          "city": "NYC",
+          "model_pred": 74.9,
+          "model_bucket": "74-75",
+          "crowd_bucket": "76",
+          "actual": "74-75",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-25",
+          "city": "NYC",
+          "model_pred": 85.4,
+          "model_bucket": "85-86",
+          "crowd_bucket": "85",
+          "actual": "85-86",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-18",
+          "city": "NYC",
+          "model_pred": 76.5,
+          "model_bucket": "76-77",
+          "crowd_bucket": "78",
+          "actual": "76-77",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-18",
+          "city": "NYC",
+          "model_pred": 83.7,
+          "model_bucket": "83-84",
+          "crowd_bucket": "85",
+          "actual": "83-84",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-09",
+          "city": "NYC",
+          "model_pred": 92.5,
+          "model_bucket": "92+",
+          "crowd_bucket": "89",
+          "actual": "92+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-05",
+          "city": "NYC",
+          "model_pred": 86.3,
+          "model_bucket": "86-87",
+          "crowd_bucket": "85",
+          "actual": "86-87",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-28",
+          "city": "NYC",
+          "model_pred": 85.6,
+          "model_bucket": "85+",
+          "crowd_bucket": "83",
+          "actual": "85+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    },
+    {
+      "engine": "ensemble_trad3",
+      "total": 360,
+      "agree_right": 34,
+      "agree_wrong": 124,
+      "disagree_model": 25,
+      "disagree_crowd": 177,
+      "n_disagree": 202,
+      "disagree_alpha": 0.12376237623762376,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": -510.0,
+      "pnl_B_trades": 202,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": -0.505,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2025-12-26",
+          "city": "NYC",
+          "model_pred": 28.8,
+          "model_bucket": "28-29",
+          "crowd_bucket": "29",
+          "actual": "28-29",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-19",
+          "city": "NYC",
+          "model_pred": 47.2,
+          "model_bucket": "47-48",
+          "crowd_bucket": "45",
+          "actual": "47-48",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-16",
+          "city": "NYC",
+          "model_pred": 55.8,
+          "model_bucket": "55-56",
+          "crowd_bucket": "55",
+          "actual": "55-56",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-18",
+          "city": "NYC",
+          "model_pred": 46.2,
+          "model_bucket": "46-47",
+          "crowd_bucket": "46",
+          "actual": "46-47",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-07",
+          "city": "NYC",
+          "model_pred": 59.0,
+          "model_bucket": "59-60",
+          "crowd_bucket": "59",
+          "actual": "59-60",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-19",
+          "city": "NYC",
+          "model_pred": 69.8,
+          "model_bucket": "69-70",
+          "crowd_bucket": "70",
+          "actual": "69-70",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-07",
+          "city": "NYC",
+          "model_pred": 77.9,
+          "model_bucket": "77-78",
+          "crowd_bucket": "78",
+          "actual": "77-78",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-01",
+          "city": "NYC",
+          "model_pred": 68.4,
+          "model_bucket": "68-69",
+          "crowd_bucket": "67",
+          "actual": "68-69",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-30",
+          "city": "NYC",
+          "model_pred": 76.7,
+          "model_bucket": "76-77",
+          "crowd_bucket": "76",
+          "actual": "76-77",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-08-02",
+          "city": "NYC",
+          "model_pred": 79.6,
+          "model_bucket": "79-80",
+          "crowd_bucket": "80",
+          "actual": "79-80",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-21",
+          "city": "NYC",
+          "model_pred": 84.5,
+          "model_bucket": "84-85",
+          "crowd_bucket": "83",
+          "actual": "84-85",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-11",
+          "city": "NYC",
+          "model_pred": 83.2,
+          "model_bucket": "83-84",
+          "crowd_bucket": "84",
+          "actual": "83-84",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-08",
+          "city": "NYC",
+          "model_pred": 93.2,
+          "model_bucket": "92+",
+          "crowd_bucket": "92",
+          "actual": "92+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-02",
+          "city": "NYC",
+          "model_pred": 82.1,
+          "model_bucket": "82-83",
+          "crowd_bucket": "84",
+          "actual": "82-83",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-27",
+          "city": "NYC",
+          "model_pred": 73.2,
+          "model_bucket": "73-74",
+          "crowd_bucket": "73",
+          "actual": "73-74",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-14",
+          "city": "NYC",
+          "model_pred": 66.1,
+          "model_bucket": "66-67",
+          "crowd_bucket": "66",
+          "actual": "66-67",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-11",
+          "city": "NYC",
+          "model_pred": 82.2,
+          "model_bucket": "82-83",
+          "crowd_bucket": "83",
+          "actual": "82-83",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-03",
+          "city": "NYC",
+          "model_pred": 78.6,
+          "model_bucket": "78-79",
+          "crowd_bucket": "79",
+          "actual": "78-79",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-02",
+          "city": "NYC",
+          "model_pred": 71.8,
+          "model_bucket": "71-72",
+          "crowd_bucket": "72",
+          "actual": "71-72",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-05-20",
+          "city": "NYC",
+          "model_pred": 65.7,
+          "model_bucket": "65-66",
+          "crowd_bucket": "66",
+          "actual": "65-66",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    },
+    {
+      "engine": "ensemble_ai2",
+      "total": 360,
+      "agree_right": 24,
+      "agree_wrong": 64,
+      "disagree_model": 31,
+      "disagree_crowd": 241,
+      "n_disagree": 272,
+      "disagree_alpha": 0.11397058823529412,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": -740.0,
+      "pnl_B_trades": 272,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": -0.544,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-02-20",
+          "city": "NYC",
+          "model_pred": 38.9,
+          "model_bucket": "38-39",
+          "crowd_bucket": "40",
+          "actual": "38-39",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-02-17",
+          "city": "NYC",
+          "model_pred": 46.5,
+          "model_bucket": "46-47",
+          "crowd_bucket": "45",
+          "actual": "46-47",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-28",
+          "city": "NYC",
+          "model_pred": 24.6,
+          "model_bucket": "24-25",
+          "crowd_bucket": "24",
+          "actual": "24-25",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-23",
+          "city": "NYC",
+          "model_pred": 37.6,
+          "model_bucket": "36+",
+          "crowd_bucket": "36",
+          "actual": "36+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-22",
+          "city": "NYC",
+          "model_pred": 46.5,
+          "model_bucket": "46+",
+          "crowd_bucket": "44",
+          "actual": "46+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-14",
+          "city": "NYC",
+          "model_pred": 50.5,
+          "model_bucket": "50-51",
+          "crowd_bucket": "49",
+          "actual": "50-51",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-13",
+          "city": "NYC",
+          "model_pred": 46.0,
+          "model_bucket": "46-47",
+          "crowd_bucket": "46",
+          "actual": "46-47",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-31",
+          "city": "NYC",
+          "model_pred": 32.6,
+          "model_bucket": "32-33",
+          "crowd_bucket": "32",
+          "actual": "32-33",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-27",
+          "city": "NYC",
+          "model_pred": 30.7,
+          "model_bucket": "30-31",
+          "crowd_bucket": "32",
+          "actual": "30-31",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-21",
+          "city": "NYC",
+          "model_pred": 44.8,
+          "model_bucket": "44-45",
+          "crowd_bucket": "43",
+          "actual": "44-45",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-20",
+          "city": "NYC",
+          "model_pred": 38.0,
+          "model_bucket": "38+",
+          "crowd_bucket": "37",
+          "actual": "38+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-18",
+          "city": "NYC",
+          "model_pred": 50.3,
+          "model_bucket": "50+",
+          "crowd_bucket": "48",
+          "actual": "50+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-15",
+          "city": "NYC",
+          "model_pred": 28.7,
+          "model_bucket": "28-29",
+          "crowd_bucket": "28",
+          "actual": "28-29",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-11",
+          "city": "NYC",
+          "model_pred": 40.2,
+          "model_bucket": "40-41",
+          "crowd_bucket": "39",
+          "actual": "40-41",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-13",
+          "city": "NYC",
+          "model_pred": 51.4,
+          "model_bucket": "51-52",
+          "crowd_bucket": "50",
+          "actual": "51-52",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-22",
+          "city": "NYC",
+          "model_pred": 63.8,
+          "model_bucket": "63-64",
+          "crowd_bucket": "62",
+          "actual": "63-64",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-19",
+          "city": "NYC",
+          "model_pred": 69.5,
+          "model_bucket": "69-70",
+          "crowd_bucket": "70",
+          "actual": "69-70",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-13",
+          "city": "NYC",
+          "model_pred": 59.5,
+          "model_bucket": "59-60",
+          "crowd_bucket": "61",
+          "actual": "59-60",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-07",
+          "city": "NYC",
+          "model_pred": 77.8,
+          "model_bucket": "77-78",
+          "crowd_bucket": "78",
+          "actual": "77-78",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-22",
+          "city": "NYC",
+          "model_pred": 71.7,
+          "model_bucket": "71-72",
+          "crowd_bucket": "74",
+          "actual": "71-72",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    },
+    {
+      "engine": "gfs_graphcast025",
+      "total": 360,
+      "agree_right": 20,
+      "agree_wrong": 71,
+      "disagree_model": 30,
+      "disagree_crowd": 239,
+      "n_disagree": 269,
+      "disagree_alpha": 0.11152416356877323,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": -745.0,
+      "pnl_B_trades": 269,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": -0.554,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-02-11",
+          "city": "NYC",
+          "model_pred": 40.9,
+          "model_bucket": "40-41",
+          "crowd_bucket": "40",
+          "actual": "40-41",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-02-08",
+          "city": "NYC",
+          "model_pred": 18.2,
+          "model_bucket": "18-19",
+          "crowd_bucket": "17",
+          "actual": "18-19",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-28",
+          "city": "NYC",
+          "model_pred": 24.5,
+          "model_bucket": "24-25",
+          "crowd_bucket": "24",
+          "actual": "24-25",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-23",
+          "city": "NYC",
+          "model_pred": 36.9,
+          "model_bucket": "36+",
+          "crowd_bucket": "36",
+          "actual": "36+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-14",
+          "city": "NYC",
+          "model_pred": 50.5,
+          "model_bucket": "50-51",
+          "crowd_bucket": "49",
+          "actual": "50-51",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-13",
+          "city": "NYC",
+          "model_pred": 46.2,
+          "model_bucket": "46-47",
+          "crowd_bucket": "46",
+          "actual": "46-47",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-31",
+          "city": "NYC",
+          "model_pred": 32.6,
+          "model_bucket": "32-33",
+          "crowd_bucket": "32",
+          "actual": "32-33",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-27",
+          "city": "NYC",
+          "model_pred": 30.7,
+          "model_bucket": "30-31",
+          "crowd_bucket": "32",
+          "actual": "30-31",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-21",
+          "city": "NYC",
+          "model_pred": 44.8,
+          "model_bucket": "44-45",
+          "crowd_bucket": "43",
+          "actual": "44-45",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-20",
+          "city": "NYC",
+          "model_pred": 38.0,
+          "model_bucket": "38+",
+          "crowd_bucket": "37",
+          "actual": "38+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-18",
+          "city": "NYC",
+          "model_pred": 50.3,
+          "model_bucket": "50+",
+          "crowd_bucket": "48",
+          "actual": "50+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-15",
+          "city": "NYC",
+          "model_pred": 28.7,
+          "model_bucket": "28-29",
+          "crowd_bucket": "28",
+          "actual": "28-29",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-11",
+          "city": "NYC",
+          "model_pred": 40.2,
+          "model_bucket": "40-41",
+          "crowd_bucket": "39",
+          "actual": "40-41",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-13",
+          "city": "NYC",
+          "model_pred": 51.4,
+          "model_bucket": "51-52",
+          "crowd_bucket": "50",
+          "actual": "51-52",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-22",
+          "city": "NYC",
+          "model_pred": 63.8,
+          "model_bucket": "63-64",
+          "crowd_bucket": "62",
+          "actual": "63-64",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-19",
+          "city": "NYC",
+          "model_pred": 69.5,
+          "model_bucket": "69-70",
+          "crowd_bucket": "70",
+          "actual": "69-70",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-13",
+          "city": "NYC",
+          "model_pred": 59.5,
+          "model_bucket": "59-60",
+          "crowd_bucket": "61",
+          "actual": "59-60",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-07",
+          "city": "NYC",
+          "model_pred": 77.8,
+          "model_bucket": "77-78",
+          "crowd_bucket": "78",
+          "actual": "77-78",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-22",
+          "city": "NYC",
+          "model_pred": 71.7,
+          "model_bucket": "71-72",
+          "crowd_bucket": "74",
+          "actual": "71-72",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-19",
+          "city": "NYC",
+          "model_pred": 82.6,
+          "model_bucket": "82-83",
+          "crowd_bucket": "83",
+          "actual": "82-83",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    },
+    {
+      "engine": "gfs_seamless",
+      "total": 360,
+      "agree_right": 21,
+      "agree_wrong": 58,
+      "disagree_model": 30,
+      "disagree_crowd": 251,
+      "n_disagree": 281,
+      "disagree_alpha": 0.10676156583629894,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": -805.0,
+      "pnl_B_trades": 281,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": -0.573,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-02-13",
+          "city": "NYC",
+          "model_pred": 38.4,
+          "model_bucket": "38-39",
+          "crowd_bucket": "36",
+          "actual": "38-39",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-07",
+          "city": "NYC",
+          "model_pred": 48.7,
+          "model_bucket": "48-49",
+          "crowd_bucket": "48",
+          "actual": "48-49",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-02",
+          "city": "NYC",
+          "model_pred": 30.4,
+          "model_bucket": "30-31",
+          "crowd_bucket": "30",
+          "actual": "30-31",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-18",
+          "city": "NYC",
+          "model_pred": 50.7,
+          "model_bucket": "50+",
+          "crowd_bucket": "48",
+          "actual": "50+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-17",
+          "city": "NYC",
+          "model_pred": 49.7,
+          "model_bucket": "48+",
+          "crowd_bucket": "44",
+          "actual": "48+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-18",
+          "city": "NYC",
+          "model_pred": 46.4,
+          "model_bucket": "46-47",
+          "crowd_bucket": "46",
+          "actual": "46-47",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-07",
+          "city": "NYC",
+          "model_pred": 59.6,
+          "model_bucket": "59-60",
+          "crowd_bucket": "59",
+          "actual": "59-60",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-20",
+          "city": "NYC",
+          "model_pred": 67.0,
+          "model_bucket": "67-68",
+          "crowd_bucket": "67",
+          "actual": "67-68",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-10",
+          "city": "NYC",
+          "model_pred": 62.0,
+          "model_bucket": "62-63",
+          "crowd_bucket": "62",
+          "actual": "62-63",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-06",
+          "city": "NYC",
+          "model_pred": 80.9,
+          "model_bucket": "80-81",
+          "crowd_bucket": "78",
+          "actual": "80-81",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-10-01",
+          "city": "NYC",
+          "model_pred": 68.4,
+          "model_bucket": "68-69",
+          "crowd_bucket": "67",
+          "actual": "68-69",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-23",
+          "city": "NYC",
+          "model_pred": 82.5,
+          "model_bucket": "82-83",
+          "crowd_bucket": "80",
+          "actual": "82-83",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-18",
+          "city": "NYC",
+          "model_pred": 85.9,
+          "model_bucket": "83+",
+          "crowd_bucket": "82",
+          "actual": "83+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-01",
+          "city": "NYC",
+          "model_pred": 76.5,
+          "model_bucket": "76-77",
+          "crowd_bucket": "77",
+          "actual": "76-77",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-30",
+          "city": "NYC",
+          "model_pred": 99.5,
+          "model_bucket": "99+",
+          "crowd_bucket": "95",
+          "actual": "99+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-29",
+          "city": "NYC",
+          "model_pred": 102.7,
+          "model_bucket": "100+",
+          "crowd_bucket": "98",
+          "actual": "100+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-09",
+          "city": "NYC",
+          "model_pred": 93.4,
+          "model_bucket": "92+",
+          "crowd_bucket": "89",
+          "actual": "92+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-08",
+          "city": "NYC",
+          "model_pred": 97.0,
+          "model_bucket": "92+",
+          "crowd_bucket": "92",
+          "actual": "92+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-03",
+          "city": "NYC",
+          "model_pred": 91.8,
+          "model_bucket": "91-92",
+          "crowd_bucket": "88",
+          "actual": "91-92",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-01",
+          "city": "NYC",
+          "model_pred": 89.0,
+          "model_bucket": "89+",
+          "crowd_bucket": "88",
+          "actual": "89+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    },
+    {
+      "engine": "ecmwf_ifs025",
+      "total": 360,
+      "agree_right": 20,
+      "agree_wrong": 71,
+      "disagree_model": 14,
+      "disagree_crowd": 255,
+      "n_disagree": 269,
+      "disagree_alpha": 0.05204460966542751,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": -1065.0,
+      "pnl_B_trades": 269,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": -0.792,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-01-01",
+          "city": "NYC",
+          "model_pred": 34.2,
+          "model_bucket": "34+",
+          "crowd_bucket": "34",
+          "actual": "34+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-31",
+          "city": "NYC",
+          "model_pred": 32.1,
+          "model_bucket": "32-33",
+          "crowd_bucket": "32",
+          "actual": "32-33",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-23",
+          "city": "NYC",
+          "model_pred": 40.1,
+          "model_bucket": "40-41",
+          "crowd_bucket": "38",
+          "actual": "40-41",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-12-02",
+          "city": "NYC",
+          "model_pred": 41.0,
+          "model_bucket": "41-42",
+          "crowd_bucket": "43",
+          "actual": "41-42",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-25",
+          "city": "NYC",
+          "model_pred": 56.2,
+          "model_bucket": "56-57",
+          "crowd_bucket": "55",
+          "actual": "56-57",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-11-16",
+          "city": "NYC",
+          "model_pred": 55.4,
+          "model_bucket": "55-56",
+          "crowd_bucket": "55",
+          "actual": "55-56",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-09-17",
+          "city": "NYC",
+          "model_pred": 72.2,
+          "model_bucket": "72-73",
+          "crowd_bucket": "69",
+          "actual": "72-73",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-29",
+          "city": "NYC",
+          "model_pred": 102.2,
+          "model_bucket": "100+",
+          "crowd_bucket": "98",
+          "actual": "100+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-10",
+          "city": "NYC",
+          "model_pred": 82.4,
+          "model_bucket": "82-83",
+          "crowd_bucket": "83",
+          "actual": "82-83",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-08",
+          "city": "NYC",
+          "model_pred": 96.2,
+          "model_bucket": "92+",
+          "crowd_bucket": "92",
+          "actual": "92+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-05",
+          "city": "NYC",
+          "model_pred": 86.0,
+          "model_bucket": "86-87",
+          "crowd_bucket": "85",
+          "actual": "86-87",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-07-02",
+          "city": "NYC",
+          "model_pred": 82.4,
+          "model_bucket": "82-83",
+          "crowd_bucket": "84",
+          "actual": "82-83",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-29",
+          "city": "NYC",
+          "model_pred": 90.0,
+          "model_bucket": "90+",
+          "crowd_bucket": "88",
+          "actual": "90+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2025-06-08",
+          "city": "NYC",
+          "model_pred": 73.5,
+          "model_bucket": "73-74",
+          "crowd_bucket": "72",
+          "actual": "73-74",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    }
+  ],
+  "by_city": {
+    "nyc": {
+      "engine": "ncep_aigfs025",
+      "total": 47,
+      "agree_right": 6,
+      "agree_wrong": 5,
+      "disagree_model": 9,
+      "disagree_crowd": 27,
+      "n_disagree": 36,
+      "disagree_alpha": 0.25,
+      "avg_buy_price": 0.25,
+      "break_even_rate": 0.25,
+      "pnl_B": 0.0,
+      "pnl_B_trades": 36,
+      "pnl_C": 0.0,
+      "pnl_C_trades": 0,
+      "roi_B": 0.0,
+      "overround_blocked": 0,
+      "market_priced": 0,
+      "highlights": [
+        {
+          "date": "2026-02-10",
+          "city": "NYC",
+          "model_pred": 37.0,
+          "model_bucket": "36+",
+          "crowd_bucket": "33",
+          "actual": "36+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-02-06",
+          "city": "NYC",
+          "model_pred": 32.9,
+          "model_bucket": "32-33",
+          "crowd_bucket": "30",
+          "actual": "32-33",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-02-04",
+          "city": "NYC",
+          "model_pred": 32.3,
+          "model_bucket": "32-33",
+          "crowd_bucket": "31",
+          "actual": "32-33",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-29",
+          "city": "NYC",
+          "model_pred": 24.3,
+          "model_bucket": "24-25",
+          "crowd_bucket": "23",
+          "actual": "24-25",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-28",
+          "city": "NYC",
+          "model_pred": 24.7,
+          "model_bucket": "24-25",
+          "crowd_bucket": "24",
+          "actual": "24-25",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-23",
+          "city": "NYC",
+          "model_pred": 38.4,
+          "model_bucket": "36+",
+          "crowd_bucket": "36",
+          "actual": "36+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-22",
+          "city": "NYC",
+          "model_pred": 47.9,
+          "model_bucket": "46+",
+          "crowd_bucket": "44",
+          "actual": "46+",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-14",
+          "city": "NYC",
+          "model_pred": 50.6,
+          "model_bucket": "50-51",
+          "crowd_bucket": "49",
+          "actual": "50-51",
+          "buy_price": null,
+          "pnl_B": 15.0
+        },
+        {
+          "date": "2026-01-06",
+          "city": "NYC",
+          "model_pred": 38.8,
+          "model_bucket": "38-39",
+          "crowd_bucket": "41",
+          "actual": "38-39",
+          "buy_price": null,
+          "pnl_B": 15.0
+        }
+      ],
+      "crowd_source": "market+fallback"
+    }
+  },
+  "decision": "\u274c NO FINANCIAL ALPHA \u2014 best engine ncep_aigfs025 loses money on disagreements (alpha=25.0%, PnL-B=+0).\n   Pivot to latency arbitrage or collect more data (NYC/London fetches pending).",
+  "n_markets": 360,
+  "n_priced": 0
+}

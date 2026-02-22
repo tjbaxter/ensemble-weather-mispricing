@@ -1,0 +1,94 @@
+{
+  "period": "2025-12-06 to 2026-02-22",
+  "n_markets": 79,
+  "model_stats": [
+    {
+      "model": "ensemble_avg",
+      "markets": 79,
+      "hits": 36,
+      "accuracy": 0.45569620253164556,
+      "mae": 0.8078059071729956,
+      "bias": -0.42221217600964434
+    },
+    {
+      "model": "ensemble_elite3",
+      "markets": 79,
+      "hits": 32,
+      "accuracy": 0.4050632911392405,
+      "mae": 0.7734177215189875,
+      "bias": -0.5443037974683546
+    },
+    {
+      "model": "ncep_aigfs025",
+      "markets": 47,
+      "hits": 19,
+      "accuracy": 0.40425531914893614,
+      "mae": 0.793617021276596,
+      "bias": 0.023404255319149005
+    },
+    {
+      "model": "icon_seamless",
+      "markets": 79,
+      "hits": 30,
+      "accuracy": 0.379746835443038,
+      "mae": 0.8810126582278482,
+      "bias": -0.3443037974683544
+    },
+    {
+      "model": "gfs_graphcast025",
+      "markets": 79,
+      "hits": 29,
+      "accuracy": 0.3670886075949367,
+      "mae": 0.9911392405063294,
+      "bias": -0.7329113924050634
+    },
+    {
+      "model": "ecmwf_ifs025",
+      "markets": 79,
+      "hits": 24,
+      "accuracy": 0.3037974683544304,
+      "mae": 1.0924050632911393,
+      "bias": -0.753164556962025
+    },
+    {
+      "model": "gem_global",
+      "markets": 79,
+      "hits": 24,
+      "accuracy": 0.3037974683544304,
+      "mae": 1.1367088607594937,
+      "bias": -0.5974683544303797
+    },
+    {
+      "model": "gfs_seamless",
+      "markets": 79,
+      "hits": 21,
+      "accuracy": 0.26582278481012656,
+      "mae": 1.5987341772151893,
+      "bias": 0.21392405063291137
+    },
+    {
+      "model": "kma_gdps",
+      "markets": 79,
+      "hits": 17,
+      "accuracy": 0.21518987341772153,
+      "mae": 1.0278481012658227,
+      "bias": -0.610126582278481
+    }
+  ],
+  "alpha_signal": {
+    "n": 31,
+    "primary_right": 0.3225806451612903,
+    "actionable": false
+  },
+  "city_stats": [
+    {
+      "model": "ncep_aigfs025",
+      "markets": 47,
+      "hits": 19,
+      "accuracy": 0.40425531914893614,
+      "mae": 0.793617021276596,
+      "bias": 0.023404255319149005,
+      "city": "seoul"
+    }
+  ]
+}

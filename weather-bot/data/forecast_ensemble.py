@@ -79,12 +79,24 @@ class EnsembleForecastClient:
         station: dict[str, Any],
         target_date: str,
         models: list[str],
-    ) -> tuple[list[float], str]:
-        """Fetch model members and combine with calibration-based weighting."""
+    ) -> tuple[list[float], str, float | None, float | None]:
+        """Fetch model members and combine with calibration-based weighting.
+
+        Returns:
+            members: combined weighted temperature samples
+            best_model: model name with best calibration MAE
+            primary_model_temp: raw mean of primary model (models[0]) members, or None
+            baseline_model_temp: raw mean of gfs_seamless members, or None
+        """
         unit = "fahrenheit" if station.get("resolution_unit") == "F" else "celsius"
         members: list[float] = []
         best_model = models[0]
         best_mae = float("inf")
+        primary_model_temp: float | None = None
+        baseline_model_temp: float | None = None
+        # IBM GRAF (WU's engine) blends GFS + ECMWF. We approximate the crowd's
+        # baseline by averaging both — closer to what retail traders see on WU.
+        _baseline_components: list[float] = []
 
         for model in models:
             model_members = await self._fetch_model_daily_members(
@@ -95,6 +107,20 @@ class EnsembleForecastClient:
             )
             if not model_members:
                 continue
+
+            raw_mean = float(sum(model_members) / len(model_members))
+
+            # Track primary (AI) model temp for high-delta regime detection.
+            if model == models[0]:
+                primary_model_temp = raw_mean
+            # Traditional NWP baseline (what IBM GRAF / WU is built on).
+            # gfs_seamless removed from ensemble — use ecmwf_ifs025 + gem_global
+            # as the "physics model" reference for high-delta detection.
+            if model in ("ecmwf_ifs025", "gem_global"):
+                _baseline_components.append(raw_mean)
+
+        if _baseline_components:
+            baseline_model_temp = float(sum(_baseline_components) / len(_baseline_components))
 
             metrics = self._model_metrics(station["icao"], model)
             bias = float(metrics.get("mean_bias", 0.0) or 0.0)
@@ -120,7 +146,7 @@ class EnsembleForecastClient:
             corrected = [float(v - bias) for v in model_members]
             members.extend(corrected * weight)
 
-        return members, best_model
+        return members, best_model, primary_model_temp, baseline_model_temp
 
     async def _fetch_model_daily_members(
         self,

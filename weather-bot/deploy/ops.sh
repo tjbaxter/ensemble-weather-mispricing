@@ -8,6 +8,8 @@ REMOTE_USER="${REMOTE_USER:-tombaxter}"
 WORKDIR="/home/${REMOTE_USER}/weather-bot"
 SERVICE="weather-bot"
 
+LOCAL_DIR="${LOCAL_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+
 usage() {
   cat <<'EOF'
 Usage: ./deploy/ops.sh <command>
@@ -20,6 +22,7 @@ Commands:
   follow      Stream live journald logs
   restart     Restart service and show status
   cron        Show installed cron jobs
+  sync        Pull live data from VM to local (logs + data)
 EOF
 }
 
@@ -49,6 +52,27 @@ case "${cmd}" in
     ;;
   cron)
     ssh_cmd "crontab -l || true"
+    ;;
+  sync)
+    echo "Pulling data from VM -> local..."
+    mkdir -p "${LOCAL_DIR}/logs" "${LOCAL_DIR}/data"
+    gcloud compute scp \
+      "${VM_NAME}:${WORKDIR}/logs/trades.csv" \
+      "${LOCAL_DIR}/logs/trades.csv" \
+      --zone "${ZONE}" --project "${PROJECT}" 2>/dev/null || echo "  trades.csv: not found on VM yet"
+    gcloud compute scp \
+      "${VM_NAME}:${WORKDIR}/logs/signals.csv" \
+      "${LOCAL_DIR}/logs/signals.csv" \
+      --zone "${ZONE}" --project "${PROJECT}" 2>/dev/null || echo "  signals.csv: not found on VM yet"
+    gcloud compute scp \
+      "${VM_NAME}:${WORKDIR}/data/positions.json" \
+      "${LOCAL_DIR}/data/positions.json" \
+      --zone "${ZONE}" --project "${PROJECT}" 2>/dev/null || echo "  positions.json: not found on VM yet"
+    gcloud compute scp \
+      "${VM_NAME}:${WORKDIR}/logs/calibration.json" \
+      "${LOCAL_DIR}/logs/calibration.json" \
+      --zone "${ZONE}" --project "${PROJECT}" 2>/dev/null || echo "  calibration.json: not found on VM yet"
+    echo "Sync complete. Refresh the Streamlit dashboard."
     ;;
   *)
     usage
