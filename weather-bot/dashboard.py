@@ -716,13 +716,130 @@ ACCURACY_CITIES: dict[str, dict] = {
             "2026-02-22": ("88-89°F",  88,   89, None, None),
         },
     },
+    "Buenos Aires": {
+        "lat": -34.8222, "lon": -58.5358,
+        "timezone": "America/Argentina/Buenos_Aires",
+        "temperature_unit": "celsius",
+        "bucket_style": "exact_1c",
+        "temp_unit_display": "°C",
+        "models": {
+            "ukmo_seamless":  ("UKMO Seamless", "🇬🇧"),
+            "ecmwf_ifs025":   ("ECMWF IFS",     "🌍"),
+            "best_match":     ("Best Match",    "🌐"),
+            "icon_seamless":  ("ICON Seamless", "🇩🇪"),
+            "ncep_aigfs025":  ("NCEP AIGFS",    "🤖"),
+        },
+        "best_ensemble": {
+            "short":      "UKMO Seamless D1",
+            "label":      "UKMO Seamless (UK Met Office Global)",
+            "model_keys": ["ukmo_seamless"],
+        },
+        "top_model_key":   "ukmo_seamless",
+        "top_model_label": "UKMO Seamless D1",
+        "chart_models":    ["ukmo_seamless", "ecmwf_ifs025", "best_match", "icon_seamless"],
+        "notes": (
+            "**Best signal:** UKMO Seamless D1 — **64.9%** accuracy over 77 days (Dec 6 2025–Feb 22 2026). "
+            "Exhaustive ensemble search found no combination beats the single model; UKMO Global excels "
+            "in the Southern Hemisphere where it is specifically well-calibrated.\n\n"
+            "**Station:** Minister Pistarini International Airport (SAEZ/Ezeiza) — Wunderground SAEZ.\n\n"
+            "**Bucket:** Exact 1°C integers with ≤ and ≥ edge buckets (e.g. 30°C, 31°C, ≥32°C, ≤29°C). "
+            "Temperatures in Celsius. ~20 of 48 Open-Meteo models cover SAEZ.\n\n"
+            "**Why full Dec 6 window:** NCEP AIGFS (our best model elsewhere) only starts Jan 6 at SAEZ "
+            "and ranks 6th here (50.0%/48 days). UKMO leads from Dec 6 with 29 extra days of data. "
+            "NCEP is NOT the leader here — UK Met Office dominates the Southern Hemisphere."
+        ),
+        "polymarket": {
+            "2025-12-06": ("30°C",   30, False),
+            "2025-12-07": ("≥28°C",  28, True),   # confirmed from Polymarket (slug API quirk)
+            "2025-12-09": ("≥26°C",  26, True),
+            "2025-12-10": ("31°C",   31, False),
+            "2025-12-11": ("31°C",   31, False),
+            "2025-12-12": ("34°C",   34, False),
+            "2025-12-13": ("34°C",   34, False),
+            "2025-12-14": ("≥25°C",  25, True),
+            "2025-12-15": ("27°C",   27, False),
+            "2025-12-16": ("25°C",   25, False),
+            "2025-12-17": ("≤31°C",  31, None),
+            "2025-12-18": ("≤36°C",  36, None),
+            "2025-12-19": ("≤33°C",  33, None),
+            "2025-12-20": ("28°C",   28, False),
+            "2025-12-21": ("≥33°C",  33, True),
+            "2025-12-22": ("31°C",   31, False),
+            "2025-12-23": ("≥33°C",  33, True),
+            "2025-12-24": ("35°C",   35, False),
+            "2025-12-25": ("31°C",   31, False),
+            "2025-12-26": ("35°C",   35, False),
+            "2025-12-27": ("≤35°C",  35, None),
+            "2025-12-28": ("≤35°C",  35, None),
+            "2025-12-29": ("≤37°C",  37, None),
+            "2025-12-30": ("≤38°C",  38, None),
+            "2025-12-31": ("≤40°C",  40, None),
+            "2026-01-01": ("31°C",   31, False),
+            "2026-01-02": ("29°C",   29, False),
+            "2026-01-03": ("≤24°C",  24, None),
+            "2026-01-04": ("≤26°C",  26, None),
+            "2026-01-05": ("≤29°C",  29, None),
+            "2026-01-06": ("32°C",   32, False),
+            "2026-01-07": ("≤33°C",  33, None),
+            "2026-01-08": ("≤26°C",  26, None),
+            "2026-01-09": ("26°C",   26, False),
+            "2026-01-10": ("≤26°C",  26, None),
+            "2026-01-11": ("35°C",   35, False),
+            "2026-01-12": ("39°C",   39, False),
+            "2026-01-13": ("33°C",   33, False),
+            "2026-01-14": ("≤36°C",  36, None),
+            "2026-01-15": ("35°C",   35, False),
+            "2026-01-16": ("31°C",   31, False),
+            "2026-01-17": ("≤35°C",  35, None),
+            "2026-01-18": ("≤29°C",  29, None),
+            "2026-01-19": ("25°C",   25, False),
+            "2026-01-20": ("29°C",   29, False),
+            "2026-01-21": ("≤32°C",  32, None),
+            "2026-01-22": ("≤32°C",  32, None),
+            "2026-01-23": ("≤34°C",  34, None),
+            "2026-01-24": ("≤35°C",  35, None),
+            "2026-01-25": ("≤35°C",  35, None),
+            "2026-01-26": ("≤38°C",  38, None),
+            "2026-01-27": ("≤35°C",  35, None),
+            "2026-01-28": ("≤34°C",  34, None),
+            "2026-01-29": ("35°C",   35, False),
+            "2026-01-30": ("31°C",   31, False),
+            "2026-01-31": ("32°C",   32, False),
+            "2026-02-01": ("≤34°C",  34, None),
+            "2026-02-02": ("≤38°C",  38, None),
+            "2026-02-03": ("≤37°C",  37, None),
+            "2026-02-04": ("≤31°C",  31, None),
+            "2026-02-05": ("30°C",   30, False),
+            "2026-02-06": ("31°C",   31, False),
+            "2026-02-07": ("33°C",   33, False),
+            "2026-02-08": ("≤34°C",  34, None),
+            "2026-02-09": ("34°C",   34, False),
+            "2026-02-10": ("36°C",   36, False),
+            "2026-02-11": ("≤32°C",  32, None),
+            "2026-02-12": ("31°C",   31, False),
+            "2026-02-13": ("29°C",   29, False),
+            "2026-02-14": ("29°C",   29, False),
+            "2026-02-15": ("30°C",   30, False),
+            "2026-02-16": ("33°C",   33, False),
+            "2026-02-17": ("31°C",   31, False),
+            "2026-02-18": ("≤35°C",  35, None),
+            "2026-02-19": ("32°C",   32, False),
+            "2026-02-20": ("31°C",   31, False),
+            "2026-02-21": ("31°C",   31, False),
+            "2026-02-22": ("31°C",   31, False),
+        },
+    },
 }
 
 _OM_PREV_URL = "https://previous-runs-api.open-meteo.com/v1/forecast"
 
 
-def _wins(pred: float, res_int: int, is_plus: bool) -> bool:
-    return round(pred) >= res_int if is_plus else round(pred) == res_int
+def _wins(pred: float, res_int: int, is_plus) -> bool:
+    """is_plus=True → ≥ (or higher), False → exact, None → ≤ (or below)"""
+    p = round(pred)
+    if is_plus is True:  return p >= res_int
+    if is_plus is None:  return p <= res_int
+    return p == res_int
 
 
 def _wins_nyc(pred_f: float, low, high, bottom_thresh, top_thresh) -> bool:
