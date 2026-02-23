@@ -608,7 +608,7 @@ ACCURACY_CITIES: dict[str, dict] = {
         "chart_models":    ["ncep_nbm_conus", "ncep_aigfs025", "gem_seamless", "icon_seamless"],
         "notes": (
             "**Best signal:** AVG(NCEP NBM + NCEP AIGFS + GEM Seamless + Best Match + ICON Seamless) D1 — "
-            "exhaustive search confirmed **68.8%** (22/32 days) as the accuracy ceiling for Chicago Jan–Feb 2026.\n\n"
+            "exhaustive search confirmed **71.9%** (23/32 days) as the accuracy ceiling for Chicago Jan–Feb 2026.\n\n"
             "**Station:** Chicago O'Hare International Airport (KORD) — Wunderground KORD.\n\n"
             "**Bucket:** 2°F wide pairs in Fahrenheit. 24 of 48 Open-Meteo models cover KORD. "
             "Markets started Jan 22, 2026 (32 days total).\n\n"
