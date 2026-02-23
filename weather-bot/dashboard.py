@@ -424,6 +424,85 @@ ACCURACY_CITIES: dict[str, dict] = {
             "2026-02-21": ("14", 14, False),
         },
     },
+    "New York": {
+        "lat": 40.7769, "lon": -73.8740,
+        "timezone": "America/New_York",
+        "temperature_unit": "fahrenheit",
+        "bucket_style": "range_2f",
+        "temp_unit_display": "°F",
+        "models": {
+            "gem_seamless":     ("GEM Seamless",  "🇨🇦"),
+            "ncep_aigfs025":    ("NCEP AIGFS",    "🤖"),
+            "icon_seamless":    ("ICON Seamless", "🇩🇪"),
+            "kma_seamless":     ("KMA Seamless",  "🇰🇷"),
+            "gfs_graphcast025": ("GFS GraphCast", "🌐"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(GEM+NCEP+ICON+KMA)",
+            "label":      "AVG(GEM Seamless + NCEP AIGFS + ICON Seamless + KMA Seamless)",
+            "model_keys": ["gem_seamless", "ncep_aigfs025", "icon_seamless", "kma_seamless"],
+        },
+        "top_model_key":   "gem_seamless",
+        "top_model_label": "GEM Seamless D1",
+        "chart_models":    ["gem_seamless", "ncep_aigfs025", "gfs_graphcast025", "icon_seamless"],
+        "notes": (
+            "**Best signal:** AVG(GEM Seamless + NCEP AIGFS + ICON Seamless + KMA Seamless) D1 — "
+            "exhaustive search over all subsets of top-8 models confirmed **66.7%** as the accuracy "
+            "ceiling for NYC Jan–Feb 2026.\n\n"
+            "**Station:** LaGuardia Airport (KLGA) — same source as Polymarket (Wunderground KLGA).\n\n"
+            "**Bucket:** 2°F wide pairs (e.g. 38-39°F, 40-41°F) measured in whole degrees Fahrenheit. "
+            "25 of 48 Open-Meteo models cover NYC; 23 regional European/Pacific models don't.\n\n"
+            "**Notable:** GEM (Canadian) models dominate NYC. European models (ECMWF, MF AROME) "
+            "don't cover this location with sufficient resolution."
+        ),
+        "polymarket": {
+            "2026-01-07": ("48-49°F", 48, 49, 41, 52),
+            "2026-01-08": ("48-49°F", 48, 49, 41, 52),
+            "2026-01-09": ("≥48°F",   48, None, 37, 48),
+            "2026-01-10": ("52-53°F", 52, 53, 43, 54),
+            "2026-01-11": ("46-47°F", 46, 47, 41, 52),
+            "2026-01-12": ("40-41°F", 40, 41, 37, 48),
+            "2026-01-13": ("46-47°F", 46, 47, 41, 52),
+            "2026-01-14": ("50-51°F", 50, 51, 41, 52),
+            "2026-01-15": ("≥46°F",   46, None, 35, 46),
+            "2026-01-16": ("34-35°F", 34, 35, 25, 36),
+            "2026-01-17": ("40-41°F", 40, 41, 33, 44),
+            "2026-01-18": ("34-35°F", 34, 35, 31, 42),
+            "2026-01-19": ("32-33°F", 32, 33, 25, 36),
+            "2026-01-20": ("24-25°F", 24, 25, 19, 30),
+            "2026-01-21": ("≥36°F",   36, None, 25, 36),
+            "2026-01-22": ("≥46°F",   46, None, 35, 46),
+            "2026-01-23": ("≥36°F",   36, None, 25, 36),
+            "2026-01-24": ("18-19°F", 18, 19, 15, 26),
+            "2026-01-25": ("≥22°F",   22, None, 11, 22),
+            "2026-01-26": ("26-27°F", 26, 27, 25, 36),
+            "2026-01-27": ("22-23°F", 22, 23, 15, 26),
+            "2026-01-28": ("24-25°F", 24, 25, 23, 34),
+            "2026-01-29": ("24-25°F", 24, 25, 17, 28),
+            "2026-01-30": ("18-19°F", 18, 19,  9, 20),
+            "2026-01-31": ("24-25°F", 24, 25, 17, 28),
+            "2026-02-03": ("32-33°F", 32, 33, 29, 40),
+            "2026-02-04": ("32-33°F", 32, 33, 31, 42),
+            "2026-02-05": ("32-33°F", 32, 33, 23, 34),
+            "2026-02-06": ("32-33°F", 32, 33, 23, 34),
+            "2026-02-07": ("≥26°F",   26, None, 15, 26),
+            "2026-02-08": ("18-19°F", 18, 19, 15, 26),
+            "2026-02-09": ("30-31°F", 30, 31, 23, 34),
+            "2026-02-10": ("≥36°F",   36, None, 25, 36),
+            "2026-02-11": ("40-41°F", 40, 41, 33, 44),
+            "2026-02-12": ("36-37°F", 36, 37, 33, 44),
+            "2026-02-13": ("38-39°F", 38, 39, 33, 44),
+            "2026-02-14": ("44-45°F", 44, 45, 35, 50),
+            "2026-02-15": ("38-39°F", 38, 39, 31, 46),
+            "2026-02-16": ("38-39°F", 38, 39, 31, 46),
+            "2026-02-17": ("46-47°F", 46, 47, 41, 56),
+            "2026-02-18": ("38-39°F", 38, 39, 31, 46),
+            "2026-02-19": ("36-37°F", 36, 37, 31, 46),
+            "2026-02-20": ("38-39°F", 38, 39, 31, 46),
+            "2026-02-21": ("46-47°F", 46, 47, 39, 54),
+            "2026-02-22": ("34-35°F", 34, 35, 29, 44),
+        },
+    },
 }
 
 _OM_PREV_URL = "https://previous-runs-api.open-meteo.com/v1/forecast"
@@ -433,12 +512,22 @@ def _wins(pred: float, res_int: int, is_plus: bool) -> bool:
     return round(pred) >= res_int if is_plus else round(pred) == res_int
 
 
+def _wins_nyc(pred_f: float, low, high, bottom_thresh, top_thresh) -> bool:
+    """2°F bucket win check for NYC (Fahrenheit markets)."""
+    p = round(pred_f)
+    if low is None:   return p <= (bottom_thresh or high or 999)
+    if high is None:  return p >= (top_thresh or low or -999)
+    return low <= p <= high
+
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def fetch_accuracy_data(city: str) -> dict:
     """Fetch previous_day1 + previous_day2 for all city-specific models, Jan–present."""
     cfg = ACCURACY_CITIES[city]
     now = datetime.now(UTC)
     end = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+    bucket_style = cfg.get("bucket_style", "exact_1c")
+    temp_unit    = cfg.get("temperature_unit", "celsius")
 
     raw: dict[str, tuple[dict, dict]] = {}
     for model_key in cfg["models"]:
@@ -450,6 +539,8 @@ def fetch_accuracy_data(city: str) -> dict:
             "start_date": "2026-01-01",
             "end_date": end,
         }
+        if temp_unit != "celsius":
+            params["temperature_unit"] = temp_unit
         try:
             r = requests.get(_OM_PREV_URL, params=params, timeout=30)
             d = r.json()
@@ -472,9 +563,22 @@ def fetch_accuracy_data(city: str) -> dict:
     polymarket = cfg["polymarket"]
     ens_keys = cfg["best_ensemble"]["model_keys"]
     rows = []
+
     for date in sorted(polymarket.keys()):
-        lbl, res_int, is_plus = polymarket[date]
-        row: dict = {"date": date, "resolved": lbl, "res_int": res_int, "is_plus": is_plus}
+        pm_entry = polymarket[date]
+        if bucket_style == "range_2f":
+            lbl, low, high, bottom_thresh, top_thresh = pm_entry
+            row: dict = {"date": date, "resolved": lbl}
+        else:
+            lbl, res_int, is_plus = pm_entry
+            row = {"date": date, "resolved": lbl, "res_int": res_int, "is_plus": is_plus}
+
+        def compute_win(pred):
+            if pred is None:
+                return None
+            if bucket_style == "range_2f":
+                return _wins_nyc(pred, low, high, bottom_thresh, top_thresh)
+            return _wins(pred, res_int, is_plus)  # type: ignore[name-defined]
 
         for mk in cfg["models"]:
             d1_map, d2_map = raw.get(mk, ({}, {}))
@@ -482,20 +586,20 @@ def fetch_accuracy_data(city: str) -> dict:
             p2 = round(max(d2_map[date]), 1) if d2_map.get(date) else None
             row[f"{mk}_d1"] = p1
             row[f"{mk}_d2"] = p2
-            row[f"{mk}_d1_win"] = _wins(p1, res_int, is_plus) if p1 is not None else None
-            row[f"{mk}_d2_win"] = _wins(p2, res_int, is_plus) if p2 is not None else None
+            row[f"{mk}_d1_win"] = compute_win(p1)
+            row[f"{mk}_d2_win"] = compute_win(p2)
 
         # Best ensemble — D1
         ens_d1 = [row[f"{k}_d1"] for k in ens_keys if row.get(f"{k}_d1") is not None]
         best_ens_d1 = round(sum(ens_d1) / len(ens_d1), 1) if len(ens_d1) == len(ens_keys) else None
         row["best_ens_d1"] = best_ens_d1
-        row["best_ens_d1_win"] = _wins(best_ens_d1, res_int, is_plus) if best_ens_d1 is not None else None
+        row["best_ens_d1_win"] = compute_win(best_ens_d1)
 
         # Best ensemble — D2
         ens_d2 = [row[f"{k}_d2"] for k in ens_keys if row.get(f"{k}_d2") is not None]
         best_ens_d2 = round(sum(ens_d2) / len(ens_d2), 1) if len(ens_d2) == len(ens_keys) else None
         row["best_ens_d2"] = best_ens_d2
-        row["best_ens_d2_win"] = _wins(best_ens_d2, res_int, is_plus) if best_ens_d2 is not None else None
+        row["best_ens_d2_win"] = compute_win(best_ens_d2)
 
         rows.append(row)
 
@@ -775,6 +879,7 @@ def _render_accuracy_tab() -> None:
     city = st.selectbox("City", options=list(ACCURACY_CITIES.keys()), index=0, key="acc_city")
     cfg = ACCURACY_CITIES[city]
     ens_cfg = cfg["best_ensemble"]
+    temp_unit_disp = cfg.get("temp_unit_display", "°C")
 
     col_refresh, col_info = st.columns([1, 5])
     with col_refresh:
@@ -860,7 +965,8 @@ def _render_accuracy_tab() -> None:
     for r in rows:
         ens_val = r.get("best_ens_d1")
         ens_win = r.get("best_ens_d1_win")
-        ens_cell = (f"{ens_val:.1f}° {'✅' if ens_win else '❌'}") if ens_val is not None else "—"
+        fmt_val = lambda v: f"{v:.0f}{temp_unit_disp}" if cfg.get("bucket_style") == "range_2f" else f"{v:.1f}{temp_unit_disp}"
+        ens_cell = (f"{fmt_val(ens_val)} {'✅' if ens_win else '❌'}") if ens_val is not None else "—"
 
         row_d: dict = {
             "Date":           r["date"],
@@ -870,7 +976,7 @@ def _render_accuracy_tab() -> None:
         for mk, (label, icon) in cfg["models"].items():
             val = r.get(f"{mk}_d1")
             win = r.get(f"{mk}_d1_win")
-            row_d[f"{icon} {label}"] = (f"{val:.1f}° {'✅' if win else '❌'}") if val is not None else "—"
+            row_d[f"{icon} {label}"] = (f"{fmt_val(val)} {'✅' if win else '❌'}") if val is not None else "—"
 
         display_rows.append(row_d)
 
