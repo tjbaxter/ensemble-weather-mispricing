@@ -852,12 +852,14 @@ def _wins_nyc(pred_f: float, low, high, bottom_thresh, top_thresh) -> bool:
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def fetch_accuracy_data(city: str) -> dict:
-    """Fetch previous_day1 + previous_day2 for all city-specific models, Jan–present."""
+    """Fetch previous_day1 + previous_day2 for all city-specific models, from first PM date."""
     cfg = ACCURACY_CITIES[city]
     now = datetime.now(UTC)
     end = (now - timedelta(days=1)).strftime("%Y-%m-%d")
     bucket_style = cfg.get("bucket_style", "exact_1c")
     temp_unit    = cfg.get("temperature_unit", "celsius")
+    # Use earliest Polymarket date so cities starting before Jan 1 (e.g. Buenos Aires Dec 6) work
+    start = min(cfg["polymarket"].keys())
 
     raw: dict[str, tuple[dict, dict]] = {}
     for model_key in cfg["models"]:
@@ -866,7 +868,7 @@ def fetch_accuracy_data(city: str) -> dict:
             "hourly": "temperature_2m_previous_day1,temperature_2m_previous_day2",
             "models": model_key,
             "timezone": cfg["timezone"],
-            "start_date": "2026-01-01",
+            "start_date": start,
             "end_date": end,
         }
         if temp_unit != "celsius":
