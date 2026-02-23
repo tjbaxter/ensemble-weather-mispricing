@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import json
 import subprocess
+from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
+import requests
 import streamlit as st
 
 try:
@@ -303,6 +306,169 @@ def sync_from_vm() -> tuple[bool, str]:
     return True, "\n".join(messages)
 
 
+# ---------------------------------------------------------------------------
+# Model Accuracy — data layer
+# ---------------------------------------------------------------------------
+
+ACCURACY_CITIES: dict[str, dict] = {
+    "Seoul": {
+        "lat": 37.4492, "lon": 126.451,
+        "timezone": "Asia/Seoul",
+        "polymarket": {
+            "2026-01-07": ("5+",   5, True),  "2026-01-08": ("-2",  -2, False),
+            "2026-01-09": ("7",    7, False),  "2026-01-10": ("8",   8, False),
+            "2026-01-11": ("-3",  -3, False),  "2026-01-12": ("4",   4, False),
+            "2026-01-13": ("1+",   1, True),   "2026-01-14": ("2+",  2, True),
+            "2026-01-15": ("7+",   7, True),   "2026-01-16": ("6",   6, False),
+            "2026-01-17": ("2",    2, False),  "2026-01-18": ("2",   2, False),
+            "2026-01-19": ("0",    0, False),  "2026-01-20": ("-6", -6, False),
+            "2026-01-21": ("-6",  -6, False),  "2026-01-22": ("-5", -5, False),
+            "2026-01-23": ("-1",  -1, False),  "2026-01-24": ("-2", -2, False),
+            "2026-01-25": ("-3",  -3, False),  "2026-01-26": ("-1", -1, False),
+            "2026-01-27": ("-1",  -1, False),  "2026-01-28": ("-2", -2, False),
+            "2026-01-29": ("-1",  -1, False),  "2026-01-30": ("-3", -3, False),
+            "2026-01-31": ("-1",  -1, False),
+            "2026-02-01": ("0",    0, False),  "2026-02-02": ("0",   0, False),
+            "2026-02-03": ("3",    3, False),  "2026-02-04": ("7+",  7, True),
+            "2026-02-05": ("8+",   8, True),   "2026-02-06": ("-4", -4, False),
+            "2026-02-07": ("-5",  -5, False),  "2026-02-08": ("-4", -4, False),
+            "2026-02-09": ("2",    2, False),  "2026-02-10": ("3",   3, False),
+            "2026-02-11": ("4",    4, False),  "2026-02-12": ("7+",  7, True),
+            "2026-02-13": ("9+",   9, True),   "2026-02-14": ("11+",11, True),
+            "2026-02-15": ("8",    8, False),  "2026-02-16": ("5",   5, False),
+            "2026-02-17": ("4",    4, False),  "2026-02-18": ("6",   6, False),
+            "2026-02-19": ("5",    5, False),  "2026-02-20": ("11+",11, True),
+            "2026-02-21": ("14+", 14, True),   "2026-02-22": ("11", 11, False),
+        },
+    }
+}
+
+ACCURACY_MODELS: dict[str, str] = {
+    "ncep_aigfs025":           "NCEP AI-GFS",
+    "gfs_graphcast025":        "GFS GraphCast",
+    "ecmwf_ifs025":            "ECMWF IFS",
+    "ncep_hgefs025_ensemble_mean": "NCEP HGEFS Ens",
+    "kma_gdps":                "KMA GDPS",
+}
+
+_OM_PREV_URL = "https://previous-runs-api.open-meteo.com/v1/forecast"
+
+
+def _wins(pred: float, res_int: int, is_plus: bool) -> bool:
+    return round(pred) >= res_int if is_plus else round(pred) == res_int
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def fetch_accuracy_data(city: str) -> dict:
+    """Fetch previous_day1 + previous_day2 for all models, Jan–present."""
+    cfg = ACCURACY_CITIES[city]
+    now = datetime.now(UTC)
+    start_jan = "2026-01-01"
+    end = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    raw: dict[str, tuple[dict, dict]] = {}
+    for model_key in ACCURACY_MODELS:
+        params = {
+            "latitude": cfg["lat"], "longitude": cfg["lon"],
+            "hourly": "temperature_2m_previous_day1,temperature_2m_previous_day2",
+            "models": model_key,
+            "timezone": cfg["timezone"],
+            "start_date": start_jan,
+            "end_date": end,
+        }
+        try:
+            r = requests.get(_OM_PREV_URL, params=params, timeout=30)
+            d = r.json()
+            if "error" in d:
+                raw[model_key] = ({}, {})
+                continue
+            times = d["hourly"]["time"]
+            v1 = d["hourly"].get("temperature_2m_previous_day1", [])
+            v2 = d["hourly"].get("temperature_2m_previous_day2", [])
+            daily1: dict[str, list] = defaultdict(list)
+            daily2: dict[str, list] = defaultdict(list)
+            for t, a, b in zip(times, v1, v2):
+                dt = t[:10]
+                if a is not None: daily1[dt].append(a)
+                if b is not None: daily2[dt].append(b)
+            raw[model_key] = (dict(daily1), dict(daily2))
+        except Exception:
+            raw[model_key] = ({}, {})
+
+    # Build per-date rows
+    polymarket = cfg["polymarket"]
+    rows = []
+    for date in sorted(polymarket.keys()):
+        label, res_int, is_plus = polymarket[date]
+        row: dict = {"date": date, "resolved": label, "res_int": res_int, "is_plus": is_plus}
+
+        preds_d1 = []
+        for mk in ACCURACY_MODELS:
+            d1_map, d2_map = raw[mk]
+            p1 = round(max(d1_map[date]), 1) if d1_map.get(date) else None
+            p2 = round(max(d2_map[date]), 1) if d2_map.get(date) else None
+            row[f"{mk}_d1"] = p1
+            row[f"{mk}_d2"] = p2
+            row[f"{mk}_d1_win"] = _wins(p1, res_int, is_plus) if p1 is not None else None
+            row[f"{mk}_d2_win"] = _wins(p2, res_int, is_plus) if p2 is not None else None
+            if p1 is not None:
+                preds_d1.append(p1)
+
+        # Ensemble averages
+        ncep_d1 = row.get("ncep_aigfs025_d1")
+        gc_d1   = row.get("gfs_graphcast025_d1")
+        ncep_d2 = row.get("ncep_aigfs025_d2")
+        gc_d2   = row.get("gfs_graphcast025_d2")
+
+        avg2_d1 = round((ncep_d1 + gc_d1) / 2, 1) if (ncep_d1 is not None and gc_d1 is not None) else None
+        avg2_d2 = round((ncep_d2 + gc_d2) / 2, 1) if (ncep_d2 is not None and gc_d2 is not None) else None
+
+        row["avg2_d1"] = avg2_d1
+        row["avg2_d2"] = avg2_d2
+        row["avg2_d1_win"] = _wins(avg2_d1, res_int, is_plus) if avg2_d1 is not None else None
+        row["avg2_d2_win"] = _wins(avg2_d2, res_int, is_plus) if avg2_d2 is not None else None
+
+        rows.append(row)
+
+    return {"rows": rows, "fetched_at": datetime.now(UTC).isoformat()}
+
+
+def _build_leaderboard(rows: list[dict]) -> pd.DataFrame:
+    strategies = [
+        ("avg2_d1",              "AVG(NCEP+GraphCast) D1", "🏆"),
+        ("ncep_aigfs025_d1",     "NCEP AI-GFS  D1",        "🤖"),
+        ("ncep_aigfs025_d2",     "NCEP AI-GFS  D2",        "🤖"),
+        ("gfs_graphcast025_d1",  "GFS GraphCast  D1",      "🌐"),
+        ("gfs_graphcast025_d2",  "GFS GraphCast  D2",      "🌐"),
+        ("ecmwf_ifs025_d1",      "ECMWF IFS  D1",          "🌍"),
+        ("ncep_hgefs025_ensemble_mean_d1", "NCEP HGEFS Ens  D1", "📊"),
+        ("kma_gdps_d1",          "KMA GDPS  D1",           "🇰🇷"),
+        ("avg2_d2",              "AVG(NCEP+GraphCast) D2", "📅"),
+    ]
+    records = []
+    for key, label, icon in strategies:
+        win_key = f"{key}_win" if not key.startswith("avg") else f"{key}_win"
+        wins = sum(1 for r in rows if r.get(win_key) is True)
+        total = sum(1 for r in rows if r.get(win_key) is not None)
+        if total == 0:
+            continue
+        pct = wins / total * 100
+        records.append({
+            "Strategy": f"{icon} {label}",
+            "Wins": wins,
+            "Days": total,
+            "Accuracy": pct,
+            "_sort": pct,
+        })
+    df = pd.DataFrame(records).sort_values("_sort", ascending=False).drop(columns="_sort").reset_index(drop=True)
+    df["Accuracy"] = df["Accuracy"].map(lambda x: f"{x:.1f}%")
+    return df
+
+
+# ---------------------------------------------------------------------------
+# Main dashboard
+# ---------------------------------------------------------------------------
+
 def main() -> None:
     st.set_page_config(page_title="Weather Edge Terminal", layout="wide")
     apply_style()
@@ -369,10 +535,21 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
+    tab_trading, tab_accuracy = st.tabs(["⚡ Trading", "📊 Model Accuracy"])
+
+    with tab_trading:
+        _render_trading_tab()
+
+    with tab_accuracy:
+        _render_accuracy_tab()
+
+
+def _render_trading_tab() -> None:
     trades_df = load_trades_df()
-    _ = load_signals_df()  # keep warm for future sections, currently not shown.
+    _ = load_signals_df()
     positions = load_positions()
     metrics = kpis(trades_df, positions)
+    _, live_mode = load_mode_from_env(DEFAULT_ENV)
 
     cols = st.columns(6)
     kpi_items = [
@@ -506,6 +683,199 @@ def main() -> None:
 
     st.markdown("### Wallet")
     st.button("Connect Polygon Wallet (Coming Soon)", disabled=True, help="Wallet integration will be added later.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def _render_accuracy_tab() -> None:
+    st.markdown(
+        f"""
+<div class="panel" style="display:flex;justify-content:space-between;align-items:center;">
+  <div>
+    <div class="banner-title">📊 MODEL ACCURACY BACKTEST</div>
+    <div class="muted">Bucket hit rate vs Polymarket resolved temperatures · Jan–Feb 2026</div>
+  </div>
+  <div style="text-align:right;">
+    <div style="color:{BLUE};font-weight:700;font-size:0.85rem;">Data: Open-Meteo Previous Runs API</div>
+    <div class="muted">Refreshes every hour · D1 = T-24h · D2 = T-48h</div>
+  </div>
+</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    city = st.selectbox("City", options=list(ACCURACY_CITIES.keys()), index=0, key="acc_city")
+
+    col_refresh, col_info = st.columns([1, 5])
+    with col_refresh:
+        if st.button("🔄 Refresh data", key="acc_refresh"):
+            st.cache_data.clear()
+            st.rerun()
+
+    with st.spinner(f"Loading model predictions for {city}..."):
+        acc = fetch_accuracy_data(city)
+
+    rows = acc["rows"]
+    fetched_at = acc.get("fetched_at", "")
+    with col_info:
+        st.caption(f"Last fetched: {fetched_at[:19].replace('T', ' ')} UTC · {len(rows)} market days")
+
+    if not rows:
+        st.warning("No data available. Check API connectivity.")
+        return
+
+    # ── Section 1: Key finding callout ─────────────────────────────────────
+    best_wins = sum(1 for r in rows if r.get("avg2_d1_win") is True)
+    best_n = sum(1 for r in rows if r.get("avg2_d1_win") is not None)
+    best_pct = best_wins / best_n * 100 if best_n else 0
+
+    ncep_wins = sum(1 for r in rows if r.get("ncep_aigfs025_d1_win") is True)
+    ncep_n = sum(1 for r in rows if r.get("ncep_aigfs025_d1_win") is not None)
+    ncep_pct = ncep_wins / ncep_n * 100 if ncep_n else 0
+
+    c1, c2, c3, c4 = st.columns(4)
+    for col, label, val, color in [
+        (c1, "Best Signal (AVG D1)", f"{best_pct:.1f}%", GREEN),
+        (c2, "NCEP AI-GFS D1",       f"{ncep_pct:.1f}%", BLUE),
+        (c3, "Market Days Tested",    str(best_n),        BLUE),
+        (c4, "Signal Lead Time",      "T-24h / T-48h",    GRAY),
+    ]:
+        with col:
+            st.markdown(
+                f"""<div class="kpi-card">
+  <div class="kpi-value" style="color:{color};">{val}</div>
+  <div class="kpi-label">{label}</div>
+</div>""",
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Section 2: Leaderboard ──────────────────────────────────────────────
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.subheader("🏆 Model Leaderboard — Bucket Accuracy")
+    st.caption("Bucket hit = model's rounded prediction matches the Polymarket winning bucket")
+
+    lb_df = _build_leaderboard(rows)
+
+    # Bar chart
+    bar_colors = [GREEN if i == 0 else BLUE if i < 3 else GRAY for i in range(len(lb_df))]
+    fig_bar = go.Figure(go.Bar(
+        x=lb_df["Strategy"],
+        y=lb_df["Accuracy"].str.replace("%", "").astype(float),
+        marker_color=bar_colors,
+        text=lb_df["Accuracy"],
+        textposition="outside",
+        hovertemplate="%{x}<br>Accuracy: %{y:.1f}%<extra></extra>",
+    ))
+    fig_bar.add_hline(y=50, line_dash="dot", line_color=GRAY, annotation_text="50% baseline", annotation_font_color=GRAY)
+    fig_bar.update_layout(
+        plot_bgcolor=BG, paper_bgcolor=PANEL,
+        font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+        margin={"l": 10, "r": 10, "t": 10, "b": 120},
+        xaxis={"gridcolor": "#1f2937", "tickangle": -30},
+        yaxis={"gridcolor": "#1f2937", "title": "Bucket Accuracy %", "range": [0, 70]},
+        height=360, showlegend=False,
+    )
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+    st.dataframe(lb_df, use_container_width=True, hide_index=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Section 3: Day-by-day table ─────────────────────────────────────────
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.subheader("📅 Day-by-Day Predictions vs Polymarket")
+
+    display_rows = []
+    for r in rows:
+        def _cell(key: str) -> str:
+            val = r.get(f"{key}_d1")
+            win = r.get(f"{key}_d1_win")
+            if val is None: return "—"
+            mark = "✅" if win else "❌"
+            return f"{val:.1f}° {mark}"
+
+        avg_val = r.get("avg2_d1")
+        avg_win = r.get("avg2_d1_win")
+        avg_cell = (f"{avg_val:.1f}° {'✅' if avg_win else '❌'}") if avg_val is not None else "—"
+
+        display_rows.append({
+            "Date": r["date"],
+            "Resolved": r["resolved"],
+            "NCEP AI-GFS": _cell("ncep_aigfs025"),
+            "GraphCast": _cell("gfs_graphcast025"),
+            "AVG(NCEP+GC)": avg_cell,
+            "ECMWF IFS": _cell("ecmwf_ifs025"),
+            "KMA GDPS": _cell("kma_gdps"),
+            "HGEFS Ens": _cell("ncep_hgefs025_ensemble_mean"),
+        })
+
+    detail_df = pd.DataFrame(display_rows)
+    st.dataframe(detail_df, use_container_width=True, hide_index=True, height=520)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Section 4: Accuracy over time (rolling 10-day) ──────────────────────
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.subheader("📈 Rolling 10-Day Accuracy")
+    st.caption("Shows how model accuracy evolves over the backtest period")
+
+    window = 10
+    plot_models = {
+        "avg2_d1":           ("AVG(NCEP+GC) D1", GREEN),
+        "ncep_aigfs025_d1":  ("NCEP AI-GFS D1",  BLUE),
+        "gfs_graphcast025_d1": ("GraphCast D1",   "#FF9F40"),
+        "ecmwf_ifs025_d1":   ("ECMWF IFS D1",    GRAY),
+    }
+
+    fig_roll = go.Figure()
+    for key, (label, color) in plot_models.items():
+        win_key = f"{key}_win"
+        valid = [(r["date"], r.get(win_key)) for r in rows if r.get(win_key) is not None]
+        if len(valid) < window:
+            continue
+        dates_v = [v[0] for v in valid]
+        wins_v  = [1 if v[1] else 0 for v in valid]
+        rolling = [
+            sum(wins_v[max(0, i - window + 1): i + 1]) / min(i + 1, window) * 100
+            for i in range(len(wins_v))
+        ]
+        fig_roll.add_trace(go.Scatter(
+            x=dates_v, y=rolling,
+            mode="lines+markers", name=label,
+            line={"color": color, "width": 2},
+            marker={"size": 5},
+            hovertemplate=f"{label}<br>%{{x}}<br>Rolling acc: %{{y:.1f}}%<extra></extra>",
+        ))
+
+    fig_roll.add_hline(y=50, line_dash="dot", line_color=GRAY, annotation_text="50%", annotation_font_color=GRAY)
+    fig_roll.update_layout(
+        plot_bgcolor=BG, paper_bgcolor=PANEL,
+        font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+        margin={"l": 20, "r": 10, "t": 10, "b": 20},
+        xaxis={"gridcolor": "#1f2937"},
+        yaxis={"gridcolor": "#1f2937", "title": "Rolling accuracy %", "range": [0, 100]},
+        legend={"bgcolor": "rgba(0,0,0,0)", "font": {"size": 11}},
+        height=340,
+    )
+    st.plotly_chart(fig_roll, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Section 5: Key notes ────────────────────────────────────────────────
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.subheader("📌 Notes & Methodology")
+    st.markdown("""
+**Bucket rule:** Model prediction is rounded to nearest integer. Wins if it matches the Polymarket resolved bucket.
+For "X or higher" top buckets, any prediction ≥ X is a win.
+
+**T-24h (D1):** Forecast made the day before the resolution date — this is the trading window.
+
+**T-48h (D2):** Forecast made two days before — useful for earlier entry at better prices.
+
+**Data source:** [Open-Meteo Previous Runs API](https://previous-runs-api.open-meteo.com) — `temperature_2m_previous_day1/2`
+
+**ECMWF AIFS:** No previous-run archive available yet in Open-Meteo. Will be added when data is released.
+
+**Coverage:** `ncep_aigfs025` data starts ~Jan 7 2026. HGEFS Ensemble starts ~Jan 22 2026.
+    """)
     st.markdown("</div>", unsafe_allow_html=True)
 
 
