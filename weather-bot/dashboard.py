@@ -345,32 +345,62 @@ def fetch_wu_live_obs(city: str) -> dict | None:
         return None
 
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=1800, show_spinner=False)
 def fetch_commercial_forecasts(city: str) -> dict:
     """Fetch AccuWeather and Weather.com (WU) D+1 forecasts for a city.
 
-    Returns a dict with keys: target_date, accu, wu, unit, errors, source.
-    Disk-first: if both values already logged for tomorrow, skip API entirely.
-    This keeps daily AccuWeather calls to at most 1 per city (9 total), well
-    within the 500/day free tier limit.
+    Refresh logic:
+      - Before 19:00 UTC: re-fetch from API every 30 min (TTL=1800s).
+        AccuWeather only re-fetches if on-disk data is >25 min old, keeping
+        calls to ≤48/day per city (well within 500/day free tier for 10 cities).
+      - After 19:00 UTC: locked — serve canonical value from disk, no more
+        API calls until next day.
     """
     from datetime import date as _d, timedelta
     tomorrow = (_d.today() + timedelta(days=1)).isoformat()
-    cfg = ACCURACY_CITIES.get(city, {})
-    lat = cfg.get("lat")
-    lon = cfg.get("lon")
+    cfg  = ACCURACY_CITIES.get(city, {})
+    lat  = cfg.get("lat")
+    lon  = cfg.get("lon")
     icao = _CITY_ICAO.get(city)
     unit = "F" if cfg.get("temperature_unit", "celsius") != "celsius" else "C"
-    result: dict = {"target_date": tomorrow, "accu": None, "wu": None, "unit": unit, "errors": [], "source": "api"}
+    result: dict = {"target_date": tomorrow, "accu": None, "wu": None,
+                    "unit": unit, "errors": [], "source": "api"}
 
-    # Disk-first: if both values are already logged for tomorrow, skip the API.
-    logged = _load_commercial_log().get(city, {}).get(tomorrow, {})
+    logged      = _load_commercial_log().get(city, {}).get(tomorrow, {})
+    now_utc_h   = datetime.now(UTC).hour
+    now_utc     = datetime.now(UTC)
+
+    # After 19:00 UTC: locked — always serve from disk if available
+    if now_utc_h >= _COMM_LOG_LOCK_HOUR_UTC:
+        if logged.get("accu") is not None or logged.get("wu") is not None:
+            logged_ts = ""
+            try:
+                logged_ts = datetime.fromisoformat(logged["logged_at"]).strftime("%H:%M UTC")
+            except Exception:
+                pass
+            return {
+                "target_date": tomorrow,
+                "accu":   logged.get("accu"),
+                "wu":     logged.get("wu"),
+                "unit":   unit,
+                "errors": [],
+                "source": f"🔒 locked {logged_ts}",
+            }
+
+    # Before 19:00 UTC: use disk only if fresh (logged within 25 min)
+    disk_is_fresh = False
     if logged.get("accu") is not None and logged.get("wu") is not None:
-        logged_ts = ""
         try:
-            logged_ts = datetime.fromisoformat(logged["logged_at"]).strftime("%H:%M UTC")
+            logged_at = datetime.fromisoformat(logged["logged_at"])
+            if logged_at.tzinfo is None:
+                logged_at = logged_at.replace(tzinfo=UTC)
+            age_min = (now_utc - logged_at).total_seconds() / 60
+            disk_is_fresh = age_min < 25
         except Exception:
             pass
+
+    if disk_is_fresh:
+        logged_ts = datetime.fromisoformat(logged["logged_at"]).strftime("%H:%M UTC")
         return {
             "target_date": tomorrow,
             "accu":   logged["accu"],
