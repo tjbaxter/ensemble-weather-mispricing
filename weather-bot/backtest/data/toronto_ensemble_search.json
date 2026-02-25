@@ -1,0 +1,8328 @@
+[
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "dmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6909,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "knmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6909,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "metno_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6909,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "dmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6909,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "knmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6909,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "metno_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6909,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6951,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6951,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6951,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6951,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6977,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6977,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6977,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6977,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6977,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.6977,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global"
+    ],
+    "size": 3,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.7152,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.7295,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.7295,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.7295,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 53.09,
+    "mae": 0.7295,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6789,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6789,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6789,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6789,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6789,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6789,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6798,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6798,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6798,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6798,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6798,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6798,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6864,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.6864,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "dmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7007,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "knmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7007,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "metno_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7007,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7045,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7045,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7123,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7123,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7123,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7123,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7123,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7123,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7123,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7123,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7154,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7154,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7154,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7154,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7154,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7154,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.716,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.716,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7242,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7252,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7252,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7252,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7252,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7272,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7272,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7272,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7299,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7299,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7531,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.7531,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.765,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.765,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.765,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 51.85,
+    "mae": 0.765,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6809,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6809,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6833,
+    "within_1c_pct": 77.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6833,
+    "within_1c_pct": 77.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6833,
+    "within_1c_pct": 77.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6833,
+    "within_1c_pct": 77.8
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6833,
+    "within_1c_pct": 77.8
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6833,
+    "within_1c_pct": 77.8
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6833,
+    "within_1c_pct": 77.8
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6833,
+    "within_1c_pct": 77.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6866,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6866,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6885,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6885,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6885,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.693,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.693,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.693,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.693,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.693,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.693,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6957,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6957,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6957,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6957,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6957,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.6957,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7008,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7008,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7008,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7008,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_seamless",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_seamless",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_seamless",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_hrdps_continental",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_hrdps_continental",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_hrdps_continental",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_seamless",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_seamless",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_seamless",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7012,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "ecmwf_ifs025"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7112,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7121,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7153,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7153,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7153,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7153,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7178,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7178,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7178,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7178,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7178,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7178,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7204,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_regional",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7204,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7225,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7225,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.724,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7285,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7285,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7285,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7285,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7285,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7285,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7285,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7285,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7294,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7427,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7448,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7448,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7532,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7572,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.7572,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 50.62,
+    "mae": 0.764,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6654,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6654,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6654,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6654,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6863,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6863,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6863,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6863,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6918,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6918,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6944,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6944,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6944,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gfs_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.6995,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ecmwf_ifs025"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7015,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ecmwf_ifs025"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7015,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7017,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7017,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7017,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7021,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7021,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7021,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7021,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7022,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7038,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7039,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7039,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7039,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.704,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.704,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gfs_graphcast025",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7048,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gfs_graphcast025",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7048,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gfs_graphcast025",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7048,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "jma_gsm"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7064,
+    "within_1c_pct": 79.0
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_regional",
+      "jma_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7064,
+    "within_1c_pct": 79.0
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7071,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7071,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7071,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7071,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7071,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7092,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7105,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_hrdps_continental",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7105,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7105,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7105,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_seamless",
+      "jma_gsm"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_seamless",
+      "jma_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_gsm"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "jma_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7131,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7137,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7137,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7137,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7137,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "gem_seamless",
+      "icon_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7138,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "gem_seamless",
+      "icon_global"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7138,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "icon_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7138,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "icon_global"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7138,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "dmi_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "dmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "knmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "dmi_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "dmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "knmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "dmi_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "dmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "knmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "dmi_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "dmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "knmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7143,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "gem_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "gem_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "gem_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7153,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7159,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7159,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7172,
+    "within_1c_pct": 77.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "ncep_aigfs025",
+      "gem_regional",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7172,
+    "within_1c_pct": 77.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_seamless",
+      "gfs_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7179,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_seamless",
+      "gfs_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7179,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_seamless",
+      "gfs_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7179,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "gfs_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7179,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "gfs_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7179,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "gfs_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7179,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.718,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_seamless",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7239,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_seamless",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7239,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_seamless",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7239,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7239,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7239,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_hrdps_continental",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7239,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_seamless",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7252,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_seamless",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7252,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_hrdps_continental",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7252,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_hrdps_continental",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7252,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_seamless",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7252,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_seamless",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7252,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_hrdps_continental",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7252,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_hrdps_continental",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7252,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "dmi_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7255,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "dmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7255,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "knmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7255,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7262,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7262,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7262,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7262,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7262,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7262,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7272,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7272,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7272,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7272,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7272,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7272,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ecmwf_ifs025"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7277,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ecmwf_ifs025"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7277,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7278,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7278,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7278,
+    "within_1c_pct": 67.9
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.731,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.731,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.731,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.731,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.731,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.731,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7316,
+    "within_1c_pct": 74.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7317,
+    "within_1c_pct": 66.7
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7317,
+    "within_1c_pct": 66.7
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7317,
+    "within_1c_pct": 66.7
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7321,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7321,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_seamless",
+      "jma_gsm",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7339,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "gem_hrdps_continental",
+      "jma_gsm",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7339,
+    "within_1c_pct": 75.3
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.735,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7353,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7357,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7357,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7357,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7357,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7372,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "jma_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7372,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7378,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7378,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "jma_gsm"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7378,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "jma_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7378,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "dmi_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7386,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "dmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7386,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "knmi_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7386,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.74,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.74,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.74,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.74,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.74,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 5,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.74,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "dmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7406,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "knmi_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7406,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "metno_seamless",
+      "ecmwf_ifs025"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7406,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_seamless",
+      "gfs_graphcast025",
+      "icon_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7424,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_seamless",
+      "gfs_graphcast025",
+      "icon_global"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7424,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "gfs_graphcast025",
+      "icon_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7424,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "gfs_graphcast025",
+      "icon_global"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7424,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_seamless",
+      "gfs_graphcast025",
+      "icon_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7424,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_seamless",
+      "gfs_graphcast025",
+      "icon_global"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7424,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "gfs_graphcast025",
+      "icon_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7424,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "gfs_graphcast025",
+      "icon_global"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7424,
+    "within_1c_pct": 71.6
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7431,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7431,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7431,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7431,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7431,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_seamless",
+      "gem_global",
+      "ncep_aigfs025",
+      "jma_gsm",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 8,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7431,
+    "within_1c_pct": 72.8
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7443,
+    "within_1c_pct": 66.7
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7443,
+    "within_1c_pct": 66.7
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_gsm",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7443,
+    "within_1c_pct": 66.7
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7443,
+    "within_1c_pct": 66.7
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7443,
+    "within_1c_pct": 66.7
+  },
+  {
+    "models": [
+      "ncep_nbm_conus",
+      "kma_gdps",
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "jma_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7443,
+    "within_1c_pct": 66.7
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_seamless",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_seamless",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_seamless",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "dmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "knmi_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "gem_global",
+      "gem_regional",
+      "gem_hrdps_continental",
+      "metno_seamless"
+    ],
+    "size": 7,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7462,
+    "within_1c_pct": 69.1
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7468,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7468,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7468,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "dmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7468,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "knmi_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7468,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_seamless",
+      "meteofrance_arpege_world",
+      "meteofrance_seamless",
+      "ncep_aigfs025",
+      "gfs_graphcast025",
+      "metno_seamless"
+    ],
+    "size": 6,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7468,
+    "within_1c_pct": 70.4
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7469,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "knmi_seamless"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7469,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_arpege_world",
+      "gem_regional",
+      "metno_seamless"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7469,
+    "within_1c_pct": 76.5
+  },
+  {
+    "models": [
+      "kma_gdps",
+      "meteofrance_seamless",
+      "gem_regional",
+      "dmi_seamless"
+    ],
+    "size": 4,
+    "n": 81,
+    "coverage_pct": 100.0,
+    "bucket_acc": 49.38,
+    "mae": 0.7469,
+    "within_1c_pct": 76.5
+  }
+]

@@ -1480,28 +1480,32 @@ ACCURACY_CITIES: dict[str, dict] = {
             "ecmwf_ifs025":            ("ECMWF IFS",          "🌍"),
         },
         "best_ensemble": {
-            "short":      "AVG(NBM+KMA+MF+GEM)",
-            "label":      "AVG(NCEP NBM + KMA GDPS + MF ARPEGE World + GEM Global)",
-            "model_keys": ["ncep_nbm_conus", "kma_gdps", "meteofrance_arpege_world", "gem_global"],
+            "short":      "AVG(KMA+MF+GEM+DMI)",
+            "label":      "AVG(KMA GDPS + MF ARPEGE World + GEM Global + DMI Seamless)",
+            "model_keys": ["kma_gdps", "meteofrance_arpege_world", "gem_global", "dmi_seamless"],
         },
         "top_model_key":   "ncep_nbm_conus",
         "top_model_label": "NCEP NBM D1",
         "chart_models":    ["ncep_nbm_conus", "kma_gdps", "meteofrance_arpege_world", "gem_global"],
         "notes": (
-            "**Best signal:** NCEP NBM CONUS — MAE **0.85°C**, ≤1°C accuracy **66.7%** (54/81 days), "
-            "bucket accuracy **40.7%** over 81 resolved markets Dec 6 2025–Feb 24 2026.\n\n"
-            "**Why NBM dominates:** NCEP National Blend of Models is a calibrated multi-model "
-            "blend optimised for North America — Toronto (CYYZ) sits within its CONUS domain "
-            "despite being in Canada.\n\n"
-            "**Full 38-model sweep results (81 days):**\n"
-            "1. NCEP NBM CONUS — MAE 0.846°C, ≤1°C 66.7%, bucket 40.7%\n"
-            "2. KMA GDPS — MAE 0.878°C, ≤1°C 63.0%, bucket 39.5%\n"
-            "3. MF ARPEGE World — MAE 0.940°C, ≤1°C 64.2%, bucket 43.2%\n"
-            "4. GEM Global — MAE 0.983°C, ≤1°C 64.2%, bucket 33.3%\n"
-            "5. NCEP AI-GFS — MAE 1.048°C (50 days only), bucket 24.0%\n"
-            "6. GEM Regional — MAE 1.053°C, bucket 33.3%\n"
-            "Models NOT covering Toronto: UK Met Office, AROME regional, icon_eu/d2, BOM, SMHI, MetNO.\n\n"
-            "**Station:** Toronto Pearson International Airport (CYYZ) — same as Polymarket Wunderground source.\n\n"
+            "**Best signal:** AVG(KMA GDPS + MF ARPEGE World + GEM Global + DMI Seamless) — "
+            "bucket accuracy **53.1%** (43/81 days), MAE **0.691°C**, ≤1°C **70.4%**.\n\n"
+            "**How found:** Exhaustive permutation search over all 263,949 subsets (size 1–8) "
+            "of 20 valid models, tested on 81 resolved markets Dec 6 2025–Feb 24 2026. "
+            "Ceiling was 53.1%, hit by multiple size-3, size-5, and size-6 combos — all sharing "
+            "the same KMA + GEM core. Adding more models did not improve bucket accuracy beyond 53.1%.\n\n"
+            "**⚠ Data-dredging caveat:** 263K hypotheses on 81 days is significant in-sample "
+            "fitting. Treat 53.1% as the ceiling, not a forward-test guarantee. "
+            "Pre-registering this ensemble now; evaluate after 30+ new forward days.\n\n"
+            "**Single-model baseline:** KMA GDPS — 45.7% bucket accuracy.\n"
+            "**Ensemble gain:** +7.4 pp vs best single (in-sample).\n\n"
+            "**38-model sweep singles ranking (81 days, by MAE):**\n"
+            "1. NCEP NBM CONUS — MAE 0.846°C, ≤1°C 66.7% ← lowest MAE, best for ≤1°C\n"
+            "2. KMA GDPS — MAE 0.878°C, bucket 45.7% ← best single by bucket accuracy\n"
+            "3. MF ARPEGE World — MAE 0.940°C\n"
+            "4. GEM Global — MAE 0.983°C\n"
+            "Models NOT covering Toronto: UK Met Office, AROME France/HD, icon_eu/d2, BOM, SMHI.\n\n"
+            "**Station:** Toronto Pearson International Airport (CYYZ) — same as Polymarket Wunderground.\n\n"
             "**Bucket:** Exact 1°C integers with lower/upper boundary buckets. Markets started Dec 6 2025."
         ),
         "polymarket": {
