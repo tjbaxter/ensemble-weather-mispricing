@@ -160,7 +160,21 @@ def _log_commercial_forecast(
             except Exception:
                 already_locked = True  # be conservative if parse fails
             if already_locked:
-                return  # canonical snapshot already set — don't overwrite
+                # Allow filling in null slots even after the lock —
+                # e.g. AccuWeather was 429 when the entry was first written.
+                existing_accu = existing.get("accu")
+                existing_wu   = existing.get("wu")
+                if (accu is not None and existing_accu is None) or \
+                   (wu   is not None and existing_wu   is None):
+                    # Patch only the null fields; keep the rest intact
+                    log[city][date_str] = {
+                        "accu":      accu      if existing_accu is None else existing_accu,
+                        "wu":        wu        if existing_wu   is None else existing_wu,
+                        "unit":      unit,
+                        "logged_at": existing.get("logged_at", now_utc.isoformat()),
+                    }
+                    _COMMERCIAL_LOG_PATH.write_text(json.dumps(log, indent=2), encoding="utf-8")
+                return
         # Write (new entry or pre-lock update)
         log[city][date_str] = {
             "accu": accu,
@@ -726,10 +740,9 @@ ACCURACY_CITIES: dict[str, dict] = {
             "meteofrance_seamless":           ("MF Seamless",        "🇫🇷"),
             "meteofrance_arome_france_hd":    ("MF AROME HD",        "🇫🇷"),
             "icon_seamless":                  ("ICON Seamless",      "🇩🇪"),
+            "dmi_seamless":                   ("DMI Seamless",       "🇩🇰"),
             "ecmwf_ifs025":                   ("ECMWF IFS",          "🌍"),
             "kma_seamless":                   ("KMA Seamless",       "🇰🇷"),
-            "knmi_seamless":                  ("KNMI Seamless",      "🌊"),
-            "dmi_seamless":                   ("DMI Seamless",       "🇩🇰"),
             "ukmo_uk_deterministic_2km":      ("UKMO 2km",           "🇬🇧"),
             "ukmo_seamless":                  ("UKMO Seamless",      "🇬🇧"),
             "ukmo_global_deterministic_10km": ("UKMO Global 10km",   "🇬🇧"),
@@ -2665,6 +2678,14 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
                     all_preds = dict(snap_preds)
                     snap_time = datetime.fromisoformat(snap_logged).strftime("%H:%M UTC") if snap_logged != "?" else "?"
                     fetch_ts  = f"12Z snap {snap_time}"
+                    # Fill in any models the snapshot didn't capture (e.g. old cron version)
+                    all_model_keys = set(cfg["models"].keys())
+                    missing_keys = all_model_keys - set(snap_preds.keys())
+                    if missing_keys:
+                        live_fill = fetch_all_models_live(city)
+                        for mk in missing_keys:
+                            if mk in live_fill:
+                                all_preds[mk] = live_fill[mk]
                 else:
                     # No snapshot yet — fall back to live (will be 00Z, warn user)
                     all_preds = fetch_all_models_live(city)
@@ -2689,7 +2710,7 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
             ens_val = top_val
 
         row_d: dict = {
-            "Date":           f"📍 {date_str} 🕐{fetch_ts}",
+            "Date":           f"{date_str} 📍 🕐{fetch_ts}",
             "Resolved":       label,
             ens_cfg["short"]: f"{fmt_val(ens_val)} ⏳",
         }
@@ -2778,7 +2799,7 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
             ens_cell = "—"
 
         row_d: dict = {
-            "Date":           f"🆕 {date_str}",
+            "Date":           f"{date_str} 🆕",
             "Resolved":       f"{res_label} 🆕",
             ens_cfg["short"]: ens_cell,
         }
