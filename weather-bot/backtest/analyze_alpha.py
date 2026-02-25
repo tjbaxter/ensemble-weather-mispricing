@@ -262,17 +262,23 @@ def _compute_engine_stats(
         # Model's bucket
         model_canon = _temp_to_bucket(model_t, canons or [actual_canon])
 
-        # Crowd's bucket
-        if not skip_prices and price_info.get("crowd_bucket") and bucket_prices:
-            crowd_canon = price_info["crowd_bucket"]
-            crowd_source = "market"
-        else:
-            # Fallback: model-median proxy
+        # Crowd's bucket — ONLY use real CLOB market data, never proxy.
+        # Proxy (model-median) contaminates the alpha signal by forcing the bot
+        # to fight a supercomputer consensus instead of real market inefficiencies.
+        if skip_prices:
+            # Explicit proxy mode requested by caller
             med = _median_temp(row)
             if med is None:
                 continue
             crowd_canon = _temp_to_bucket(med, canons or [actual_canon])
             crowd_source = "model_median"
+        elif price_info.get("crowd_bucket") and bucket_prices:
+            crowd_canon = price_info["crowd_bucket"]
+            crowd_source = "market"
+        else:
+            # No real price data — skip this market entirely.
+            # Including it with a proxy crowd would produce meaningless results.
+            continue
 
         # Classify
         outcome = _classify(model_canon, crowd_canon, actual_canon)
@@ -497,7 +503,8 @@ def run_alpha_analysis(
     print(f"\n  Total markets with model predictions : {len(rows)}")
     print(f"  Markets with CLOB price data         : {priced}")
     print(f"  Tradeable (overround ≤115%)           : {tradeable}")
-    print(f"  Crowd source                          : {'CLOB price history' if priced else 'model-median proxy'}")
+    crowd_note = "CLOB price history (proxy markets excluded)" if priced else "model-median proxy (--skip-prices mode)"
+    print(f"  Crowd source                          : {crowd_note}")
 
     # Build engines
     def run_all_engines(subset: list[dict], label: str) -> list[dict]:

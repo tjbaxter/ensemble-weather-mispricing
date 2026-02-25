@@ -76,6 +76,7 @@ _CITY_WU_STATION: dict[str, tuple[str, str]] = {
     "Dallas":       ("KDFW:9:US", "e"),
     "Buenos Aires": ("SAEZ:9:AR", "m"),
     "Paris":        ("LFPG:9:FR", "m"),
+    "Toronto":      ("CYYZ:9:CA", "m"),
 }
 
 # ICAO → AccuWeather location key (stable, no geoposition lookup needed)
@@ -90,6 +91,7 @@ _ACCU_LOCATION_KEYS: dict[str, str] = {
     "LFPG": "159190",    # Paris CDG
     "RKSI": "2331998",   # Seoul Incheon
     "SBGR": "36369",     # São Paulo Guarulhos
+    "CYYZ": "55488",     # Toronto Pearson
 }
 
 # Dashboard city name → ICAO code
@@ -103,6 +105,7 @@ _CITY_ICAO: dict[str, str] = {
     "Dallas":       "KDFW",
     "Buenos Aires": "SBGR",
     "Paris":        "LFPG",
+    "Toronto":      "CYYZ",
 }
 
 _COMMERCIAL_LOG_PATH = ROOT / "data" / "commercial_forecast_log.json"
@@ -1454,6 +1457,135 @@ ACCURACY_CITIES: dict[str, dict] = {
             "2026-02-21": ("16°C",  16, False),
             "2026-02-22": ("14°C",  14, False),
             "2026-02-23": ("16°C",  16, False),
+        },
+    },
+    "Toronto": {
+        "lat": 43.6772, "lon": -79.6306,
+        "timezone": "America/Toronto",
+        "temperature_unit": "celsius",
+        "bucket_style": "exact_1c",
+        "temp_unit_display": "°C",
+        "polymarket_slug": "highest-temperature-in-toronto-on",
+        # Top 8 models from exhaustive 38-model sweep, 81 resolved markets Dec 6 2025–Feb 24 2026
+        # NCEP NBM CONUS covers Toronto (close to US border) and is the clear #1
+        # kma_seamless = kma_gdps (identical scores); meteofrance_seamless = meteofrance_arpege_world
+        "models": {
+            "ncep_nbm_conus":          ("NCEP NBM",           "🇺🇸"),
+            "kma_gdps":                ("KMA GDPS",           "🇰🇷"),
+            "meteofrance_arpege_world": ("MF ARPEGE World",   "🇫🇷"),
+            "gem_global":              ("GEM Global",         "🇨🇦"),
+            "ncep_aigfs025":           ("NCEP AI-GFS",        "🤖"),
+            "gem_regional":            ("GEM Regional",       "🇨🇦"),
+            "gfs_seamless":            ("GFS Seamless",       "🇺🇸"),
+            "ecmwf_ifs025":            ("ECMWF IFS",          "🌍"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(NBM+KMA+MF+GEM)",
+            "label":      "AVG(NCEP NBM + KMA GDPS + MF ARPEGE World + GEM Global)",
+            "model_keys": ["ncep_nbm_conus", "kma_gdps", "meteofrance_arpege_world", "gem_global"],
+        },
+        "top_model_key":   "ncep_nbm_conus",
+        "top_model_label": "NCEP NBM D1",
+        "chart_models":    ["ncep_nbm_conus", "kma_gdps", "meteofrance_arpege_world", "gem_global"],
+        "notes": (
+            "**Best signal:** NCEP NBM CONUS — MAE **0.85°C**, ≤1°C accuracy **66.7%** (54/81 days), "
+            "bucket accuracy **40.7%** over 81 resolved markets Dec 6 2025–Feb 24 2026.\n\n"
+            "**Why NBM dominates:** NCEP National Blend of Models is a calibrated multi-model "
+            "blend optimised for North America — Toronto (CYYZ) sits within its CONUS domain "
+            "despite being in Canada.\n\n"
+            "**Full 38-model sweep results (81 days):**\n"
+            "1. NCEP NBM CONUS — MAE 0.846°C, ≤1°C 66.7%, bucket 40.7%\n"
+            "2. KMA GDPS — MAE 0.878°C, ≤1°C 63.0%, bucket 39.5%\n"
+            "3. MF ARPEGE World — MAE 0.940°C, ≤1°C 64.2%, bucket 43.2%\n"
+            "4. GEM Global — MAE 0.983°C, ≤1°C 64.2%, bucket 33.3%\n"
+            "5. NCEP AI-GFS — MAE 1.048°C (50 days only), bucket 24.0%\n"
+            "6. GEM Regional — MAE 1.053°C, bucket 33.3%\n"
+            "Models NOT covering Toronto: UK Met Office, AROME regional, icon_eu/d2, BOM, SMHI, MetNO.\n\n"
+            "**Station:** Toronto Pearson International Airport (CYYZ) — same as Polymarket Wunderground source.\n\n"
+            "**Bucket:** Exact 1°C integers with lower/upper boundary buckets. Markets started Dec 6 2025."
+        ),
+        "polymarket": {
+            "2025-12-06": ("1°C",    1,  False),
+            "2025-12-07": ("-1°C",  -1,  False),
+            "2025-12-08": ("-4°C",  -4,  False),
+            "2025-12-09": ("0°C",    0,  False),
+            "2025-12-10": ("1°C",    1,  False),
+            "2025-12-11": ("-6°C",  -6,  False),
+            "2025-12-12": ("-1°C",  -1,  False),
+            "2025-12-13": ("-2°C",  -2,  False),
+            "2025-12-14": ("-7°C",  -7,  False),
+            "2025-12-15": ("-5°C",  -5,  False),
+            "2025-12-16": ("≥1°C",   1,  True),
+            "2025-12-17": ("4°C",    4,  False),
+            "2025-12-18": ("≥7°C",   7,  True),
+            "2025-12-19": ("≥6°C",   6,  True),
+            "2025-12-20": ("≥2°C",   2,  True),
+            "2025-12-21": ("≥2°C",   2,  True),
+            "2025-12-22": ("≥1°C",   1,  True),
+            "2025-12-23": ("4°C",    4,  False),
+            "2025-12-24": ("≥3°C",   3,  True),
+            "2025-12-25": ("2°C",    2,  False),
+            "2025-12-26": ("-2°C",  -2,  False),
+            "2025-12-27": ("-3°C",  -3,  False),
+            "2025-12-28": ("2°C",    2,  False),
+            "2025-12-29": ("5°C",    5,  False),
+            "2025-12-30": ("-4°C",  -4,  False),
+            "2025-12-31": ("≤-4°C", -4,  None),
+            "2026-01-01": ("-7°C",  -7,  False),
+            "2026-01-02": ("-4°C",  -4,  False),
+            "2026-01-03": ("-3°C",  -3,  False),
+            "2026-01-04": ("-1°C",  -1,  False),
+            "2026-01-05": ("0°C",    0,  False),
+            "2026-01-06": ("1°C",    1,  False),
+            "2026-01-07": ("3°C",    3,  False),
+            "2026-01-08": ("≥5°C",   5,  True),
+            "2026-01-09": ("≥10°C", 10,  True),
+            "2026-01-10": ("≥3°C",   3,  True),
+            "2026-01-11": ("2°C",    2,  False),
+            "2026-01-12": ("0°C",    0,  False),
+            "2026-01-13": ("5°C",    5,  False),
+            "2026-01-14": ("5°C",    5,  False),
+            "2026-01-15": ("-9°C",  -9,  False),
+            "2026-01-16": ("≥-1°C", -1,  True),
+            "2026-01-17": ("2°C",    2,  False),
+            "2026-01-18": ("-6°C",  -6,  False),
+            "2026-01-19": ("-5°C",  -5,  False),
+            "2026-01-20": ("≥-11°C",-11, True),
+            "2026-01-21": ("-1°C",  -1,  False),
+            "2026-01-22": ("-1°C",  -1,  False),
+            "2026-01-23": ("-9°C",  -9,  False),
+            "2026-01-24": ("-11°C", -11, False),
+            "2026-01-25": ("-9°C",  -9,  False),
+            "2026-01-26": ("-9°C",  -9,  False),
+            "2026-01-27": ("-9°C",  -9,  False),
+            "2026-01-28": ("-10°C", -10, False),
+            "2026-01-29": ("≤-12°C",-12, None),
+            "2026-01-30": ("≥-10°C",-10, True),
+            "2026-01-31": ("≥-10°C",-10, True),
+            "2026-02-01": ("≥-5°C", -5,  True),
+            "2026-02-02": ("≥-5°C", -5,  True),
+            "2026-02-03": ("-3°C",  -3,  False),
+            "2026-02-04": ("-5°C",  -5,  False),
+            "2026-02-05": ("-5°C",  -5,  False),
+            "2026-02-06": ("-3°C",  -3,  False),
+            "2026-02-07": ("-13°C", -13, False),
+            "2026-02-08": ("≤-12°C",-12, None),
+            "2026-02-09": ("-7°C",  -7,  False),
+            "2026-02-10": ("2°C",    2,  False),
+            "2026-02-11": ("1°C",    1,  False),
+            "2026-02-12": ("-3°C",  -3,  False),
+            "2026-02-13": ("-1°C",  -1,  False),
+            "2026-02-14": ("2°C",    2,  False),
+            "2026-02-15": ("1°C",    1,  False),
+            "2026-02-16": ("2°C",    2,  False),
+            "2026-02-17": ("≥7°C",   7,  True),
+            "2026-02-18": ("3°C",    3,  False),
+            "2026-02-19": ("2°C",    2,  False),
+            "2026-02-20": ("2°C",    2,  False),
+            "2026-02-21": ("2°C",    2,  False),
+            "2026-02-22": ("0°C",    0,  False),
+            "2026-02-23": ("-1°C",  -1,  False),
+            "2026-02-24": ("-4°C",  -4,  False),
         },
     },
 }

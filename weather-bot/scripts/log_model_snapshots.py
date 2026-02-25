@@ -144,6 +144,21 @@ CITIES: dict[str, dict] = {
             "dmi_seamless",
         ],
     },
+    "Toronto": {
+        "lat": 43.6772, "lon": -79.6306,
+        "timezone": "America/Toronto",
+        "unit": "celsius",
+        "models": [
+            "ncep_nbm_conus",
+            "kma_gdps",
+            "meteofrance_arpege_world",
+            "gem_global",
+            "ncep_aigfs025",
+            "gem_regional",
+            "gfs_seamless",
+            "ecmwf_ifs025",
+        ],
+    },
 }
 
 

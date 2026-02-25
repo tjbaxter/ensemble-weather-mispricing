@@ -1,0 +1,272 @@
+{
+  "equity": {
+    "n": 31,
+    "wins": 6,
+    "losses": 25,
+    "win_rate": 0.1935483870967742,
+    "break_even": 0.23695161290322575,
+    "final_bankroll": 85.92,
+    "roi_pct": -14.08,
+    "max_drawdown": 80.29,
+    "longest_loss_streak": 9,
+    "p_value": 0.7775,
+    "trades": [
+      {
+        "date": "2026-01-24",
+        "city": "London",
+        "bankroll": 95.0,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-01-26",
+        "city": "Seoul",
+        "bankroll": 105.15,
+        "pnl": 10.15,
+        "win": true
+      },
+      {
+        "date": "2026-01-26",
+        "city": "London",
+        "bankroll": 161.5,
+        "pnl": 56.35,
+        "win": true
+      },
+      {
+        "date": "2026-01-29",
+        "city": "London",
+        "bankroll": 156.5,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-01-31",
+        "city": "Seoul",
+        "bankroll": 166.21,
+        "pnl": 9.71,
+        "win": true
+      },
+      {
+        "date": "2026-01-31",
+        "city": "London",
+        "bankroll": 161.21,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-02",
+        "city": "NYC",
+        "bankroll": 156.21,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-03",
+        "city": "NYC",
+        "bankroll": 151.21,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-03",
+        "city": "London",
+        "bankroll": 146.21,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-04",
+        "city": "London",
+        "bankroll": 141.21,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-04",
+        "city": "NYC",
+        "bankroll": 136.21,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-05",
+        "city": "NYC",
+        "bankroll": 131.21,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-07",
+        "city": "London",
+        "bankroll": 126.21,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-08",
+        "city": "NYC",
+        "bankroll": 121.21,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-08",
+        "city": "Seoul",
+        "bankroll": 130.29,
+        "pnl": 9.08,
+        "win": true
+      },
+      {
+        "date": "2026-02-09",
+        "city": "Seoul",
+        "bankroll": 141.69,
+        "pnl": 11.39,
+        "win": true
+      },
+      {
+        "date": "2026-02-10",
+        "city": "London",
+        "bankroll": 136.69,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-12",
+        "city": "NYC",
+        "bankroll": 131.69,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-12",
+        "city": "Seoul",
+        "bankroll": 126.69,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-14",
+        "city": "Seoul",
+        "bankroll": 121.69,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-14",
+        "city": "London",
+        "bankroll": 116.69,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-15",
+        "city": "Seoul",
+        "bankroll": 111.69,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-15",
+        "city": "London",
+        "bankroll": 106.69,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-16",
+        "city": "Seoul",
+        "bankroll": 120.92,
+        "pnl": 14.23,
+        "win": true
+      },
+      {
+        "date": "2026-02-17",
+        "city": "London",
+        "bankroll": 115.92,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-18",
+        "city": "London",
+        "bankroll": 110.92,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-19",
+        "city": "Seoul",
+        "bankroll": 105.92,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-20",
+        "city": "Seoul",
+        "bankroll": 100.92,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-20",
+        "city": "London",
+        "bankroll": 95.92,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-21",
+        "city": "Seoul",
+        "bankroll": 90.92,
+        "pnl": -5.0,
+        "win": false
+      },
+      {
+        "date": "2026-02-21",
+        "city": "London",
+        "bankroll": 85.92,
+        "pnl": -5.0,
+        "win": false
+      }
+    ]
+  },
+  "montecarlo": {
+    "n_simulations": 10000,
+    "observed_win_rate": 0.1935,
+    "break_even": 0.237,
+    "p5": 1.27,
+    "p25": 60.21,
+    "p50": 111.43,
+    "p75": 171.03,
+    "p95": 265.01,
+    "prob_loss": 0.4426,
+    "prob_gain20": 0.46,
+    "prob_gain50": 0.333
+  },
+  "random_sim": {
+    "london": {
+      "n": 385,
+      "accuracy": 0.0727,
+      "p50": -1370.99,
+      "prob_loss": 1.0
+    },
+    "nyc": {
+      "n": 360,
+      "accuracy": 0.1944,
+      "p50": -564.7,
+      "prob_loss": 1.0
+    },
+    "seoul": {
+      "n": 79,
+      "accuracy": 0.4557,
+      "p50": 288.55,
+      "prob_loss": 0.0
+    },
+    "all": {
+      "n": 824,
+      "accuracy": 0.1626,
+      "p50": -1846.53,
+      "prob_loss": 1.0
+    }
+  }
+}

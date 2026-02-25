@@ -37,6 +37,7 @@ OUT_CSV  = OUT_DIR / "resolved_markets.csv"
 # Key = exact lowercase city name from title; also include common aliases
 STATION_META: dict[str, dict] = {
     # ── North America ──────────────────────────────────────────────────────────
+    "toronto":     {"icao": "CYYZ", "lat": 43.6772, "lon":  -79.6306, "unit": "C", "tz": "America/Toronto"},
     "nyc":         {"icao": "KLGA", "lat": 40.7743, "lon":  -73.8726, "unit": "F", "tz": "America/New_York"},
     "new york":    {"icao": "KLGA", "lat": 40.7743, "lon":  -73.8726, "unit": "F", "tz": "America/New_York"},
     "miami":       {"icao": "KMIA", "lat": 25.7959, "lon":  -80.2870, "unit": "F", "tz": "America/New_York"},
