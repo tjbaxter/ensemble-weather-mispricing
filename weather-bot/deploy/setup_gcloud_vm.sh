@@ -92,6 +92,11 @@ echo "==> Installing healthcheck cron (every 5 minutes)"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   (crontab -l 2>/dev/null | grep -v 'deploy/healthcheck.sh' || true; echo '*/5 * * * * ${REMOTE_WORKDIR}/deploy/healthcheck.sh') | crontab -"
 
+echo "==> Installing commercial forecast logger cron (daily 19:05 UTC)"
+gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
+  (crontab -l 2>/dev/null | grep -v 'log_commercial_forecasts.py' || true; \
+   echo '5 19 * * * ${REMOTE_WORKDIR}/venv/bin/python3 ${REMOTE_WORKDIR}/scripts/log_commercial_forecasts.py >> ${REMOTE_WORKDIR}/logs/commercial_forecast.log 2>&1') | crontab -"
+
 echo "==> Verifying service status"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   sudo systemctl status weather-bot --no-pager && \
