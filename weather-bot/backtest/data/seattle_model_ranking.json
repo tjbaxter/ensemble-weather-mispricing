@@ -1,0 +1,3137 @@
+{
+  "singles": [
+    {
+      "model": "ncep_nbm_conus",
+      "n": 81,
+      "mae": 1.193,
+      "rmse": 1.445,
+      "bias": -0.116,
+      "within_1_pct": 53.1,
+      "bucket_acc": 39.5
+    },
+    {
+      "model": "gem_seamless",
+      "n": 81,
+      "mae": 1.28,
+      "rmse": 1.782,
+      "bias": 0.115,
+      "within_1_pct": 54.3,
+      "bucket_acc": 46.9
+    },
+    {
+      "model": "gem_hrdps_continental",
+      "n": 81,
+      "mae": 1.28,
+      "rmse": 1.782,
+      "bias": 0.115,
+      "within_1_pct": 54.3,
+      "bucket_acc": 46.9
+    },
+    {
+      "model": "knmi_seamless",
+      "n": 81,
+      "mae": 1.28,
+      "rmse": 1.641,
+      "bias": -0.038,
+      "within_1_pct": 48.1,
+      "bucket_acc": 44.4
+    },
+    {
+      "model": "dmi_seamless",
+      "n": 81,
+      "mae": 1.28,
+      "rmse": 1.641,
+      "bias": -0.038,
+      "within_1_pct": 48.1,
+      "bucket_acc": 44.4
+    },
+    {
+      "model": "metno_seamless",
+      "n": 81,
+      "mae": 1.28,
+      "rmse": 1.641,
+      "bias": -0.038,
+      "within_1_pct": 48.1,
+      "bucket_acc": 44.4
+    },
+    {
+      "model": "ecmwf_ifs025",
+      "n": 81,
+      "mae": 1.444,
+      "rmse": 1.868,
+      "bias": -0.686,
+      "within_1_pct": 40.7,
+      "bucket_acc": 37.0
+    },
+    {
+      "model": "icon_seamless",
+      "n": 81,
+      "mae": 1.449,
+      "rmse": 1.877,
+      "bias": -0.099,
+      "within_1_pct": 48.1,
+      "bucket_acc": 42.0
+    },
+    {
+      "model": "icon_global",
+      "n": 81,
+      "mae": 1.449,
+      "rmse": 1.877,
+      "bias": -0.099,
+      "within_1_pct": 48.1,
+      "bucket_acc": 42.0
+    },
+    {
+      "model": "meteofrance_arpege_world",
+      "n": 81,
+      "mae": 1.465,
+      "rmse": 1.976,
+      "bias": -0.744,
+      "within_1_pct": 46.9,
+      "bucket_acc": 44.4
+    },
+    {
+      "model": "meteofrance_seamless",
+      "n": 81,
+      "mae": 1.465,
+      "rmse": 1.976,
+      "bias": -0.744,
+      "within_1_pct": 46.9,
+      "bucket_acc": 44.4
+    },
+    {
+      "model": "jma_seamless",
+      "n": 81,
+      "mae": 1.537,
+      "rmse": 1.892,
+      "bias": -0.633,
+      "within_1_pct": 40.7,
+      "bucket_acc": 37.0
+    },
+    {
+      "model": "jma_gsm",
+      "n": 81,
+      "mae": 1.537,
+      "rmse": 1.892,
+      "bias": -0.633,
+      "within_1_pct": 40.7,
+      "bucket_acc": 37.0
+    },
+    {
+      "model": "kma_gdps",
+      "n": 81,
+      "mae": 1.786,
+      "rmse": 2.314,
+      "bias": -0.73,
+      "within_1_pct": 38.3,
+      "bucket_acc": 24.7
+    },
+    {
+      "model": "kma_seamless",
+      "n": 81,
+      "mae": 1.786,
+      "rmse": 2.314,
+      "bias": -0.73,
+      "within_1_pct": 38.3,
+      "bucket_acc": 24.7
+    },
+    {
+      "model": "gem_regional",
+      "n": 81,
+      "mae": 1.791,
+      "rmse": 2.365,
+      "bias": -1.322,
+      "within_1_pct": 43.2,
+      "bucket_acc": 29.6
+    },
+    {
+      "model": "gfs_graphcast025",
+      "n": 81,
+      "mae": 1.902,
+      "rmse": 2.382,
+      "bias": -1.653,
+      "within_1_pct": 37.0,
+      "bucket_acc": 30.9
+    },
+    {
+      "model": "ncep_aigfs025",
+      "n": 49,
+      "mae": 1.984,
+      "rmse": 2.376,
+      "bias": -1.355,
+      "within_1_pct": 26.5,
+      "bucket_acc": 28.6
+    },
+    {
+      "model": "gfs_seamless",
+      "n": 81,
+      "mae": 2.015,
+      "rmse": 2.479,
+      "bias": -0.101,
+      "within_1_pct": 29.6,
+      "bucket_acc": 27.2
+    },
+    {
+      "model": "gem_global",
+      "n": 81,
+      "mae": 2.136,
+      "rmse": 2.754,
+      "bias": -1.743,
+      "within_1_pct": 37.0,
+      "bucket_acc": 19.8
+    }
+  ],
+  "ensembles": [
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 58.02,
+      "mae": 1.0353,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 58.02,
+      "mae": 1.0353,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 58.02,
+      "mae": 1.0353,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 58.02,
+      "mae": 1.0353,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 58.02,
+      "mae": 1.0353,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 58.02,
+      "mae": 1.0353,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gem_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 58.02,
+      "mae": 1.0728,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gem_hrdps_continental",
+        "ncep_nbm_conus"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 58.02,
+      "mae": 1.0728,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 58.02,
+      "mae": 1.0728,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gem_hrdps_continental",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 58.02,
+      "mae": 1.0728,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0348,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0348,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0348,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0425,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0425,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0425,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0497,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0497,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0497,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "ncep_nbm_conus"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.063,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.063,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "ecmwf_ifs025",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0681,
+      "within_1_pct": 50.6
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "icon_global"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.0681,
+      "within_1_pct": 50.6
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_seamless",
+        "knmi_seamless",
+        "dmi_seamless",
+        "kma_gdps",
+        "metno_seamless",
+        "ncep_aigfs025"
+      ],
+      "size": 8,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.1154,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_seamless",
+        "knmi_seamless",
+        "dmi_seamless",
+        "kma_seamless",
+        "metno_seamless",
+        "ncep_aigfs025"
+      ],
+      "size": 8,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.1154,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_gsm",
+        "knmi_seamless",
+        "dmi_seamless",
+        "kma_gdps",
+        "metno_seamless",
+        "ncep_aigfs025"
+      ],
+      "size": 8,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.1154,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_gsm",
+        "knmi_seamless",
+        "dmi_seamless",
+        "kma_seamless",
+        "metno_seamless",
+        "ncep_aigfs025"
+      ],
+      "size": 8,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.1154,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.116,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "icon_global"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 56.79,
+      "mae": 1.116,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0351,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0351,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0351,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0436,
+      "within_1_pct": 59.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0436,
+      "within_1_pct": 59.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0461,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0461,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0461,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0461,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0461,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0461,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0473,
+      "within_1_pct": 60.5
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0473,
+      "within_1_pct": 60.5
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0473,
+      "within_1_pct": 60.5
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0473,
+      "within_1_pct": 60.5
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0473,
+      "within_1_pct": 60.5
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0473,
+      "within_1_pct": 60.5
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0506,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0506,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0506,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 8,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0511,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0558,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0558,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0568,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0568,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0568,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0568,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "ncep_nbm_conus"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0585,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.059,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.059,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "metno_seamless"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.059,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "icon_global"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.059,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.059,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.059,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_regional",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gem_regional",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0716,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_seamless",
+        "knmi_seamless",
+        "dmi_seamless",
+        "kma_gdps",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.088,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_seamless",
+        "knmi_seamless",
+        "dmi_seamless",
+        "kma_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.088,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_gsm",
+        "knmi_seamless",
+        "dmi_seamless",
+        "kma_gdps",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.088,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_gsm",
+        "knmi_seamless",
+        "dmi_seamless",
+        "kma_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.088,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0901,
+      "within_1_pct": 53.1
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "knmi_seamless"
+      ],
+      "size": 2,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0951,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "dmi_seamless"
+      ],
+      "size": 2,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0951,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "metno_seamless"
+      ],
+      "size": 2,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0951,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_hrdps_continental",
+        "knmi_seamless"
+      ],
+      "size": 2,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0951,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_hrdps_continental",
+        "dmi_seamless"
+      ],
+      "size": 2,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0951,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_hrdps_continental",
+        "metno_seamless"
+      ],
+      "size": 2,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0951,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0951,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0951,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0951,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "icon_global"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.0963,
+      "within_1_pct": 58.0
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1041,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1041,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gem_seamless",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1041,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1041,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1041,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1041,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gem_seamless",
+        "gem_regional",
+        "knmi_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1139,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gem_seamless",
+        "gem_regional",
+        "dmi_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1139,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gem_seamless",
+        "gem_regional",
+        "metno_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1139,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1139,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "dmi_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1139,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "metno_seamless"
+      ],
+      "size": 4,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1139,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "icon_global"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "icon_global"
+      ],
+      "size": 5,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1424,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1424,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "meteofrance_seamless",
+        "gem_seamless"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1424,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1424,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "icon_global"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1424,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "icon_global"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1424,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "meteofrance_seamless",
+        "gem_seamless",
+        "icon_global"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1424,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "icon_global"
+      ],
+      "size": 3,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1424,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "meteofrance_arpege_world",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 55.56,
+      "mae": 1.1424,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0178,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.022,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.022,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.022,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.022,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.022,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.022,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 8,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0281,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_regional",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 8,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0281,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 8,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0316,
+      "within_1_pct": 51.9
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "knmi_seamless",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "knmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "knmi_seamless",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "knmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "icon_global"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0321,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0331,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0331,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0331,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0331,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0331,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 6,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0331,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_seamless",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_arpege_world",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_seamless",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "dmi_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "gfs_seamless",
+        "meteofrance_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0353,
+      "within_1_pct": 55.6
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "ecmwf_ifs025",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0362,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "ecmwf_ifs025",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0362,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "ecmwf_ifs025",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "metno_seamless",
+        "ncep_nbm_conus"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0362,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "knmi_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0362,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "dmi_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0362,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "ecmwf_ifs025",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "metno_seamless",
+        "ncep_nbm_conus",
+        "icon_global"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0362,
+      "within_1_pct": 54.3
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_seamless",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0369,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_seamless",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0369,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_seamless",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0369,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_gsm",
+        "knmi_seamless",
+        "dmi_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0369,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_gsm",
+        "knmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0369,
+      "within_1_pct": 56.8
+    },
+    {
+      "models": [
+        "icon_seamless",
+        "gfs_seamless",
+        "gem_seamless",
+        "gem_hrdps_continental",
+        "jma_gsm",
+        "dmi_seamless",
+        "metno_seamless"
+      ],
+      "size": 7,
+      "n": 81,
+      "bucket_acc": 54.32,
+      "mae": 1.0369,
+      "within_1_pct": 56.8
+    }
+  ]
+}

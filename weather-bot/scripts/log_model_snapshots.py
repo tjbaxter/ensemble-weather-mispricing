@@ -159,6 +159,21 @@ CITIES: dict[str, dict] = {
             "ecmwf_ifs025",
         ],
     },
+    "Seattle": {
+        "lat": 47.4502, "lon": -122.3088,
+        "timezone": "America/Los_Angeles",
+        "unit": "fahrenheit",
+        "models": [
+            "ncep_nbm_conus",
+            "gem_seamless",
+            "gem_hrdps_continental",
+            "knmi_seamless",
+            "dmi_seamless",
+            "icon_seamless",
+            "ecmwf_ifs025",
+            "gfs_seamless",
+        ],
+    },
 }
 
 
