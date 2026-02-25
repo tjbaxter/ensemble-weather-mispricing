@@ -2246,7 +2246,9 @@ def _render_accuracy_tab() -> None:
         unsafe_allow_html=True,
     )
 
-    city = st.selectbox("City", options=list(ACCURACY_CITIES.keys()), index=0, key="acc_city")
+    _city_options = list(ACCURACY_CITIES.keys())
+    _london_idx = _city_options.index("London") if "London" in _city_options else 0
+    city = st.selectbox("City", options=_city_options, index=_london_idx, key="acc_city")
     cfg = ACCURACY_CITIES[city]
     ens_cfg = cfg["best_ensemble"]
     temp_unit_disp = cfg.get("temp_unit_display", "°C")
@@ -2618,12 +2620,21 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
                 all_preds = fetch_all_models_live(city)
                 fetch_ts  = all_preds.get("__ts__", "?")
             else:
-                # Before 18:30 UTC: 00Z/06Z values are unreliable — use yesterday's 12Z snapshot
+                # Before 18:30 UTC: only trust snapshot if it was itself logged after 18:30 UTC
+                # (i.e., it contains real 12Z data, not morning 00Z/06Z junk).
                 snap = _load_model_snapshot(city, date_str)
+                snap_is_valid_12z = False
                 if snap:
                     snap_preds, snap_logged = snap
+                    try:
+                        snap_dt = datetime.fromisoformat(snap_logged)
+                        snap_is_valid_12z = (snap_dt.hour * 60 + snap_dt.minute) >= (18 * 60 + 30)
+                    except Exception:
+                        snap_is_valid_12z = False
+
+                if snap and snap_is_valid_12z:
                     all_preds = dict(snap_preds)
-                    snap_time = datetime.fromisoformat(snap_logged).strftime("%H:%M UTC") if snap_logged != "?" else "?"
+                    snap_time = datetime.fromisoformat(snap_logged).strftime("%H:%M UTC")
                     fetch_ts  = f"12Z snap {snap_time}"
                     # Fill in any models the snapshot didn't capture (e.g. old cron version)
                     all_model_keys = set(cfg["models"].keys())
@@ -2634,7 +2645,7 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
                             if mk in live_fill:
                                 all_preds[mk] = live_fill[mk]
                 else:
-                    # No snapshot yet — fall back to live (will be 00Z, warn user)
+                    # No valid 12Z snapshot — fall back to live (will be 00Z, warn user)
                     all_preds = fetch_all_models_live(city)
                     fetch_ts  = all_preds.get("__ts__", "?") + " ⚠pre-12Z"
         else:
