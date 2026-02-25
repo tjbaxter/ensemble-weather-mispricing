@@ -109,14 +109,19 @@ _COMMERCIAL_LOG_PATH = ROOT / "data" / "commercial_forecast_log.json"
 
 
 def _read_env_key(name: str) -> str:
-    """Read a single key from the local .env file."""
+    """Read a single key from the local .env file.
+
+    Strips inline comments (e.g. KEY=value  # comment → returns 'value').
+    """
     for env_path in (DEFAULT_ENV, VM_ENV):
         try:
             text = env_path.read_text(encoding="utf-8")
             for line in text.splitlines():
                 line = line.strip()
                 if line.startswith(f"{name}="):
-                    return line.split("=", 1)[1].strip()
+                    value = line.split("=", 1)[1].strip()
+                    value = value.split("#")[0].strip()   # drop inline comments
+                    return value
         except Exception:
             pass
     return ""
@@ -335,12 +340,14 @@ def fetch_wu_live_obs(city: str) -> dict | None:
         return None
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=300, show_spinner=False)
 def fetch_commercial_forecasts(city: str) -> dict:
     """Fetch AccuWeather and Weather.com (WU) D+1 forecasts for a city.
 
-    Returns a dict with keys: target_date, accu, wu, unit, errors.
-    Also logs the snapshot to disk for future backtesting.
+    Returns a dict with keys: target_date, accu, wu, unit, errors, source.
+    Disk-first: if both values already logged for tomorrow, skip API entirely.
+    This keeps daily AccuWeather calls to at most 1 per city (9 total), well
+    within the 500/day free tier limit.
     """
     from datetime import date as _d, timedelta
     tomorrow = (_d.today() + timedelta(days=1)).isoformat()
@@ -349,7 +356,24 @@ def fetch_commercial_forecasts(city: str) -> dict:
     lon = cfg.get("lon")
     icao = _CITY_ICAO.get(city)
     unit = "F" if cfg.get("temperature_unit", "celsius") != "celsius" else "C"
-    result: dict = {"target_date": tomorrow, "accu": None, "wu": None, "unit": unit, "errors": []}
+    result: dict = {"target_date": tomorrow, "accu": None, "wu": None, "unit": unit, "errors": [], "source": "api"}
+
+    # Disk-first: if both values are already logged for tomorrow, skip the API.
+    logged = _load_commercial_log().get(city, {}).get(tomorrow, {})
+    if logged.get("accu") is not None and logged.get("wu") is not None:
+        logged_ts = ""
+        try:
+            logged_ts = datetime.fromisoformat(logged["logged_at"]).strftime("%H:%M UTC")
+        except Exception:
+            pass
+        return {
+            "target_date": tomorrow,
+            "accu":   logged["accu"],
+            "wu":     logged["wu"],
+            "unit":   unit,
+            "errors": [],
+            "source": f"disk {logged_ts}",
+        }
 
     # --- Weather.com/IBM forecast ---
     if lat is not None and lon is not None:
@@ -411,6 +435,16 @@ def fetch_commercial_forecasts(city: str) -> dict:
 
     # Persist snapshot for backtesting (write-once per date)
     _log_commercial_forecast(city, tomorrow, result.get("accu"), result.get("wu"), unit)
+
+    # If live fetch failed, fall back to the most recent logged value for today's target date
+    if result["accu"] is None or result["wu"] is None:
+        logged_fb = _load_commercial_log().get(city, {}).get(tomorrow, {})
+        if result["accu"] is None and logged_fb.get("accu") is not None:
+            result["accu"] = logged_fb["accu"]
+            result["errors"] = [e for e in result["errors"] if "AccuWeather" not in e]
+            result["source"] = "disk (API failed)"
+        if result["wu"] is None and logged_fb.get("wu") is not None:
+            result["wu"] = logged_fb["wu"]
 
     return result
 
@@ -2001,18 +2035,16 @@ def main() -> None:
         )
         st.caption("Bot fires immediately at each trigger. Fast scans run for 30 min after each.")
         st.divider()
-        st.markdown("### VM Data Sync")
-        st.caption(f"Bot runs on `{VM_NAME}` ({VM_PROJECT}). Pull latest data before reading dashboard.")
-        if st.button("Sync from VM", use_container_width=True):
-            with st.spinner("Pulling from VM..."):
+        st.markdown("### Data Sync")
+        st.caption(f"Bot runs on `{VM_NAME}` ({VM_PROJECT}).")
+        if st.button("🔄 Sync from VM + Refresh", use_container_width=True,
+                     help="Pull latest logs/trades from VM, then clear all caches and reload"):
+            with st.spinner("Syncing from VM..."):
                 try:
                     _, msg = sync_from_vm()
                     st.success(msg)
-                    st.cache_data.clear()
-                    st.rerun()
                 except Exception as exc:
-                    st.error(f"Sync failed: {exc}")
-        if st.button("🔄 Force Refresh Data", use_container_width=True, help="Clears all cached model data and re-fetches from Open-Meteo + Polymarket"):
+                    st.warning(f"VM sync partial: {exc}")
             st.cache_data.clear()
             st.rerun()
         st.divider()
@@ -2219,19 +2251,12 @@ def _render_accuracy_tab() -> None:
     ens_cfg = cfg["best_ensemble"]
     temp_unit_disp = cfg.get("temp_unit_display", "°C")
 
-    col_refresh, col_info = st.columns([1, 5])
-    with col_refresh:
-        if st.button("🔄 Refresh data", key="acc_refresh"):
-            st.cache_data.clear()
-            st.rerun()
-
     with st.spinner(f"Loading model predictions for {city}..."):
         acc = fetch_accuracy_data(city)
 
     rows = acc["rows"]
     fetched_at = acc.get("fetched_at", "")
-    with col_info:
-        st.caption(f"Last fetched: {fetched_at[:19].replace('T', ' ')} UTC · {len(rows)} market days")
+    st.caption(f"Last fetched: {fetched_at[:19].replace('T', ' ')} UTC · {len(rows)} market days")
 
     if not rows:
         st.warning("No data available. Check API connectivity.")
@@ -2322,86 +2347,6 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
                 st.caption("⚠ Pre-registered forward test (2026-02-24). Do not resize positions until 30+ days of out-of-sample data.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # ── Section 0.1: Kelly Sizing Calculator ──────────────────────────────
-        st.markdown('<div class="panel">', unsafe_allow_html=True)
-        st.subheader("🎯 Kelly Sizing Calculator")
-        st.caption(
-            "Spread sets your win probability (p). Market price sets your stake size. "
-            "Never skip a cheap red day — never overbet an expensive green day."
-        )
-
-        def _half_kelly(p: float, price_pct: float) -> float:
-            """Half-Kelly fraction of bankroll. price_pct in 0–100 (cents on dollar)."""
-            c = price_pct / 100
-            if c <= 0 or c >= 1: return 0.0
-            b = (1 - c) / c          # net odds per $1 staked
-            full = (b * p - (1 - p)) / b
-            return max(0.0, full / 2)
-
-        # Use spread state if live, else default to GREEN
-        is_green   = (live["green"] if (live and "error" not in live) else True)
-        p_green, p_red = 0.80, 0.50
-        p_assumed  = p_green if is_green else p_red
-        kill_price = int(p_assumed * 100)  # break-even price in ¢
-        spread_label = "🟢 GREEN" if is_green else "🔴 RED"
-        spread_color = GREEN if is_green else "#ef4444"
-
-        kc1, kc2, kc3 = st.columns([1, 1, 1])
-
-        with kc1:
-            market_price = st.slider(
-                "Market price of correct bucket (¢)",
-                min_value=5, max_value=95, value=35, step=1,
-                help="What price (cents on $1) is Polymarket showing for MF AROME's predicted bucket?"
-            )
-            bankroll = st.number_input(
-                "Bankroll ($)",
-                min_value=10, max_value=100_000, value=500, step=50,
-            )
-
-        with kc2:
-            frac   = _half_kelly(p_assumed, market_price)
-            stake  = frac * bankroll
-            ev_per = p_assumed * (1 - market_price/100) - (1 - p_assumed) * (market_price/100)
-            ev_tot = ev_per * stake
-
-            if frac > 0:
-                stake_colour = GREEN if is_green else "#f59e0b"
-                verdict = "✅ BET" if is_green else "⚠️ BET (small)"
-            else:
-                stake_colour = "#ef4444"
-                verdict = "🚫 DON'T BET — overpriced"
-
-            st.markdown(
-                f"""<div class="kpi-card" style="border-left:4px solid {stake_colour}; margin-top:8px;">
-  <div class="kpi-value" style="color:{stake_colour}; font-size:1.4rem;">{verdict}</div>
-  <div class="kpi-label" style="margin-top:6px;">Half-Kelly stake: <strong>${stake:.2f}</strong> ({frac:.0%} of bankroll)</div>
-  <div class="kpi-label" style="margin-top:4px;">Win: +${stake*(1-market_price/100):.2f} &nbsp;|&nbsp; Lose: −${stake*(market_price/100):.2f}</div>
-  <div class="kpi-label" style="margin-top:4px; color:#6b7280;">EV of this bet: {ev_tot:+.2f}</div>
-</div>""", unsafe_allow_html=True)
-
-        with kc3:
-            # Show a mini table: full sizing reference at this spread state
-            ref_prices = [10, 20, 30, 40, 50, 60, 70]
-            rows_k = []
-            for rp in ref_prices:
-                f = _half_kelly(p_assumed, rp)
-                ev = p_assumed * (1 - rp/100) - (1 - p_assumed) * (rp/100)
-                rows_k.append({
-                    "Price": f"{rp}¢",
-                    "Stake %": f"{f:.0%}" if f > 0 else "—",
-                    f"EV/$": f"{ev:+.2f}" if f > 0 else "—",
-                })
-            st.caption(f"**{spread_label} sizing table** (p = {p_assumed:.0%}, half-Kelly, kill above {kill_price}¢)")
-            st.dataframe(pd.DataFrame(rows_k), hide_index=True, use_container_width=True, height=290)
-
-        st.caption(
-            f"**Logic:** {spread_label} day → assumed p = {p_assumed:.0%}. "
-            f"Break-even price = {kill_price}¢ — above this, EV turns negative. "
-            "Spread sets probability; price sets size. Both conditions must be favourable."
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-
     # ── Section 0.5: Live WU Station + Commercial Forecasts ─────────────────
     if city in _CITY_ICAO or city in _CITY_WU_STATION:
         st.markdown('<div class="panel">', unsafe_allow_html=True)
@@ -2480,6 +2425,7 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
             accu_val = comm.get("accu")
             wu_forecast_val = comm.get("wu")
             errors = comm.get("errors", [])
+            comm_source = comm.get("source", "api")
 
             fc1, fc2 = st.columns(2)
 
@@ -2491,13 +2437,14 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
   <div class="kpi-value" style="color:#FF9F40;">{accu_val:.1f}{temp_unit_str}</div>
   <div class="kpi-label">🔶 AccuWeather FORECAST D+1</div>
   <div class="kpi-label" style="color:#6b7280;">rounds → {accu_rounded:.0f}{temp_unit_str} · for {target_date}</div>
-  <div class="kpi-label" style="color:#6b7280;font-size:0.75rem;">AccuWeather's own model — not WU station data</div>
+  <div class="kpi-label" style="color:#6b7280;font-size:0.75rem;">source: {comm_source}</div>
 </div>""", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"""<div class="kpi-card" style="border-left:4px solid #6b7280;">
-  <div class="kpi-value" style="color:#6b7280;">—</div>
+                    error_msgs = " · ".join(errors) if errors else "API unavailable"
+                    st.markdown(f"""<div class="kpi-card" style="border-left:4px solid #ef4444;">
+  <div class="kpi-value" style="color:#ef4444;">⚠ NO DATA</div>
   <div class="kpi-label">🔶 AccuWeather FORECAST D+1</div>
-  <div class="kpi-label" style="color:#6b7280;">unavailable</div>
+  <div class="kpi-label" style="color:#ef4444;font-size:0.75rem;">{error_msgs}</div>
 </div>""", unsafe_allow_html=True)
 
             with fc2:
@@ -2508,13 +2455,13 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
   <div class="kpi-value" style="color:#A855F7;">{wu_forecast_val:.1f}{temp_unit_str}</div>
   <div class="kpi-label">🔷 Weather.com/IBM FORECAST D+1</div>
   <div class="kpi-label" style="color:#6b7280;">rounds → {wu_rounded:.0f}{temp_unit_str} · for {target_date}</div>
-  <div class="kpi-label" style="color:#6b7280;font-size:0.75rem;">IBM GRAF model forecast — separate from live WU station readings</div>
+  <div class="kpi-label" style="color:#6b7280;font-size:0.75rem;">source: {comm_source}</div>
 </div>""", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"""<div class="kpi-card" style="border-left:4px solid #6b7280;">
-  <div class="kpi-value" style="color:#6b7280;">—</div>
+                    st.markdown(f"""<div class="kpi-card" style="border-left:4px solid #ef4444;">
+  <div class="kpi-value" style="color:#ef4444;">⚠ NO DATA</div>
   <div class="kpi-label">🔷 Weather.com/IBM FORECAST D+1</div>
-  <div class="kpi-label" style="color:#6b7280;">unavailable</div>
+  <div class="kpi-label" style="color:#ef4444;font-size:0.75rem;">API unavailable</div>
 </div>""", unsafe_allow_html=True)
 
             # Consensus / divergence signals
