@@ -1665,8 +1665,13 @@ def fetch_accuracy_data(city: str) -> dict:
     temp_unit    = cfg.get("temperature_unit", "celsius")
     _pm_all = get_polymarket_for_city(city)
 
-    # Load what's already on disk
-    cached_rows  = _load_accuracy_disk_cache(city)
+    # Load what's already on disk, dropping rows where ALL model predictions are None
+    # (these were cached before the previous-runs API had data — re-fetch them)
+    _model_keys = list(cfg["models"].keys())
+    def _row_has_any_preds(row: dict) -> bool:
+        return any(row.get(f"{mk}_d1") is not None for mk in _model_keys)
+
+    cached_rows  = [r for r in _load_accuracy_disk_cache(city) if _row_has_any_preds(r)]
     cached_dates = {r["date"] for r in cached_rows}
 
     # Determine which dates need fetching
