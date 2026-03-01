@@ -2951,11 +2951,6 @@ def _render_trading_tab() -> None:
                     marker_color=bar_colors,
                     text=[f"${v:+.2f}" for v in bar_vals],
                     textposition="outside",
-                    hovertemplate="%{y}<br>Side: " +
-                        "<br>".join(
-                            [f"{r['side']}" for r in _bar_rows_sorted]
-                        ) + "<br>Unrealized: $%{x:.2f}<extra></extra>"
-                        if False else "%{y}<br>Unrealized: $%{x:.2f}<extra></extra>",
                     customdata=[[r["side"], r["fill"], r["cur"]] for r in _bar_rows_sorted],
                     hovertemplate=(
                         "%{y}<br>"
