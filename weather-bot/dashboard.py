@@ -2228,8 +2228,21 @@ def fetch_accuracy_data(city: str) -> dict:
     ens_keys = cfg["best_ensemble"]["model_keys"]
     rows = []
 
-    for date in sorted(polymarket.keys()):
-        pm_entry = polymarket[date]
+    # Load snapshot log for this city — used as fallback when Open-Meteo
+    # previous_day1 API has a lag (typically 1-2 days behind for recent dates)
+    try:
+        _snap_raw = json.loads(_MODEL_SNAPSHOT_PATH.read_text(encoding="utf-8")) if _MODEL_SNAPSHOT_PATH.exists() else {}
+    except Exception:
+        _snap_raw = {}
+    _city_snap: dict[str, dict] = _snap_raw.get(city, {})   # {date: {preds: {model_key: temp}}}
+
+    # Only build rows for NEW dates — not for dates already in the cache.
+    # Previously the loop ran over ALL polymarket dates, which created duplicate
+    # rows for already-cached dates (empty row + cached row → duplicates in UI).
+    for date in sorted(new_dates):
+        pm_entry = polymarket.get(date)
+        if pm_entry is None:
+            continue
         if bucket_style == "range_2f":
             lbl, low, high, bottom_thresh, top_thresh = pm_entry
             row: dict = {"date": date, "resolved": lbl}
@@ -2244,10 +2257,19 @@ def fetch_accuracy_data(city: str) -> dict:
                 return _wins_nyc(pred, low, high, bottom_thresh, top_thresh)
             return _wins(pred, res_int, is_plus)  # type: ignore[name-defined]
 
+        # Snapshot fallback: bot's 12Z prediction for this date (from model_snapshot_log.json)
+        _snap_preds: dict = _city_snap.get(date, {}).get("preds", {}) if isinstance(_city_snap.get(date), dict) else {}
+
         for mk in cfg["models"]:
             d1_map, d2_map = raw.get(mk, ({}, {}))
             p1 = _hround(max(d1_map[date]) * 10) / 10 if d1_map.get(date) else None
             p2 = _hround(max(d2_map[date]) * 10) / 10 if d2_map.get(date) else None
+            # Fallback to snapshot log when Open-Meteo has no data for this date/model
+            if p1 is None and mk in _snap_preds:
+                try:
+                    p1 = _hround(float(_snap_preds[mk]) * 10) / 10
+                except (TypeError, ValueError):
+                    pass
             row[f"{mk}_d1"] = p1
             row[f"{mk}_d2"] = p2
             row[f"{mk}_d1_win"] = compute_win(p1)
@@ -2294,8 +2316,20 @@ def fetch_accuracy_data(city: str) -> dict:
 
         rows.append(row)
 
-    # Merge new rows with disk cache and persist
-    all_rows = sorted(cached_rows + rows, key=lambda r: r["date"])
+    # Merge new rows with disk cache, deduplicate by date (keep row with most predictions)
+    merged: dict[str, dict] = {}
+    for r in cached_rows + rows:
+        d = r["date"]
+        existing = merged.get(d)
+        if existing is None:
+            merged[d] = r
+        else:
+            # Prefer whichever row has more non-None model predictions
+            def _n_preds(row: dict) -> int:
+                return sum(1 for k, v in row.items() if k.endswith("_d1") and v is not None)
+            if _n_preds(r) > _n_preds(existing):
+                merged[d] = r
+    all_rows = sorted(merged.values(), key=lambda r: r["date"])
     _save_accuracy_disk_cache(city, all_rows)
     return {"rows": all_rows, "fetched_at": datetime.now(UTC).isoformat()}
 
