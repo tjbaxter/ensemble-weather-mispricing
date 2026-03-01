@@ -1,0 +1,40 @@
+name: Sync VM Data → Streamlit Cloud
+
+on:
+  schedule:
+    # Every 30 min during trading/resolution hours (08:00–20:00 UTC)
+    - cron: '*/30 8-20 * * *'
+  workflow_dispatch:  # allow manual trigger from GitHub UI
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Pull data files from VM via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 34.23.188.207
+          username: tombaxter
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: |
+            /home/tombaxter/weather-bot/data/positions.json,
+            /home/tombaxter/weather-bot/data/polymarket_cache.json,
+            /home/tombaxter/weather-bot/data/commercial_forecast_log.json,
+            /home/tombaxter/weather-bot/data/model_snapshot_log.json,
+            /home/tombaxter/weather-bot/data/accuracy_rows_cache.json
+          target: weather-bot/data/
+          strip_components: 5   # removes /home/tombaxter/weather-bot/data/ prefix
+
+      - name: Commit and push if data changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "auto: vm data sync ${{ github.run_id }}"
+          file_pattern: weather-bot/data/*.json
+          commit_user_name: github-actions[bot]
+          commit_user_email: github-actions[bot]@users.noreply.github.com
