@@ -2978,7 +2978,7 @@ def _render_trading_tab() -> None:
   <span class="pnl-title">TOTAL P&amp;L</span>
   <span class="pnl-total">${total_pnl:+.2f}</span>
   <span class="pnl-sub">
-    Realized: <span class="pnl-sub-val" style="color:{pnl_color};">${last_pnl:+.2f}</span>
+    Realized: <span class="pnl-sub-val" style="color:{"#00FF88" if total_res_pnl >= 0 else "#FF4444"};">${total_res_pnl:+.2f}</span>
     &nbsp;+&nbsp;
     Unrealized: <span class="pnl-sub-val" style="color:{unreal_color};">${unreal_pnl:+.2f}</span>
   </span>
