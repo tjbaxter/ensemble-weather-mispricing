@@ -38,6 +38,7 @@ _TRIGGER_SCHEDULE: list[tuple[int, int, str]] = [
 ROOT = Path(__file__).resolve().parent
 TRADES_CSV = ROOT / "logs" / "trades.csv"
 SIGNALS_CSV = ROOT / "logs" / "signals.csv"
+RESOLVED_CSV = ROOT / "logs" / "resolved.csv"
 POSITIONS_JSON = ROOT / "data" / "positions.json"
 DEFAULT_ENV = ROOT / ".env"
 VM_ENV = Path("/etc/weather-bot.env")
@@ -78,6 +79,8 @@ _CITY_WU_STATION: dict[str, tuple[str, str]] = {
     "Paris":        ("LFPG:9:FR", "m"),
     "Toronto":      ("CYYZ:9:CA", "m"),
     "Seattle":      ("KSEA:9:US", "e"),
+    "Ankara":       ("LTAC:9:TR", "m"),
+    "Wellington":   ("NZWN:9:NZ", "m"),
 }
 
 # ICAO → AccuWeather location key (stable, no geoposition lookup needed)
@@ -93,6 +96,9 @@ _ACCU_LOCATION_KEYS: dict[str, str] = {
     "RKSI": "2331998",   # Seoul Incheon
     "SBGR": "36369",     # São Paulo Guarulhos
     "CYYZ": "55488",     # Toronto Pearson
+    "LTAC": "1294331",  # Ankara Esenboğa
+    "SAEZ": "7894",      # Buenos Aires (city — closest to Ezeiza resolution station)
+    "NZWN": "250938",    # Wellington NZ
 }
 
 # Dashboard city name → ICAO code
@@ -104,10 +110,12 @@ _CITY_ICAO: dict[str, str] = {
     "Chicago":      "KORD",
     "Miami":        "KMIA",
     "Dallas":       "KDFW",
-    "Buenos Aires": "SBGR",
+    "Buenos Aires": "SAEZ",
     "Paris":        "LFPG",
     "Toronto":      "CYYZ",
     "Seattle":      "KSEA",
+    "Ankara":       "LTAC",
+    "Wellington":   "NZWN",
 }
 
 _COMMERCIAL_LOG_PATH = ROOT / "data" / "commercial_forecast_log.json"
@@ -136,7 +144,9 @@ _COMM_LOG_LOCK_HOUR_UTC = 19  # After this UTC hour the snapshot is frozen for b
 
 
 def _log_commercial_forecast(
-    city: str, date_str: str, accu: float | None, wu: float | None, unit: str
+    city: str, date_str: str, accu: float | None, wu: float | None, unit: str,
+    accu_d2: float | None = None, wu_d2: float | None = None,
+    accu_d3: float | None = None, wu_d3: float | None = None,
 ) -> None:
     """Write a commercial forecast snapshot to disk.
 
@@ -172,14 +182,28 @@ def _log_commercial_forecast(
             if already_locked:
                 # Allow filling in null slots even after the lock —
                 # e.g. AccuWeather was 429 when the entry was first written.
-                existing_accu = existing.get("accu")
-                existing_wu   = existing.get("wu")
-                if (accu is not None and existing_accu is None) or \
-                   (wu   is not None and existing_wu   is None):
-                    # Patch only the null fields; keep the rest intact
+                existing_accu    = existing.get("accu")
+                existing_wu      = existing.get("wu")
+                existing_accu_d2 = existing.get("accu_d2")
+                existing_wu_d2   = existing.get("wu_d2")
+                existing_accu_d3 = existing.get("accu_d3")
+                existing_wu_d3   = existing.get("wu_d3")
+                needs_patch = (
+                    (accu    is not None and existing_accu    is None) or
+                    (wu      is not None and existing_wu      is None) or
+                    (accu_d2 is not None and existing_accu_d2 is None) or
+                    (wu_d2   is not None and existing_wu_d2   is None) or
+                    (accu_d3 is not None and existing_accu_d3 is None) or
+                    (wu_d3   is not None and existing_wu_d3   is None)
+                )
+                if needs_patch:
                     log[city][date_str] = {
-                        "accu":      accu      if existing_accu is None else existing_accu,
-                        "wu":        wu        if existing_wu   is None else existing_wu,
+                        "accu":      accu    if existing_accu    is None else existing_accu,
+                        "wu":        wu      if existing_wu      is None else existing_wu,
+                        "accu_d2":   accu_d2 if existing_accu_d2 is None else existing_accu_d2,
+                        "wu_d2":     wu_d2   if existing_wu_d2   is None else existing_wu_d2,
+                        "accu_d3":   accu_d3 if existing_accu_d3 is None else existing_accu_d3,
+                        "wu_d3":     wu_d3   if existing_wu_d3   is None else existing_wu_d3,
                         "unit":      unit,
                         "logged_at": existing.get("logged_at", now_utc.isoformat()),
                     }
@@ -187,9 +211,13 @@ def _log_commercial_forecast(
                 return
         # Write (new entry or pre-lock update)
         log[city][date_str] = {
-            "accu": accu,
-            "wu": wu,
-            "unit": unit,
+            "accu":    accu,
+            "wu":      wu,
+            "accu_d2": accu_d2,
+            "wu_d2":   wu_d2,
+            "accu_d3": accu_d3,
+            "wu_d3":   wu_d3,
+            "unit":    unit,
             "logged_at": now_utc.isoformat(),
         }
         _COMMERCIAL_LOG_PATH.write_text(json.dumps(log, indent=2), encoding="utf-8")
@@ -347,23 +375,28 @@ def fetch_wu_live_obs(city: str) -> dict | None:
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def fetch_commercial_forecasts(city: str) -> dict:
-    """Fetch AccuWeather and Weather.com (WU) D+1 forecasts for a city.
+    """Fetch AccuWeather and Weather.com (WU) D+1/D+2/D+3 forecasts for a city.
+
+    Both APIs return multi-day forecasts in one call, so D+2 and D+3 come for free.
+    Result includes accu_d2/wu_d2 and accu_d3/wu_d3 keys for the pending rows.
 
     Refresh logic:
-      - Before 19:00 UTC: re-fetch from API every 30 min (TTL=1800s).
-        AccuWeather only re-fetches if on-disk data is >25 min old, keeping
-        calls to ≤48/day per city (well within 500/day free tier for 10 cities).
+      - Before 19:00 UTC: serve from disk if we have both values already logged.
       - After 19:00 UTC: locked — serve canonical value from disk, no more
         API calls until next day.
     """
     from datetime import date as _d, timedelta
-    tomorrow = (_d.today() + timedelta(days=1)).isoformat()
+    tomorrow  = (_d.today() + timedelta(days=1)).isoformat()
+    day2      = (_d.today() + timedelta(days=2)).isoformat()
+    day3      = (_d.today() + timedelta(days=3)).isoformat()
     cfg  = ACCURACY_CITIES.get(city, {})
     lat  = cfg.get("lat")
     lon  = cfg.get("lon")
     icao = _CITY_ICAO.get(city)
     unit = "F" if cfg.get("temperature_unit", "celsius") != "celsius" else "C"
     result: dict = {"target_date": tomorrow, "accu": None, "wu": None,
+                    "accu_d2": None, "wu_d2": None,
+                    "accu_d3": None, "wu_d3": None,
                     "unit": unit, "errors": [], "source": "api"}
 
     logged      = _load_commercial_log().get(city, {}).get(tomorrow, {})
@@ -380,37 +413,40 @@ def fetch_commercial_forecasts(city: str) -> dict:
                 pass
             return {
                 "target_date": tomorrow,
-                "accu":   logged.get("accu"),
-                "wu":     logged.get("wu"),
-                "unit":   unit,
-                "errors": [],
-                "source": f"🔒 locked {logged_ts}",
+                "accu":    logged.get("accu"),
+                "wu":      logged.get("wu"),
+                "accu_d2": logged.get("accu_d2"),
+                "wu_d2":   logged.get("wu_d2"),
+                "accu_d3": logged.get("accu_d3"),
+                "wu_d3":   logged.get("wu_d3"),
+                "unit":    unit,
+                "errors":  [],
+                "source":  f"🔒 locked {logged_ts}",
             }
 
-    # Before 19:00 UTC: use disk only if fresh (logged within 25 min)
-    disk_is_fresh = False
+    # Before 19:00 UTC: serve from disk if we already have both values logged.
+    # Forecasts don't change meaningfully hour-to-hour; only fetch live when
+    # we have no data at all (e.g. early in the morning before the 19:00 cron).
     if logged.get("accu") is not None and logged.get("wu") is not None:
+        logged_ts = ""
         try:
-            logged_at = datetime.fromisoformat(logged["logged_at"])
-            if logged_at.tzinfo is None:
-                logged_at = logged_at.replace(tzinfo=UTC)
-            age_min = (now_utc - logged_at).total_seconds() / 60
-            disk_is_fresh = age_min < 25
+            logged_ts = datetime.fromisoformat(logged["logged_at"]).strftime("%H:%M UTC")
         except Exception:
             pass
-
-    if disk_is_fresh:
-        logged_ts = datetime.fromisoformat(logged["logged_at"]).strftime("%H:%M UTC")
         return {
             "target_date": tomorrow,
-            "accu":   logged["accu"],
-            "wu":     logged["wu"],
-            "unit":   unit,
-            "errors": [],
-            "source": f"disk {logged_ts}",
+            "accu":    logged["accu"],
+            "wu":      logged["wu"],
+            "accu_d2": logged.get("accu_d2"),
+            "wu_d2":   logged.get("wu_d2"),
+            "accu_d3": logged.get("accu_d3"),
+            "wu_d3":   logged.get("wu_d3"),
+            "unit":    unit,
+            "errors":  [],
+            "source":  f"disk {logged_ts}",
         }
 
-    # --- Weather.com/IBM forecast ---
+    # --- Weather.com/IBM forecast (returns ~15 days — parse D+1 and D+2) ---
     if lat is not None and lon is not None:
         try:
             wu_units = "m" if unit == "C" else "e"
@@ -435,11 +471,14 @@ def fetch_commercial_forecasts(city: str) -> dict:
                     continue
                 if day == tomorrow:
                     result["wu"] = float(high)
-                    break
+                elif day == day2:
+                    result["wu_d2"] = float(high)
+                elif day == day3:
+                    result["wu_d3"] = float(high)
         except Exception as exc:
             result["errors"].append(f"WU: {exc}")
 
-    # --- AccuWeather forecast ---
+    # --- AccuWeather forecast (5-day response includes D+2) ---
     accu_key = _read_env_key("ACCUWEATHER_API_KEY")
     if accu_key and icao:
         loc_key = _ACCU_LOCATION_KEYS.get(icao)
@@ -458,18 +497,22 @@ def fetch_commercial_forecasts(city: str) -> dict:
                     payload = r.json()
                     for fc in payload.get("DailyForecasts", []):
                         fc_date = str(fc.get("Date", ""))[:10]
-                        if fc_date == tomorrow:
-                            temp = fc.get("Temperature", {}).get("Maximum", {}).get("Value")
-                            if temp is not None:
-                                result["accu"] = float(temp)
-                            break
+                        temp = fc.get("Temperature", {}).get("Maximum", {}).get("Value")
+                        if fc_date == tomorrow and temp is not None:
+                            result["accu"] = float(temp)
+                        elif fc_date == day2 and temp is not None:
+                            result["accu_d2"] = float(temp)
+                        elif fc_date == day3 and temp is not None:
+                            result["accu_d3"] = float(temp)
             except Exception as exc:
                 result["errors"].append(f"AccuWeather: {exc}")
     elif not accu_key:
         result["errors"].append("AccuWeather: ACCUWEATHER_API_KEY not set in .env")
 
-    # Persist snapshot for backtesting (write-once per date)
-    _log_commercial_forecast(city, tomorrow, result.get("accu"), result.get("wu"), unit)
+    # Persist snapshot for backtesting (write-once per date), including D+2/D+3 values
+    _log_commercial_forecast(city, tomorrow, result.get("accu"), result.get("wu"), unit,
+                             accu_d2=result.get("accu_d2"), wu_d2=result.get("wu_d2"),
+                             accu_d3=result.get("accu_d3"), wu_d3=result.get("wu_d3"))
 
     # If live fetch failed, fall back to the most recent logged value for today's target date
     if result["accu"] is None or result["wu"] is None:
@@ -480,6 +523,14 @@ def fetch_commercial_forecasts(city: str) -> dict:
             result["source"] = "disk (API failed)"
         if result["wu"] is None and logged_fb.get("wu") is not None:
             result["wu"] = logged_fb["wu"]
+        if result["accu_d2"] is None and logged_fb.get("accu_d2") is not None:
+            result["accu_d2"] = logged_fb["accu_d2"]
+        if result["wu_d2"] is None and logged_fb.get("wu_d2") is not None:
+            result["wu_d2"] = logged_fb["wu_d2"]
+        if result["accu_d3"] is None and logged_fb.get("accu_d3") is not None:
+            result["accu_d3"] = logged_fb["accu_d3"]
+        if result["wu_d3"] is None and logged_fb.get("wu_d3") is not None:
+            result["wu_d3"] = logged_fb["wu_d3"]
 
     return result
 
@@ -534,6 +585,26 @@ def load_signals_df() -> pd.DataFrame:
         if col not in df.columns:
             df[col] = ""
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce", utc=True)
+    return df
+
+
+@st.cache_data(ttl=15)
+def load_resolved_df() -> pd.DataFrame:
+    """Load from logs/resolved.csv — written by scripts/daily_resolver.py."""
+    try:
+        df = pd.read_csv(RESOLVED_CSV)
+    except Exception:
+        return pd.DataFrame()
+    for col in ("resolved_at", "target_date", "city", "bucket", "outcome"):
+        if col not in df.columns:
+            df[col] = ""
+    for col in ("pnl_usd", "entry_price", "size_usd", "ev_per_bet"):
+        if col not in df.columns:
+            df[col] = 0.0
+    df["resolved_at"] = pd.to_datetime(df["resolved_at"], errors="coerce", utc=True)
+    df["pnl_usd"] = pd.to_numeric(df["pnl_usd"], errors="coerce").fillna(0.0)
+    df = df.sort_values("resolved_at", ascending=True)
+    df["cum_pnl"] = df["pnl_usd"].cumsum()
     return df
 
 
@@ -927,29 +998,32 @@ ACCURACY_CITIES: dict[str, dict] = {
         "temp_unit_display": "°F",
         "polymarket_slug": "highest-temperature-in-new-york-on",
         "models": {
-            "gem_seamless":     ("GEM Seamless",  "🇨🇦"),
-            "ncep_aigfs025":    ("NCEP AIGFS",    "🤖"),
+            "ncep_nbm_conus":   ("NCEP NBM",      "🇺🇸"),
+            "gfs_graphcast025": ("GFS GraphCast", "🌐"),
             "icon_seamless":    ("ICON Seamless", "🇩🇪"),
             "kma_seamless":     ("KMA Seamless",  "🇰🇷"),
-            "gfs_graphcast025": ("GFS GraphCast", "🌐"),
+            "gem_seamless":     ("GEM Seamless",  "🇨🇦"),
+            "kma_gdps":         ("KMA GDPS",      "🇰🇷"),
+            "gem_hrdps_continental": ("GEM HRDPS", "🇨🇦"),
+            "ncep_aigfs025":    ("NCEP AIGFS",    "🤖"),
         },
         "best_ensemble": {
-            "short":      "AVG(GEM+NCEP+ICON+KMA)",
-            "label":      "AVG(GEM Seamless + NCEP AIGFS + ICON Seamless + KMA Seamless)",
-            "model_keys": ["gem_seamless", "ncep_aigfs025", "icon_seamless", "kma_seamless"],
+            "short":      "AVG(NBM+ICON+GraphCast+KMA+GEM)",
+            "label":      "AVG(NCEP NBM + ICON Seamless + GFS GraphCast + KMA Seamless + GEM Seamless)",
+            "model_keys": ["ncep_nbm_conus", "icon_seamless", "gfs_graphcast025", "kma_seamless", "gem_seamless"],
         },
-        "top_model_key":   "gem_seamless",
-        "top_model_label": "GEM Seamless D1",
-        "chart_models":    ["gem_seamless", "ncep_aigfs025", "gfs_graphcast025", "icon_seamless"],
+        "top_model_key":   "ncep_nbm_conus",
+        "top_model_label": "NCEP NBM D1",
+        "chart_models":    ["ncep_nbm_conus", "gfs_graphcast025", "icon_seamless", "gem_seamless"],
         "notes": (
-            "**Best signal:** AVG(GEM Seamless + NCEP AIGFS + ICON Seamless + KMA Seamless) D1 — "
-            "exhaustive search over all subsets of top-8 models confirmed **66.7%** as the accuracy "
-            "ceiling for NYC Jan–Feb 2026.\n\n"
+            "**Best signal:** AVG(NCEP NBM + ICON Seamless + GFS GraphCast + KMA Seamless + GEM Seamless) D1 — "
+            "exhaustive search over all 43,795 subsets of top models across **363 dates** (Feb 2025 → Feb 2026) "
+            "found **44.1% bucket accuracy** (+6.1pp over single-model best of 37.7%).\n\n"
             "**Station:** LaGuardia Airport (KLGA) — same source as Polymarket (Wunderground KLGA).\n\n"
             "**Bucket:** 2°F wide pairs (e.g. 38-39°F, 40-41°F) measured in whole degrees Fahrenheit. "
-            "25 of 48 Open-Meteo models cover NYC; 23 regional European/Pacific models don't.\n\n"
-            "**Notable:** GEM (Canadian) models dominate NYC. European models (ECMWF, MF AROME) "
-            "don't cover this location with sufficient resolution."
+            "20 of 48 Open-Meteo models cover NYC.\n\n"
+            "**Notable:** NCEP NBM (National Blend of Models) is the top single model at 37.7% — a US-specific "
+            "blend that outperforms all global models. GFS GraphCast consistently boosts ensemble accuracy."
         ),
         "polymarket": {
             "2026-01-07": ("48-49°F", 48, 49, 41, 52),
@@ -997,6 +1071,12 @@ ACCURACY_CITIES: dict[str, dict] = {
             "2026-02-20": ("38-39°F", 38, 39, 31, 46),
             "2026-02-21": ("46-47°F", 46, 47, 39, 54),
             "2026-02-22": ("34-35°F", 34, 35, 29, 44),
+            "2026-02-23": ("≥36°F",   36, None, 28, 36),
+            "2026-02-24": ("32-33°F", 32, 33,   25, 40),
+            "2026-02-25": ("42-43°F", 42, 43,   33, 50),
+            "2026-02-26": ("46-47°F", 46, 47,   37, 54),
+            "2026-02-27": ("40-41°F", 40, 41,   33, 50),
+            "2026-02-28": ("≥50°F",   50, None, 37, 50),
         },
     },
     "Atlanta": {
@@ -1755,6 +1835,122 @@ ACCURACY_CITIES: dict[str, dict] = {
             "2026-02-24": ("-4°C",  -4,  False),
         },
     },
+    "Ankara": {
+        "lat": 40.1281, "lon": 32.9951,
+        "timezone": "Europe/Istanbul",
+        "temperature_unit": "celsius",
+        "bucket_style": "exact_1c",
+        "temp_unit_display": "°C",
+        "polymarket_slug": "highest-temperature-in-ankara-on",
+        # Best 6-model ensemble from exhaustive permutation search over 37 resolved days (Jan 22–Feb 27 2026)
+        # icon_global, meteofrance_arpege_world, jma_seamless, icon_seamless, ecmwf_ifs025, gfs_graphcast025 → 62.2% bucket accuracy
+        "models": {
+            "icon_seamless":             ("ICON Seamless",       "🌐"),
+            "icon_global":               ("ICON Global",         "🌍"),
+            "ecmwf_ifs025":              ("ECMWF IFS",           "🇪🇺"),
+            "gfs_graphcast025":          ("GFS GraphCast",       "🤖"),
+            "jma_seamless":              ("JMA Seamless",        "🇯🇵"),
+            "meteofrance_arpege_world":  ("MF ARPEGE World",     "🇫🇷"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(ICON+MF+JMA+EC+GC)",
+            "label":      "AVG(ICON Global + MF ARPEGE + JMA + ICON Seamless + ECMWF + GraphCast)",
+            "model_keys": ["icon_global", "meteofrance_arpege_world", "jma_seamless",
+                           "icon_seamless", "ecmwf_ifs025", "gfs_graphcast025"],
+        },
+        "top_model_key":   "icon_seamless",
+        "top_model_label": "ICON Seamless D1",
+        "chart_models":    ["icon_seamless", "icon_global", "ecmwf_ifs025", "gfs_graphcast025"],
+        "notes": (
+            "**Best signal:** AVG(ICON Global + MF ARPEGE World + JMA Seamless + ICON Seamless + ECMWF IFS + GFS GraphCast) — "
+            "**62.2%** bucket accuracy (23/37 days, Jan 22–Feb 27 2026).\n\n"
+            "**How found:** Exhaustive permutation search over all 145,498 subsets (size 1–6) of "
+            "**23 Open-Meteo models** that cover LTAC, tested on 37 resolved markets. "
+            "Full 37-model sweep run; remaining 14 models returned no data for Ankara. "
+            "Best per size: Size 1 → JMA Seamless 46.0%; Size 2 → ICON+JMA 51.4%; "
+            "Size 3 → 56.8%; Size 4 → 56.8%; Size 5 → 59.5%; Size 6 → 62.2% (ceiling).\n\n"
+            "**Single-model baseline:** JMA Seamless 45.9% (best single by bucket accuracy). "
+            "Best by MAE: ICON Seamless & ICON EU (0.822°C, within-1°C 78.4%). "
+            "GEM Seamless/Global: 43.2% bucket. UKMO models tested — only 21.6% for Ankara (poor coverage).\n\n"
+            "**Ensemble gain:** +16.3 pp vs best single (in-sample).\n\n"
+            "**Station:** Esenboğa International Airport (LTAC) — Wunderground LTAC.\n\n"
+            "**Bucket:** Exact 1°C integers with ≤ and ≥ edge buckets. Temperatures in Celsius. "
+            "Markets started Jan 22, 2026."
+        ),
+        "polymarket": {
+            "2026-01-22": ("≤2°C",   2, None),
+            "2026-01-23": ("5°C",    5, False),
+            "2026-01-24": ("7°C",    7, False),
+            "2026-01-25": ("≥9°C",   9, True),
+            "2026-01-26": ("≥7°C",   7, True),
+            "2026-01-27": ("≥10°C", 10, True),
+            "2026-01-28": ("7°C",    7, False),
+            "2026-01-29": ("8°C",    8, False),
+            "2026-01-30": ("11°C",  11, False),
+            "2026-01-31": ("8°C",    8, False),
+            "2026-02-01": ("12°C",  12, False),
+            "2026-02-02": ("≥8°C",   8, True),
+            "2026-02-03": ("6°C",    6, False),
+            "2026-02-04": ("7°C",    7, False),
+            "2026-02-05": ("8°C",    8, False),
+            "2026-02-06": ("8°C",    8, False),
+            "2026-02-07": ("10°C",  10, False),
+            "2026-02-08": ("≥10°C", 10, True),
+            "2026-02-09": ("9°C",    9, False),
+            "2026-02-10": ("6°C",    6, False),
+            "2026-02-11": ("7°C",    7, False),
+            "2026-02-12": ("10°C",  10, False),
+            "2026-02-13": ("11°C",  11, False),
+            "2026-02-14": ("11°C",  11, False),
+            "2026-02-15": ("14°C",  14, False),
+            "2026-02-16": ("15°C",  15, False),
+            "2026-02-17": ("13°C",  13, False),
+            "2026-02-18": ("9°C",    9, False),
+            "2026-02-19": ("5°C",    5, False),
+            "2026-02-20": ("11°C",  11, False),
+            "2026-02-21": ("13°C",  13, False),
+            "2026-02-22": ("7°C",    7, False),
+            "2026-02-23": ("7°C",    7, False),
+            "2026-02-24": ("8°C",    8, False),
+            "2026-02-25": ("6°C",    6, False),
+            "2026-02-26": ("5°C",    5, False),
+            "2026-02-27": ("5°C",    5, False),
+        },
+    },
+    "Wellington": {
+        "lat": -41.3272, "lon": 174.8050,
+        "timezone": "Pacific/Auckland",
+        "temperature_unit": "celsius",
+        "bucket_style": "exact_1c",
+        "temp_unit_display": "°C",
+        "polymarket_slug": "highest-temperature-in-wellington-on",
+        "polymarket_since": "2026-03-01",  # First possible resolution date (markets created Feb 28 for Mar 2+)
+        # Top models from Open-Meteo for New Zealand region
+        "models": {
+            "bom_access_global": ("BOM ACCESS-G",  "🇦🇺"),
+            "ukmo_seamless":     ("UKMO Seamless",  "🇬🇧"),
+            "ecmwf_ifs025":      ("ECMWF IFS",      "🌍"),
+            "icon_seamless":     ("ICON Seamless",  "🇩🇪"),
+            "gfs_seamless":      ("GFS Seamless",   "🇺🇸"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(BOM+UKMO+ECMWF+ICON)",
+            "label":      "AVG(BOM ACCESS-G + UKMO Seamless + ECMWF IFS + ICON Seamless)",
+            "model_keys": ["bom_access_global", "ukmo_seamless", "ecmwf_ifs025", "icon_seamless"],
+        },
+        "top_model_key":   "bom_access_global",
+        "top_model_label": "BOM ACCESS-G D1",
+        "chart_models":    ["bom_access_global", "ukmo_seamless", "ecmwf_ifs025", "icon_seamless"],
+        "notes": (
+            "**Best signal:** Not yet backtested — using BOM ACCESS-G as anchor (Australian Bureau of Meteorology "
+            "global model provides excellent coverage of New Zealand). UKMO Global also strong in Southern Hemisphere.\n\n"
+            "**Station:** Wellington International Airport (NZWN) — Wunderground NZWN.\n\n"
+            "**Bucket:** Exact 1°C integers with ≤ and ≥ edge buckets. Temperatures in Celsius.\n\n"
+            "**TODO:** Run backtest once resolved markets are collected."
+        ),
+        "polymarket": {
+        },
+    },
 }
 
 _OM_PREV_URL = "https://previous-runs-api.open-meteo.com/v1/forecast"
@@ -1888,8 +2084,14 @@ def get_polymarket_for_city(city: str) -> dict:
     hardcoded: dict = cfg.get("polymarket", {})
     slug: str | None = cfg.get("polymarket_slug")
 
-    if not slug or not hardcoded:
+    if not slug:
         return hardcoded
+
+    # For brand-new cities with no hardcoded data, use polymarket_since as the
+    # starting point for auto-fetch (avoids crashing on max({}.keys())).
+    since_str: str | None = cfg.get("polymarket_since")
+    if not hardcoded and not since_str:
+        return hardcoded  # no seed and no since date — nothing to fetch
 
     # Load disk cache
     disk: dict = {}
@@ -1902,7 +2104,11 @@ def get_polymarket_for_city(city: str) -> dict:
     # Fetch all dates after the last hardcoded entry up to and including today.
     # We include today because markets often resolve by early evening; the
     # Polymarket API simply returns nothing if not yet resolved, so it's safe.
-    last_seed = _date.fromisoformat(max(hardcoded.keys()))
+    if hardcoded:
+        last_seed = _date.fromisoformat(max(hardcoded.keys()))
+    else:
+        # New city: start from polymarket_since (one day before so fetch_start = since)
+        last_seed = _date.fromisoformat(since_str) - timedelta(days=1)  # type: ignore[arg-type]
     today = datetime.now(UTC).date()
     fetch_start = last_seed + timedelta(days=1)
 
@@ -2212,6 +2418,88 @@ def fetch_models_for_date(city: str, date_str: str) -> dict[str, float]:
 
 
 @st.cache_data(ttl=1800, show_spinner=False)
+def fetch_all_models_d2(city: str) -> dict[str, float]:
+    """Fetch live D+2 (48h) predictions for ALL models configured for a city.
+
+    Returns {model_key: predicted_max} using api.open-meteo.com/v1/forecast.
+    Used to populate the D+2 pending row as soon as Polymarket spawns the market.
+    """
+    cfg = ACCURACY_CITIES.get(city)
+    if not cfg:
+        return {}
+    from datetime import date, timedelta
+    day2 = (date.today() + timedelta(days=2)).isoformat()
+    temp_unit = cfg.get("temperature_unit", "celsius")
+    preds: dict[str, float] = {}
+
+    for mk in cfg.get("models", {}):
+        params: dict = {
+            "latitude": cfg["lat"], "longitude": cfg["lon"],
+            "hourly": "temperature_2m",
+            "models": mk,
+            "start_date": day2, "end_date": day2,
+            "timezone": cfg["timezone"],
+        }
+        if temp_unit != "celsius":
+            params["temperature_unit"] = temp_unit
+        try:
+            r = requests.get("https://api.open-meteo.com/v1/forecast",
+                             params=params, timeout=12)
+            d = r.json()
+            if "error" in d:
+                continue
+            vals = [v for v in d.get("hourly", {}).get("temperature_2m", []) if v is not None]
+            if vals:
+                preds[mk] = _hround(max(vals) * 10) / 10
+        except Exception:
+            pass
+
+    preds["__ts__"] = datetime.now(UTC).strftime("%H:%M UTC")
+    return preds
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def fetch_all_models_d3(city: str) -> dict[str, float]:
+    """Fetch live D+3 (72h) predictions for ALL models configured for a city.
+
+    Returns {model_key: predicted_max} using api.open-meteo.com/v1/forecast.
+    Used to populate the D+3 pending row so you can see early pricing opportunities.
+    """
+    cfg = ACCURACY_CITIES.get(city)
+    if not cfg:
+        return {}
+    from datetime import date, timedelta
+    day3 = (date.today() + timedelta(days=3)).isoformat()
+    temp_unit = cfg.get("temperature_unit", "celsius")
+    preds: dict[str, float] = {}
+
+    for mk in cfg.get("models", {}):
+        params: dict = {
+            "latitude": cfg["lat"], "longitude": cfg["lon"],
+            "hourly": "temperature_2m",
+            "models": mk,
+            "start_date": day3, "end_date": day3,
+            "timezone": cfg["timezone"],
+        }
+        if temp_unit != "celsius":
+            params["temperature_unit"] = temp_unit
+        try:
+            r = requests.get("https://api.open-meteo.com/v1/forecast",
+                             params=params, timeout=12)
+            d = r.json()
+            if "error" in d:
+                continue
+            vals = [v for v in d.get("hourly", {}).get("temperature_2m", []) if v is not None]
+            if vals:
+                preds[mk] = _hround(max(vals) * 10) / 10
+        except Exception:
+            pass
+
+    preds["__ts__"] = datetime.now(UTC).strftime("%H:%M UTC")
+    return preds
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
 def fetch_all_models_live(city: str) -> dict[str, float]:
     """Fetch live D+1 predictions for ALL models configured for a city.
 
@@ -2393,19 +2681,33 @@ def main() -> None:
 
 def _render_trading_tab() -> None:
     trades_df = load_trades_df()
+    resolved_df = load_resolved_df()   # from daily_resolver.py
     _ = load_signals_df()
     positions = load_positions()
     metrics = kpis(trades_df, positions)
     _, live_mode = load_mode_from_env(DEFAULT_ENV)
 
+    # ── KPI bar ──────────────────────────────────────────────────────────────
+    # Prefer resolved_df for P&L/win-rate metrics when trades.csv is sparse
+    if not resolved_df.empty:
+        res_wins   = int((resolved_df["outcome"] == "WIN").sum())
+        res_losses = int((resolved_df["outcome"] == "LOSS").sum())
+        res_total  = res_wins + res_losses
+        res_pnl    = float(resolved_df["pnl_usd"].sum())
+        res_wr     = res_wins / res_total if res_total else 0.0
+    else:
+        res_wins, res_losses, res_total = int(metrics["wins"]), int(metrics["losses"]), 0
+        res_pnl = metrics["realized_pnl"]
+        res_wr  = metrics["win_rate"]
+
     cols = st.columns(6)
     kpi_items = [
-        ("Realized PnL", f"${metrics['realized_pnl']:+.2f}", GREEN if metrics["realized_pnl"] >= 0 else RED),
-        ("Win Rate", f"{metrics['win_rate']*100:.1f}%", BLUE),
-        ("Open Positions", f"{int(metrics['open_positions'])}", BLUE),
-        ("Open Exposure", f"${metrics['open_exposure']:.2f}", BLUE),
-        ("Resolving Today", f"{int(metrics['resolving_today'])}", BLUE),
-        ("Resolving Tomorrow", f"{int(metrics['resolving_tomorrow'])}", BLUE),
+        ("Realized PnL",      f"${res_pnl:+.2f}",              GREEN if res_pnl >= 0 else RED),
+        ("Win Rate",          f"{res_wr*100:.1f}%",             BLUE),
+        ("Open Positions",    f"{int(metrics['open_positions'])}", BLUE),
+        ("Open Exposure",     f"${metrics['open_exposure']:.2f}", BLUE),
+        ("Resolving Today",   f"{int(metrics['resolving_today'])}", BLUE),
+        ("Resolving Tomorrow",f"{int(metrics['resolving_tomorrow'])}", BLUE),
     ]
     for col, (label, value, color) in zip(cols, kpi_items):
         with col:
@@ -2419,42 +2721,141 @@ def _render_trading_tab() -> None:
                 unsafe_allow_html=True,
             )
 
-    resolved = realized_trades(trades_df)
+    # ── Live P&L chart with pulsing dot ──────────────────────────────────────
     st.markdown('<div class="panel">', unsafe_allow_html=True)
-    st.subheader("CUMULATIVE REALIZED PnL")
-    if resolved.empty:
-        st.info("No resolved trades yet — check back after markets close.")
+
+    # Choose best data source: resolved_df > trades_df
+    pnl_df = resolved_df.rename(columns={"resolved_at": "ts", "pnl_usd": "pnl"}) if not resolved_df.empty else pd.DataFrame()
+    if pnl_df.empty:
+        # Fallback: trades.csv resolved trades
+        fallback = realized_trades(trades_df)
+        if not fallback.empty:
+            pnl_df = fallback.rename(columns={"timestamp": "ts"})
+
+    has_data = not pnl_df.empty and "cum_pnl" in pnl_df.columns
+
+    # Header row with live indicator
+    last_pnl   = float(pnl_df["cum_pnl"].iloc[-1]) if has_data else 0.0
+    last_ts    = pnl_df["ts"].iloc[-1].strftime("%H:%M UTC") if has_data else "—"
+    pnl_color  = "#00FF88" if last_pnl >= 0 else "#FF4444"
+    pnl_sign   = "+" if last_pnl >= 0 else ""
+
+    st.markdown(
+        f"""
+<style>
+@keyframes pulse {{
+  0%   {{ box-shadow: 0 0 0 0 rgba(0,255,136,0.7); opacity:1; }}
+  70%  {{ box-shadow: 0 0 0 8px rgba(0,255,136,0); opacity:0.7; }}
+  100% {{ box-shadow: 0 0 0 0 rgba(0,255,136,0); opacity:1; }}
+}}
+.live-dot {{
+  display:inline-block; width:10px; height:10px; border-radius:50%;
+  background:{pnl_color}; animation:pulse 1.8s infinite;
+  margin-right:7px; vertical-align:middle;
+}}
+.pnl-header {{
+  display:flex; align-items:center; gap:12px; margin-bottom:6px;
+}}
+.pnl-title  {{ color:#E6EDF3; font-size:1.05rem; font-weight:600; letter-spacing:.04em; }}
+.pnl-value  {{ color:{pnl_color}; font-size:1.35rem; font-weight:700; }}
+.pnl-stamp  {{ color:#888; font-size:0.8rem; }}
+</style>
+<div class="pnl-header">
+  <span class="live-dot"></span>
+  <span class="pnl-title">CUMULATIVE REALIZED P&amp;L</span>
+  <span class="pnl-value">{pnl_sign}${last_pnl:.2f}</span>
+  <span class="pnl-stamp">last updated {last_ts}</span>
+</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if not has_data:
+        st.info("No resolved trades yet — first resolution runs tomorrow at 10:00 UTC.")
     else:
+        n_total = len(pnl_df)
         fig = go.Figure()
-        line_color = GREEN if float(resolved["cum_pnl"].iloc[-1]) >= 0 else RED
+
+        # Fill area + line
         fig.add_trace(
             go.Scatter(
-                x=resolved["timestamp"],
-                y=resolved["cum_pnl"],
+                x=pnl_df["ts"],
+                y=pnl_df["cum_pnl"],
                 mode="lines",
-                line={"color": line_color, "width": 2},
+                line={"color": pnl_color, "width": 2},
                 fill="tozeroy",
-                fillcolor="rgba(0,255,136,0.15)" if line_color == GREEN else "rgba(255,68,68,0.15)",
-                hovertemplate="%{x}<br>Cumulative PnL: $%{y:.2f}<extra></extra>",
+                fillcolor=f"rgba(0,255,136,0.12)" if last_pnl >= 0 else "rgba(255,68,68,0.12)",
+                hovertemplate="%{x|%b %d %H:%M}<br>Cumulative P&L: $%{y:.2f}<extra></extra>",
+                showlegend=False,
             )
         )
+
+        # Individual trade markers (WIN=green dot, LOSS=red dot)
+        if "outcome" in pnl_df.columns:
+            for outcome, dot_color, symbol in [("WIN", "#00FF88", "circle"), ("LOSS", "#FF4444", "x")]:
+                mask = pnl_df["outcome"] == outcome
+                if mask.any():
+                    fig.add_trace(go.Scatter(
+                        x=pnl_df.loc[mask, "ts"],
+                        y=pnl_df.loc[mask, "cum_pnl"],
+                        mode="markers",
+                        marker={"color": dot_color, "size": 7, "symbol": symbol, "opacity": 0.85},
+                        name=outcome,
+                        hovertemplate=(
+                            "%{x|%b %d}<br>"
+                            + ("city" in pnl_df.columns and "%{customdata[0]} %{customdata[1]}<br>" or "")
+                            + f"{outcome}: $%{{y:.2f}}<extra></extra>"
+                        ),
+                        customdata=pnl_df.loc[mask, ["city", "bucket"]].values if "city" in pnl_df.columns else None,
+                    ))
+
+        # Pulsing dot at the latest point — larger scatter marker
+        fig.add_trace(go.Scatter(
+            x=[pnl_df["ts"].iloc[-1]],
+            y=[last_pnl],
+            mode="markers",
+            marker={
+                "color": pnl_color,
+                "size": 14,
+                "symbol": "circle",
+                "line": {"color": "#141A22", "width": 2},
+            },
+            hovertemplate=f"Latest: ${last_pnl:+.2f}<extra></extra>",
+            showlegend=False,
+        ))
+
+        # Zero baseline
+        fig.add_hline(y=0, line_dash="dot", line_color="#333", line_width=1)
+
         fig.update_layout(
             plot_bgcolor=BG,
             paper_bgcolor=PANEL,
             font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
             margin={"l": 20, "r": 10, "t": 10, "b": 20},
-            xaxis={"gridcolor": "#1f2937"},
-            yaxis={"gridcolor": "#1f2937", "title": "USD"},
-            height=360,
+            xaxis={"gridcolor": "#1f2937", "tickformat": "%b %d"},
+            yaxis={"gridcolor": "#1f2937", "title": "USD", "zeroline": False},
+            legend={"bgcolor": "rgba(0,0,0,0)", "font": {"size": 11}},
+            height=340,
         )
         st.plotly_chart(fig, use_container_width=True)
+
+        # Breakdown strip below chart
+        n_w = int((pnl_df["outcome"] == "WIN").sum()) if "outcome" in pnl_df.columns else res_wins
+        n_l = int((pnl_df["outcome"] == "LOSS").sum()) if "outcome" in pnl_df.columns else res_losses
+        acc = n_w / (n_w + n_l) * 100 if (n_w + n_l) else 0
+        st.caption(
+            f"**{n_w}W / {n_l}L · {acc:.0f}% accuracy · {n_total} total trades**  "
+            f"· refreshes every 15 s"
+        )
+
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # ── Open Positions ────────────────────────────────────────────────────────
     pos_df = pd.DataFrame(positions)
     st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.subheader(f"OPEN POSITIONS ({len(positions)})")
     if pos_df.empty:
-        st.info("No open positions.")
+        st.info("No open positions — bot is scanning, bets logged when signal fires.")
     else:
         show_cols = ["city", "station_icao", "date", "bucket", "side", "fill_price", "cost"]
         for col in show_cols:
@@ -2481,31 +2882,48 @@ def _render_trading_tab() -> None:
         st.caption(f"Total exposure: ${metrics['open_exposure']:.2f}")
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # ── Recent resolutions ────────────────────────────────────────────────────
     st.markdown('<div class="panel">', unsafe_allow_html=True)
-    st.subheader(f"RECENT RESOLVED TRADES (wins={int(metrics['wins'])}, losses={int(metrics['losses'])})")
-    if resolved.empty:
-        st.info("Awaiting first resolution.")
-    else:
-        latest = resolved.sort_values("timestamp", ascending=False).head(50).copy()
-        latest["timestamp"] = latest["timestamp"].dt.strftime("%m-%d %H:%M")
-        show_cols = ["timestamp", "city", "date", "bucket", "side", "fill_price", "edge", "pnl", "outcome"]
+    st.subheader(f"RECENT RESOLVED TRADES  ({res_wins}W / {res_losses}L)")
+
+    # Use resolved_df first, fall back to trades_df
+    if not resolved_df.empty:
+        show = resolved_df.sort_values("resolved_at", ascending=False).head(50).copy()
+        show["resolved_at"] = show["resolved_at"].dt.strftime("%m-%d %H:%M")
+        show_cols = [c for c in ["resolved_at", "city", "target_date", "bucket", "side",
+                                  "entry_price", "actual_temp", "outcome", "pnl_usd"] if c in show.columns]
         st.dataframe(
-            latest[show_cols].rename(
-                columns={
-                    "timestamp": "Time",
-                    "city": "City",
-                    "date": "Date",
-                    "bucket": "Bucket",
-                    "side": "Side",
-                    "fill_price": "Entry",
-                    "edge": "Edge",
-                    "pnl": "PnL",
-                    "outcome": "Result",
-                }
-            ),
+            show[show_cols].rename(columns={
+                "resolved_at":  "Resolved",
+                "city":         "City",
+                "target_date":  "Date",
+                "bucket":       "Bucket",
+                "side":         "Side",
+                "entry_price":  "Entry",
+                "actual_temp":  "Actual°",
+                "outcome":      "Result",
+                "pnl_usd":      "P&L",
+            }),
             use_container_width=True,
             hide_index=True,
         )
+    else:
+        resolved = realized_trades(trades_df)
+        if resolved.empty:
+            st.info("Awaiting first resolution — resolver runs daily at 10:00 UTC.")
+        else:
+            latest = resolved.sort_values("timestamp", ascending=False).head(50).copy()
+            latest["timestamp"] = latest["timestamp"].dt.strftime("%m-%d %H:%M")
+            show_cols = ["timestamp", "city", "date", "bucket", "side", "fill_price", "edge", "pnl", "outcome"]
+            st.dataframe(
+                latest[show_cols].rename(columns={
+                    "timestamp": "Time", "city": "City", "date": "Date",
+                    "bucket": "Bucket", "side": "Side", "fill_price": "Entry",
+                    "edge": "Edge", "pnl": "PnL", "outcome": "Result",
+                }),
+                use_container_width=True,
+                hide_index=True,
+            )
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown('<div class="panel">', unsafe_allow_html=True)
@@ -2565,7 +2983,15 @@ def _render_accuracy_tab() -> None:
     st.caption(f"Last fetched: {fetched_at[:19].replace('T', ' ')} UTC · {len(rows)} market days")
 
     if not rows:
-        st.warning("No data available. Check API connectivity.")
+        since_str = cfg.get("polymarket_since")
+        if since_str:
+            st.info(
+                f"**{city}** markets launched recently — no resolved markets yet. "
+                f"First data expected from **{since_str}** onward. "
+                "This table will populate automatically once markets resolve."
+            )
+        else:
+            st.warning("No data available. Check API connectivity.")
         return
 
     # ── Bet Window Indicator ───────────────────────────────────────────────
@@ -2615,6 +3041,20 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
     sf = cfg.get("spread_filter")
     if sf:
         live = fetch_live_spread(city)
+        # Compute ensemble consensus for the signal box
+        _sig_ens_cfg = cfg.get("best_ensemble", {})
+        _sig_ens_keys = _sig_ens_cfg.get("model_keys", [])
+        _live_all = fetch_all_models_live(city) if _sig_ens_keys else {}
+        _sig_preds = [_live_all[k] for k in _sig_ens_keys if k in _live_all]
+        _sig_cons_text = ""
+        if len(_sig_preds) >= 2:
+            _sig_mean = sum(_sig_preds) / len(_sig_preds)
+            _sig_bucket = _hround(_sig_mean)
+            _sig_agree = sum(1 for v in _sig_preds if _hround(v) == _sig_bucket)
+            _sig_frac = _sig_agree / len(_sig_preds)
+            _sig_icon = "🔵" if _sig_frac >= 0.67 else "🟡" if _sig_frac >= 0.50 else "🔴"
+            _sig_cons_text = f"{_sig_icon} Consensus: {_sig_agree}/{len(_sig_preds)} models agree on bucket {_sig_bucket}"
+
         st.markdown('<div class="panel">', unsafe_allow_html=True)
         sig_col, detail_col = st.columns([1, 2])
         with sig_col:
@@ -2630,6 +3070,7 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
   <div class="kpi-value" style="color:{colour};font-size:1.3rem;">{signal}</div>
   <div class="kpi-label">{sp_text}</div>
   <div class="kpi-label" style="margin-top:4px;">{mf_text}</div>
+  <div class="kpi-label" style="margin-top:4px;color:#9ca3af;">{_sig_cons_text}</div>
   <div class="kpi-label" style="margin-top:4px;color:#6b7280;">For {live['target_date']}</div>
   <div class="kpi-label" style="margin-top:6px;color:#f59e0b;font-size:0.75rem;">🕐 Predictions fetched {fetched_ts} — hit ⋮ → Clear cache if stale</div>
 </div>""", unsafe_allow_html=True)
@@ -2905,20 +3346,31 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
     resolved_dates = {r["date"] for r in rows} | set(_fresh_pm.keys())
     _today_str    = _today_date.today().isoformat()
     _tomorrow_str = (_today_date.today() + timedelta(days=1)).isoformat()
+    _day2_str     = (_today_date.today() + timedelta(days=2)).isoformat()
+    _day3_str     = (_today_date.today() + timedelta(days=3)).isoformat()
 
     def _make_pending_row(date_str: str, label: str) -> dict | None:
         """Build a pending/live row using Open-Meteo forecasts appropriate for date_str.
 
-        tomorrow's row → today's D+1 run (fetch_all_models_live)
-        today's row    → yesterday's D+1 run via previous-runs API (fetch_models_for_date)
-                         so the two rows always show different target-date predictions.
+        D+3 row → live 72h forecast (fetch_all_models_d3)
+        D+2 row → live 48h forecast (fetch_all_models_d2)
+        D+1 row → today's D+1 run (fetch_all_models_live)
+        D+0 row → yesterday's D+1 run via previous-runs API
         """
         from datetime import date as _d, timedelta
         _now_utc_pr = datetime.now(UTC)
         _is_tomorrow = date_str == (_d.today() + timedelta(days=1)).isoformat()
+        _is_day2     = date_str == (_d.today() + timedelta(days=2)).isoformat()
+        _is_day3     = date_str == (_d.today() + timedelta(days=3)).isoformat()
         _in_12z_window = _now_utc_pr.hour * 60 + _now_utc_pr.minute >= 18 * 60 + 30
 
-        if _is_tomorrow:
+        if _is_day3:
+            all_preds = fetch_all_models_d3(city)
+            fetch_ts  = all_preds.get("__ts__", "?") + " D+3 est."
+        elif _is_day2:
+            all_preds = fetch_all_models_d2(city)
+            fetch_ts  = all_preds.get("__ts__", "?") + " D+2 est."
+        elif _is_tomorrow:
             if _in_12z_window:
                 # After 18:30 UTC: live API has 12Z data — use it and snapshot it
                 all_preds = fetch_all_models_live(city)
@@ -2971,6 +3423,14 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
         else:
             ens_val = top_val
 
+        # Consensus: fraction of best-ensemble models landing in same bucket as ensemble mean
+        ens_bucket = _hround(ens_val)
+        n_agree = sum(1 for v in ens_preds if _hround(v) == ens_bucket)
+        n_total = len(ens_preds)
+        consensus = n_agree / n_total if n_total > 0 else 0.0
+        cons_icon = "🔵" if consensus >= 0.67 else "🟡" if consensus >= 0.50 else "🔴"
+        cons_cell = f"{cons_icon} {n_agree}/{n_total} ({consensus:.0%})"
+
         row_d: dict = {
             "Date":           f"{date_str} 📍 🕐{fetch_ts}",
             "Resolved":       label,
@@ -2992,6 +3452,10 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
                     sp = max(sf_vals) - min(sf_vals)
                     row_d["Spread"] = f"{'🟢' if sp <= sf_thr else '🔴'} {sp:.1f}°C"
 
+        # Consensus column — always shown for pending rows
+        if n_total >= 2:
+            row_d["Consensus"] = cons_cell
+
         # Hypothesis ensembles — all constituent models now available
         for hyp in cfg.get("hypothesis_ensembles", []):
             hkeys = hyp["model_keys"]
@@ -3004,11 +3468,40 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
                     hval = sum(hpreds) / len(hpreds)
                 row_d[f"🧪 {hyp['short']}"] = f"{fmt_val(_hround(hval * 10) / 10)} ⏳"
 
-        # Commercial forecasts from log
-        comm_entry = comm_log.get(date_str)
-        if comm_entry:
-            row_d["🔶 AccuWeather"] = (fmt_val(_hround(comm_entry["accu"] * 10) / 10) + " ⏳") if comm_entry.get("accu") else "—"
-            row_d["🔷 Weather.com"] = (fmt_val(_hround(comm_entry["wu"]   * 10) / 10) + " ⏳") if comm_entry.get("wu")   else "—"
+        # Commercial forecasts — D+3/D+2 come from fetch_commercial_forecasts (accu_d3/wu_d3, accu_d2/wu_d2),
+        # D+1 falls back to a live fetch when the disk log has no entry yet (cron not run today),
+        # D+0 reads strictly from disk (yesterday's cron snapshot); shows "—" if missing.
+        if _is_day3:
+            comm_live = fetch_commercial_forecasts(city)
+            _accu_val = comm_live.get("accu_d3")
+            _wu_val   = comm_live.get("wu_d3")
+            row_d["🔶 AccuWeather"] = (fmt_val(_hround(_accu_val * 10) / 10) + " ⏳") if _accu_val is not None else "—"
+            row_d["🔷 Weather.com"] = (fmt_val(_hround(_wu_val   * 10) / 10) + " ⏳") if _wu_val   is not None else "—"
+        elif _is_day2:
+            comm_live = fetch_commercial_forecasts(city)
+            _accu_val = comm_live.get("accu_d2")
+            _wu_val   = comm_live.get("wu_d2")
+            row_d["🔶 AccuWeather"] = (fmt_val(_hround(_accu_val * 10) / 10) + " ⏳") if _accu_val is not None else "—"
+            row_d["🔷 Weather.com"] = (fmt_val(_hround(_wu_val   * 10) / 10) + " ⏳") if _wu_val   is not None else "—"
+        elif _is_tomorrow:
+            # D+1: prefer disk snapshot, but if missing do a live fetch so columns always appear.
+            comm_entry = comm_log.get(date_str)
+            if comm_entry:
+                _accu_val = comm_entry.get("accu")
+                _wu_val   = comm_entry.get("wu")
+            else:
+                comm_live = fetch_commercial_forecasts(city)
+                _accu_val = comm_live.get("accu")
+                _wu_val   = comm_live.get("wu")
+            row_d["🔶 AccuWeather"] = (fmt_val(_hround(_accu_val * 10) / 10) + " ⏳") if _accu_val is not None else "—"
+            row_d["🔷 Weather.com"] = (fmt_val(_hround(_wu_val   * 10) / 10) + " ⏳") if _wu_val   is not None else "—"
+        else:
+            # D+0 (today): read strictly from yesterday's cron snapshot; always emit columns.
+            comm_entry = comm_log.get(date_str)
+            _accu_val = comm_entry.get("accu") if comm_entry else None
+            _wu_val   = comm_entry.get("wu")   if comm_entry else None
+            row_d["🔶 AccuWeather"] = (fmt_val(_hround(_accu_val * 10) / 10) + " ⏳") if _accu_val is not None else "—"
+            row_d["🔷 Weather.com"] = (fmt_val(_hround(_wu_val   * 10) / 10) + " ⏳") if _wu_val   is not None else "—"
 
         # All individual model columns
         for col_label, mk in active_models.items():
@@ -3034,19 +3527,39 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
         if not res_data:
             return None
         res_label = res_data[0]
-        res_int   = res_data[1]
-        is_plus   = res_data[2] if len(res_data) > 2 else False
+
+        # Build a scorer that handles both exact_1c 3-tuples and range_2f 5-tuples.
+        # range_2f tuple: (label, lo, hi, bottom_thresh, top_thresh)
+        #   ≥X  → lo=X,   hi=None → win if actual >= lo
+        #   ≤X  → lo=None, hi=X   → win if actual <= hi
+        #   A-B → lo=A,   hi=B    → win if lo <= actual <= hi
+        # exact_1c tuple: (label, res_int, is_plus)
+        bucket_style = cfg.get("bucket_style", "exact_1c")
+        if bucket_style == "range_2f" and len(res_data) >= 5:
+            _lo, _hi = res_data[1], res_data[2]
+            def _score(v):
+                if v is None: return None
+                r = _hround(v)
+                if _lo is not None and _hi is not None:
+                    return _lo <= r <= _hi
+                if _lo is not None:
+                    return r >= _lo
+                if _hi is not None:
+                    return r <= _hi
+                return False
+        else:
+            res_int = res_data[1]
+            is_plus = res_data[2] if len(res_data) > 2 else False
+            def _score(v):
+                if v is None: return None
+                r = _hround(v)
+                return r >= res_int if is_plus else r == res_int
 
         all_preds = fetch_models_for_date(city, date_str)
         top_mk  = cfg.get("top_model_key")
         top_val = all_preds.get(top_mk) if top_mk else None
         if top_val is None:
             return None
-
-        def _score(v):
-            if v is None: return None
-            r = _hround(v)
-            return r >= res_int if is_plus else r == res_int
 
         top_win  = _score(top_val)
         tick     = "✅" if top_win else "❌"
@@ -3083,9 +3596,10 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
                 row_d[f"🧪 {hyp['short']}"] = f"{fmt_val(hval)} {'✅' if hwin else '❌'}"
 
         comm_entry = comm_log.get(date_str)
-        if comm_entry:
-            row_d["🔶 AccuWeather"] = (fmt_val(_hround(comm_entry["accu"] * 10) / 10)) if comm_entry.get("accu") else "—"
-            row_d["🔷 Weather.com"] = (fmt_val(_hround(comm_entry["wu"]   * 10) / 10)) if comm_entry.get("wu")   else "—"
+        _accu_comm = comm_entry.get("accu") if comm_entry else None
+        _wu_comm   = comm_entry.get("wu")   if comm_entry else None
+        row_d["🔶 AccuWeather"] = (fmt_val(_hround(_accu_comm * 10) / 10)) if _accu_comm is not None else "—"
+        row_d["🔷 Weather.com"] = (fmt_val(_hround(_wu_comm   * 10) / 10)) if _wu_comm   is not None else "—"
 
         for col_label, mk in active_models.items():
             val = all_preds.get(mk)
@@ -3097,8 +3611,15 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
 
         return row_d
 
-    # Inject pending rows at the top (most recent first)
-    for pending_date, pending_label in [(_tomorrow_str, "⏳ Not resolved"), (_today_str, "⏳ Not resolved")]:
+    # Inject pending rows at the top (most recent first): D+3, D+2, D+1, D+0
+    # D+3 is shown so you can spot early mispricing before markets fill up
+    # (Polymarket often prices D+3 buckets at 5-15¢ — prime entry territory).
+    for pending_date, pending_label in [
+        (_day3_str,     "⏳ Not resolved"),
+        (_day2_str,     "⏳ Not resolved"),
+        (_tomorrow_str, "⏳ Not resolved"),
+        (_today_str,    "⏳ Not resolved"),
+    ]:
         if pending_date not in resolved_dates:
             pr = _make_pending_row(pending_date, pending_label)
             if pr:
@@ -3115,6 +3636,19 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
         ens_win = r.get("best_ens_d1_win")
         ens_cell = (f"{fmt_val(ens_val)} {'✅' if ens_win else '❌'}") if ens_val is not None else "—"
 
+        # Consensus for historical rows: count how many ens models hit same bucket as ens_val
+        hist_cons_cell = None
+        if ens_val is not None:
+            ens_bucket_h = _hround(ens_val)
+            ens_mk_list_h = cfg["best_ensemble"]["model_keys"]
+            hist_preds = [r.get(f"{mk}_d1") for mk in ens_mk_list_h if r.get(f"{mk}_d1") is not None]
+            if len(hist_preds) >= 2:
+                n_agree_h = sum(1 for v in hist_preds if _hround(v) == ens_bucket_h)
+                n_total_h = len(hist_preds)
+                cons_h = n_agree_h / n_total_h
+                icon_h = "🔵" if cons_h >= 0.67 else "🟡" if cons_h >= 0.50 else "🔴"
+                hist_cons_cell = f"{icon_h} {n_agree_h}/{n_total_h} ({cons_h:.0%})"
+
         row_d: dict = {
             "Date":           r["date"],
             "Resolved":       r["resolved"],
@@ -3125,6 +3659,9 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
         if cfg.get("spread_filter") and r.get("spread_d1") is not None:
             sp = r["spread_d1"]
             row_d["Spread"] = f"{'🟢' if r['spread_green'] else '🔴'} {sp:.1f}°C"
+
+        if hist_cons_cell:
+            row_d["Consensus"] = hist_cons_cell
 
         # Hypothesis ensemble columns (🧪 forward-test candidates)
         for hyp in cfg.get("hypothesis_ensembles", []):
