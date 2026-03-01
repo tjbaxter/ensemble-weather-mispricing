@@ -3040,8 +3040,8 @@ def _render_trading_tab() -> None:
             })
 
         if _bar_rows:
-            # Toggles row
-            _tcol1, _tcol2 = st.columns([1, 1])
+            # Toggles row: chart type | show filter | colour mode
+            _tcol1, _tcol2, _tcol3 = st.columns([1.2, 1.2, 1])
             with _tcol1:
                 chart_view = st.radio(
                     "View",
@@ -3051,6 +3051,14 @@ def _render_trading_tab() -> None:
                     key="unreal_chart_toggle",
                 )
             with _tcol2:
+                show_filter = st.radio(
+                    "Show",
+                    options=["📊 All", "⏳ Open only", "✅ Resolved only"],
+                    horizontal=True,
+                    label_visibility="collapsed",
+                    key="unreal_show_toggle",
+                )
+            with _tcol3:
                 color_mode = st.radio(
                     "Color",
                     options=["🟢 P&L", "🔵 YES / NO"],
@@ -3059,44 +3067,53 @@ def _render_trading_tab() -> None:
                     key="unreal_color_toggle",
                 )
 
-            # Sort: resolved positions at the top (positive end), open below
+            # Apply show filter
+            if show_filter == "⏳ Open only":
+                _filtered_rows = [r for r in _bar_rows if not r["resolved"]]
+            elif show_filter == "✅ Resolved only":
+                _filtered_rows = [r for r in _bar_rows if r["resolved"]]
+            else:
+                _filtered_rows = _bar_rows
+
+            # Sort: resolved at top, then by P&L within each group
             _bar_rows_sorted = sorted(
-                _bar_rows,
+                _filtered_rows,
                 key=lambda r: (r["resolved"], r["upnl"])
             )
             bar_labels = [r["label"] for r in _bar_rows_sorted]
             bar_vals   = [r["upnl"]  for r in _bar_rows_sorted]
 
-            # Colour scheme:
-            #   Resolved WIN  → gold  (#F59E0B)
-            #   Resolved LOSS → dark grey (#6B7280)
-            #   Open by P&L   → green / red
-            #   Open by side  → blue YES / orange NO
+            # Colour logic — YES/NO toggle now applies to resolved too:
+            #   P&L mode:   gold=resolved WIN, grey=resolved LOSS, green/red=open
+            #   YES/NO mode: blue=YES (open or resolved), orange=NO (open or resolved)
+            #                with darker shade for resolved to distinguish settled vs live
             def _bar_colour(r, v, mode):
-                if r["resolved"]:
-                    return "#F59E0B" if r["won"] else "#6B7280"   # gold WIN / grey LOSS
                 if mode == "🔵 YES / NO":
-                    return "#3B82F6" if r["side"] == "BUY_YES" else "#F97316"
+                    is_yes = r["side"] == "BUY_YES"
+                    if r["resolved"]:
+                        # Darker shade so settled positions stand out from live ones
+                        return "#1D4ED8" if is_yes else "#C2410C"   # dark blue / dark orange
+                    return "#3B82F6" if is_yes else "#F97316"        # bright blue / orange
+                # P&L mode
+                if r["resolved"]:
+                    return "#F59E0B" if r["won"] else "#6B7280"      # gold WIN / grey LOSS
                 return "#00FF88" if v >= 0 else "#FF4444"
 
             bar_colors = [_bar_colour(r, v, color_mode) for r, v in zip(_bar_rows_sorted, bar_vals)]
 
-            legend_html = (
-                '<span style="color:#F59E0B;font-size:0.8rem;">■ Resolved WIN</span>'
-                '&nbsp;&nbsp;'
-                '<span style="color:#6B7280;font-size:0.8rem;">■ Resolved LOSS</span>'
-                '&nbsp;&nbsp;'
-            )
+            # Legend
             if color_mode == "🔵 YES / NO":
-                legend_html += (
-                    '<span style="color:#3B82F6;font-size:0.8rem;">■ Open YES</span>'
-                    '&nbsp;&nbsp;'
+                legend_html = (
+                    '<span style="color:#1D4ED8;font-size:0.8rem;">■ Settled YES</span>&nbsp;&nbsp;'
+                    '<span style="color:#C2410C;font-size:0.8rem;">■ Settled NO</span>&nbsp;&nbsp;'
+                    '<span style="color:#3B82F6;font-size:0.8rem;">■ Open YES</span>&nbsp;&nbsp;'
                     '<span style="color:#F97316;font-size:0.8rem;">■ Open NO</span>'
                 )
             else:
-                legend_html += (
-                    '<span style="color:#00FF88;font-size:0.8rem;">■ Open +P&L</span>'
-                    '&nbsp;&nbsp;'
+                legend_html = (
+                    '<span style="color:#F59E0B;font-size:0.8rem;">■ Settled WIN</span>&nbsp;&nbsp;'
+                    '<span style="color:#6B7280;font-size:0.8rem;">■ Settled LOSS</span>&nbsp;&nbsp;'
+                    '<span style="color:#00FF88;font-size:0.8rem;">■ Open +P&L</span>&nbsp;&nbsp;'
                     '<span style="color:#FF4444;font-size:0.8rem;">■ Open -P&L</span>'
                 )
             st.markdown(legend_html, unsafe_allow_html=True)
@@ -3135,20 +3152,18 @@ def _render_trading_tab() -> None:
                 )
 
             else:
-                # Cumulative unrealized PnL line — sorted by date then city
-                _line_rows = sorted(_bar_rows, key=lambda r: (r["date"], r["city"]))
+                # Cumulative PnL line — sorted by date then city, respects show_filter
+                _line_rows = sorted(_filtered_rows, key=lambda r: (r["date"], r["city"]))
                 cum = 0.0
                 cum_vals, labels, colors, hovers = [], [], [], []
                 for r in _line_rows:
                     cum += r["upnl"]
                     cum_vals.append(round(cum, 2))
                     labels.append(r["label"])
-                    if color_mode == "🔵 YES / NO":
-                        colors.append("#3B82F6" if r["side"] == "BUY_YES" else "#F97316")
-                    else:
-                        colors.append("#00FF88" if r["upnl"] >= 0 else "#FF4444")
+                    colors.append(_bar_colour(r, r["upnl"], color_mode))
+                    status = "✅ SETTLED" if r["resolved"] and r["won"] else "❌ SETTLED" if r["resolved"] else "⏳ LIVE"
                     hovers.append(
-                        f"{r['city']} · {r['date']} · {r['bucket']}<br>"
+                        f"{r['city']} · {r['date']} · {r['bucket']} · {status}<br>"
                         f"Side: {r['side']}  Entry: {r['fill']:.3f}  Now: {r['cur']:.3f}<br>"
                         f"This position: ${r['upnl']:+.2f}<br>"
                         f"Running total: ${cum:.2f}"
