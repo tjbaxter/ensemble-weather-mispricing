@@ -2850,8 +2850,8 @@ def _render_trading_tab() -> None:
     n_live = len([p for p in positions if p.get("token_id") in _live_prices])
 
     if not has_data:
-        # ── No resolved history yet: show live unrealized P&L waterfall ──────
-        # Build per-position rows for the bar chart
+        # ── No resolved history yet: live unrealized P&L chart ───────────────
+        # Build per-position rows
         _bar_rows = []
         for p in positions:
             tid = p.get("token_id")
@@ -2861,40 +2861,128 @@ def _render_trading_tab() -> None:
             fill = float(p.get("fill_price", 0) or 0)
             size = float(p.get("fill_size",  0) or 0)
             upnl = round((cur - fill) * size, 2)
-            label = f"{p.get('city','?')} {p.get('date','?')} {p.get('bucket','?')}"
-            _bar_rows.append({"label": label, "upnl": upnl})
+            _bar_rows.append({
+                "label": f"{p.get('city','?')} {p.get('date','?')} {p.get('bucket','?')}",
+                "city":  p.get("city", "?"),
+                "date":  p.get("date", "?"),
+                "bucket": p.get("bucket", "?"),
+                "side":  p.get("side", "?"),
+                "fill":  fill,
+                "cur":   cur,
+                "upnl":  upnl,
+            })
 
         if _bar_rows:
-            _bar_rows.sort(key=lambda r: r["upnl"])
-            bar_labels = [r["label"] for r in _bar_rows]
-            bar_vals   = [r["upnl"]  for r in _bar_rows]
+            # Toggle
+            chart_view = st.radio(
+                "View",
+                options=["📊 Waterfall", "📈 Cumulative line"],
+                horizontal=True,
+                label_visibility="collapsed",
+                key="unreal_chart_toggle",
+            )
+
+            _bar_rows_sorted = sorted(_bar_rows, key=lambda r: r["upnl"])
+            bar_labels = [r["label"] for r in _bar_rows_sorted]
+            bar_vals   = [r["upnl"]  for r in _bar_rows_sorted]
             bar_colors = ["#00FF88" if v >= 0 else "#FF4444" for v in bar_vals]
 
-            fig = go.Figure()
-            fig.add_trace(go.Bar(
-                x=bar_vals,
-                y=bar_labels,
-                orientation="h",
-                marker_color=bar_colors,
-                text=[f"${v:+.2f}" for v in bar_vals],
-                textposition="outside",
-                hovertemplate="%{y}<br>Unrealized: $%{x:.2f}<extra></extra>",
-                showlegend=False,
-            ))
-            fig.add_vline(x=0, line_color="#444", line_width=1)
-            fig.update_layout(
-                plot_bgcolor=BG,
-                paper_bgcolor=PANEL,
-                font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
-                margin={"l": 10, "r": 60, "t": 10, "b": 20},
-                xaxis={"gridcolor": "#1f2937", "title": "USD"},
-                yaxis={"gridcolor": "#1f2937", "tickfont": {"size": 10}},
-                height=max(300, 22 * len(_bar_rows)),
-            )
+            if chart_view == "📊 Waterfall":
+                fig = go.Figure()
+                fig.add_trace(go.Bar(
+                    x=bar_vals,
+                    y=bar_labels,
+                    orientation="h",
+                    marker_color=bar_colors,
+                    text=[f"${v:+.2f}" for v in bar_vals],
+                    textposition="outside",
+                    hovertemplate="%{y}<br>Unrealized: $%{x:.2f}<extra></extra>",
+                    showlegend=False,
+                ))
+                fig.add_vline(x=0, line_color="#444", line_width=1)
+                fig.update_layout(
+                    plot_bgcolor=BG,
+                    paper_bgcolor=PANEL,
+                    font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+                    margin={"l": 10, "r": 60, "t": 10, "b": 20},
+                    xaxis={"gridcolor": "#1f2937", "title": "USD"},
+                    yaxis={"gridcolor": "#1f2937", "tickfont": {"size": 10}},
+                    height=max(300, 22 * len(_bar_rows_sorted)),
+                )
+
+            else:
+                # Cumulative unrealized PnL line — sorted by date then city
+                _line_rows = sorted(_bar_rows, key=lambda r: (r["date"], r["city"]))
+                cum = 0.0
+                cum_vals, labels, colors, hovers = [], [], [], []
+                for r in _line_rows:
+                    cum += r["upnl"]
+                    cum_vals.append(round(cum, 2))
+                    labels.append(r["label"])
+                    colors.append("#00FF88" if r["upnl"] >= 0 else "#FF4444")
+                    hovers.append(
+                        f"{r['city']} · {r['date']} · {r['bucket']}<br>"
+                        f"Side: {r['side']}  Entry: {r['fill']:.3f}  Now: {r['cur']:.3f}<br>"
+                        f"This position: ${r['upnl']:+.2f}<br>"
+                        f"Running total: ${cum:.2f}"
+                    )
+
+                line_color = "#00FF88" if cum_vals[-1] >= 0 else "#FF4444"
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=list(range(len(cum_vals))),
+                    y=cum_vals,
+                    mode="lines+markers",
+                    line={"color": line_color, "width": 2},
+                    fill="tozeroy",
+                    fillcolor="rgba(0,255,136,0.10)" if cum_vals[-1] >= 0 else "rgba(255,68,68,0.10)",
+                    marker={
+                        "color": colors,
+                        "size": 8,
+                        "line": {"color": "#141A22", "width": 1},
+                    },
+                    text=labels,
+                    hovertext=hovers,
+                    hoverinfo="text",
+                    showlegend=False,
+                ))
+                # Final pulsing dot
+                fig.add_trace(go.Scatter(
+                    x=[len(cum_vals) - 1],
+                    y=[cum_vals[-1]],
+                    mode="markers",
+                    marker={
+                        "color": line_color,
+                        "size": 14,
+                        "symbol": "circle",
+                        "line": {"color": "#141A22", "width": 2},
+                    },
+                    hovertemplate=f"Total unrealized: ${cum_vals[-1]:+.2f}<extra></extra>",
+                    showlegend=False,
+                ))
+                fig.add_hline(y=0, line_dash="dot", line_color="#333", line_width=1)
+                fig.update_layout(
+                    plot_bgcolor=BG,
+                    paper_bgcolor=PANEL,
+                    font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+                    margin={"l": 20, "r": 10, "t": 10, "b": 20},
+                    xaxis={
+                        "gridcolor": "#1f2937",
+                        "tickmode": "array",
+                        "tickvals": list(range(len(labels))),
+                        "ticktext": [lb.split(" ")[0] for lb in labels],  # just city name
+                        "tickangle": -45,
+                        "tickfont": {"size": 9},
+                    },
+                    yaxis={"gridcolor": "#1f2937", "title": "USD", "zeroline": False},
+                    height=340,
+                )
+
             st.plotly_chart(fig, use_container_width=True)
             st.caption(
-                f"Live unrealized P&L per position · {n_live}/{len(positions)} prices fetched · "
-                f"resolves appear here once markets settle at 10:00 UTC"
+                f"Live unrealized P&L · {n_live}/{len(positions)} prices · "
+                f"total: **${sum(r['upnl'] for r in _bar_rows):+.2f}** · "
+                f"resolves start appearing at 10:00 UTC · prices refresh every 5 min"
             )
         else:
             st.info("Fetching live prices… refresh in a moment.")
