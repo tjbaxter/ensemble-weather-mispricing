@@ -3198,8 +3198,11 @@ def _render_trading_tab() -> None:
     st.subheader("A/B: LADDER vs CONVICTION")
     if resolved_df.empty or "strategy" not in resolved_df.columns:
         st.info(
-            "A/B data starts accumulating after the first daily resolution (10:00 UTC). "
-            "Both strategies will be scored automatically from tomorrow."
+            "A/B data starts accumulating after the first daily resolution (10:00 UTC).  \n"
+            "**CONVICTION** fires only when its score ≥ 0.38 — computed from: "
+            "hot-hand weighted model consensus (40%) · raw consensus count (25%) · "
+            "Weather.com + AccuWeather agreement (20%) · GREEN spread (15%).  \n"
+            "Days where CONVICTION doesn't fire (score too low) the LADDER still runs as normal."
         )
     else:
         # Separate executed bets from shadow conviction signals

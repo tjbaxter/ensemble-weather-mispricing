@@ -42,6 +42,12 @@ from config.settings import (
 from strategy.edge_calculator import calculate_edge
 from strategy.kelly import kelly_size
 from strategy.ladder import create_ladder
+from strategy.conviction import (
+    MIN_CONVICTION_SCORE,
+    compute_hot_hand,
+    get_commercial_temps,
+    score_conviction,
+)
 
 
 @dataclass
@@ -218,17 +224,47 @@ def generate_signals(
                         total_cost += each_size
 
                     # Shadow CONVICTION signal: single best bucket, full ladder budget.
-                    # Never executed — logged so the resolver can score it for A/B comparison.
+                    # Scored by Tom's conviction framework before being logged.
+                    # Never executed — A/B comparison only.
                     if center_bucket in market["buckets"]:
                         center_info = market["buckets"][center_bucket]
                         center_item = next((i for i in ladder if i["bucket"] == center_bucket), ladder[0])
                         conviction_size = round(total_cost or ladder_size, 2)
+
+                        # ── Conviction scoring ────────────────────────────────
+                        hot_hand   = compute_hot_hand(city, list(det_model_values.keys()))
+                        accu_temp, comm_wu_temp = get_commercial_temps(city, date)
+                        # Prefer forecast-bundle Weather.com (live); fall back to logged
+                        wu_for_score = wu_crowd_temp if wu_crowd_temp is not None else comm_wu_temp
+
+                        conv_score, conv_breakdown = score_conviction(
+                            center_temp=float(predicted_display_temp or center_item["model_prob"]),
+                            model_values=det_model_values,
+                            spread_colour=det_spread_colour,
+                            wu_temp=wu_for_score,
+                            accu_temp=accu_temp,
+                            hot_hand=hot_hand,
+                        )
+
+                        # Skip CONVICTION signal if score is too low — not a high-conviction bet
+                        if conv_score < MIN_CONVICTION_SCORE:
+                            continue
+
                         ev_conviction = (
                             center_item["model_prob"]
                             * (conviction_size / max(center_item["price"], 0.001))
                             * (1.0 - center_item["price"])
                             - (1.0 - center_item["model_prob"]) * conviction_size
                         )
+
+                        # Embed score in model_values_json for dashboard / resolver visibility
+                        conv_meta = {k: round(v, 2) for k, v in det_model_values.items()}
+                        conv_meta["__conviction_score"] = round(conv_score, 3)
+                        conv_meta["__n_agree"] = conv_breakdown.get("n_agree", 0)
+                        conv_meta["__wu_agrees"] = int(bool(conv_breakdown.get("wu_agrees")))
+                        conv_meta["__accu_agrees"] = int(bool(conv_breakdown.get("accu_agrees")))
+                        conv_meta["__spread"] = det_spread_colour
+
                         signals.append(
                             Signal(
                                 market_id=market["condition_id"],
@@ -247,8 +283,7 @@ def generate_signals(
                                 spread_colour=det_spread_colour,
                                 det_spread=round(det_spread, 3),
                                 model_values_json=json.dumps(
-                                    {k: round(v, 2) for k, v in det_model_values.items()},
-                                    separators=(",", ":"),
+                                    conv_meta, separators=(",", ":"),
                                 ),
                                 ev_per_bet=round(ev_conviction, 3),
                                 kelly_fraction_used=city_kelly,
