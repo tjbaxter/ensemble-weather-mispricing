@@ -2846,8 +2846,59 @@ def _render_trading_tab() -> None:
         unsafe_allow_html=True,
     )
 
+    now_ts = datetime.now(UTC).replace(tzinfo=None)
+    n_live = len([p for p in positions if p.get("token_id") in _live_prices])
+
     if not has_data:
-        st.info("No resolved trades yet — first resolution runs tomorrow at 10:00 UTC.")
+        # ── No resolved history yet: show live unrealized P&L waterfall ──────
+        # Build per-position rows for the bar chart
+        _bar_rows = []
+        for p in positions:
+            tid = p.get("token_id")
+            if not tid or tid not in _live_prices:
+                continue
+            cur  = _live_prices[tid]
+            fill = float(p.get("fill_price", 0) or 0)
+            size = float(p.get("fill_size",  0) or 0)
+            upnl = round((cur - fill) * size, 2)
+            label = f"{p.get('city','?')} {p.get('date','?')} {p.get('bucket','?')}"
+            _bar_rows.append({"label": label, "upnl": upnl})
+
+        if _bar_rows:
+            _bar_rows.sort(key=lambda r: r["upnl"])
+            bar_labels = [r["label"] for r in _bar_rows]
+            bar_vals   = [r["upnl"]  for r in _bar_rows]
+            bar_colors = ["#00FF88" if v >= 0 else "#FF4444" for v in bar_vals]
+
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=bar_vals,
+                y=bar_labels,
+                orientation="h",
+                marker_color=bar_colors,
+                text=[f"${v:+.2f}" for v in bar_vals],
+                textposition="outside",
+                hovertemplate="%{y}<br>Unrealized: $%{x:.2f}<extra></extra>",
+                showlegend=False,
+            ))
+            fig.add_vline(x=0, line_color="#444", line_width=1)
+            fig.update_layout(
+                plot_bgcolor=BG,
+                paper_bgcolor=PANEL,
+                font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+                margin={"l": 10, "r": 60, "t": 10, "b": 20},
+                xaxis={"gridcolor": "#1f2937", "title": "USD"},
+                yaxis={"gridcolor": "#1f2937", "tickfont": {"size": 10}},
+                height=max(300, 22 * len(_bar_rows)),
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            st.caption(
+                f"Live unrealized P&L per position · {n_live}/{len(positions)} prices fetched · "
+                f"resolves appear here once markets settle at 10:00 UTC"
+            )
+        else:
+            st.info("Fetching live prices… refresh in a moment.")
+
     else:
         n_total = len(pnl_df)
         fig = go.Figure()
@@ -2860,9 +2911,10 @@ def _render_trading_tab() -> None:
                 mode="lines",
                 line={"color": pnl_color, "width": 2},
                 fill="tozeroy",
-                fillcolor=f"rgba(0,255,136,0.12)" if last_pnl >= 0 else "rgba(255,68,68,0.12)",
+                fillcolor="rgba(0,255,136,0.12)" if last_pnl >= 0 else "rgba(255,68,68,0.12)",
                 hovertemplate="%{x|%b %d %H:%M}<br>Cumulative P&L: $%{y:.2f}<extra></extra>",
                 showlegend=False,
+                name="Realized",
             )
         )
 
@@ -2901,7 +2953,6 @@ def _render_trading_tab() -> None:
         ))
 
         # Live unrealized extension: dashed line from last realized point → total P&L now
-        now_ts = datetime.now(UTC).replace(tzinfo=None)
         if unreal_pnl != 0.0:
             fig.add_trace(go.Scatter(
                 x=[pnl_df["ts"].iloc[-1], now_ts],
@@ -2946,7 +2997,6 @@ def _render_trading_tab() -> None:
         n_w = int((pnl_df["outcome"] == "WIN").sum()) if "outcome" in pnl_df.columns else res_wins
         n_l = int((pnl_df["outcome"] == "LOSS").sum()) if "outcome" in pnl_df.columns else res_losses
         acc = n_w / (n_w + n_l) * 100 if (n_w + n_l) else 0
-        n_live = len([p for p in positions if p.get("token_id") in _live_prices])
         st.caption(
             f"**{n_w}W / {n_l}L · {acc:.0f}% accuracy · {n_total} total trades**  "
             f"· live prices fetched for {n_live}/{len(positions)} open positions · prices refresh every 5 min"
