@@ -3054,6 +3054,7 @@ def _render_trading_tab() -> None:
                 show_filter = st.radio(
                     "Show",
                     options=["📊 All", "⏳ Open only", "✅ Resolved only"],
+                    index=1,
                     horizontal=True,
                     label_visibility="collapsed",
                     key="unreal_show_toggle",
