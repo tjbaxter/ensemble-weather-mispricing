@@ -319,6 +319,20 @@ def generate_signals(
                 if market_prob > HARD_MAX_YES_ENTRY_PRICE:
                     continue
 
+            # NO bet filter: only take NO bets where the market is genuinely
+            # mispricing the YES side.  Buying NO at 0.70+ (YES < 0.30) is
+            # penny-collecting: risking $5 to make cents.  We only want NO bets
+            # where the YES price is > 0.35 AND our model gives YES < 20%
+            # probability — i.e. the market is overconfident in something we
+            # think is a clear miss.
+            if action == "BUY_NO":
+                yes_price = market_prob           # market_prob is always the YES price
+                model_yes_prob = forecast_prob    # our model's probability of YES
+                if yes_price <= 0.35:
+                    continue   # market is already skeptical — no edge buying NO
+                if model_yes_prob >= 0.20:
+                    continue   # model says meaningful YES chance — skip NO side
+
             effective_edge, _guardrail_penalized = _effective_edge_with_soft_guardrails(action, market_prob, edge)
             if effective_edge <= ALPHA_THRESHOLD:
                 continue
@@ -499,6 +513,14 @@ def summarize_top_missed_edges(
                     }
                 )
                 continue
+
+            # NO bet filter: skip penny-collecting NO bets on clear extremes.
+            # Only take NO when market is overconfident (YES > 0.35) AND model
+            # thinks YES probability is genuinely low (< 20%).
+            if action == "BUY_NO":
+                if market_prob <= 0.35 or forecast_prob >= 0.20:
+                    reason_counts["no_bet_filtered"] = reason_counts.get("no_bet_filtered", 0) + 1
+                    continue
 
             effective_edge, guardrail_penalized = _effective_edge_with_soft_guardrails(action, market_prob, edge)
             if effective_edge <= ALPHA_THRESHOLD:
