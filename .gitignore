@@ -14,3 +14,9 @@ weather-bot/.env
 weather-bot/logs/
 weather-bot/.venv/
 weather-bot/__pycache__/
+
+
+http://localhost:8502
+
+http://34.23.188.207:8501
+

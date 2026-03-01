@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, asdict
-from datetime import UTC, datetime
+from datetime import UTC, date as _date, datetime
 
+from config.cities import STATIONS
 from config.settings import (
     ALPHA_THRESHOLD,
+    D2_P_WIN_DISCOUNT,
+    D3_P_WIN_DISCOUNT,
     ENABLE_LADDER_STRATEGY,
     ENSEMBLE_DISABLE_CLASSIC_CONFIDENCE_GATE,
     ENSEMBLE_STD_SKIP_THRESHOLD,
@@ -55,6 +59,16 @@ class Signal:
     bucket: str
     rounding_confidence: str
     predicted_display_temp: float | None
+    # Observability fields — populated from forecast bundle
+    spread_colour: str = "UNKNOWN"   # GREEN or RED
+    det_spread: float = 0.0          # raw model spread in °C/°F
+    model_values_json: str = "{}"    # JSON: {model: temp, ...}
+    ev_per_bet: float = 0.0          # expected value in USD
+    kelly_fraction_used: float = 0.0 # Kelly fraction applied
+    # Timing fields — for early-entry calibration analysis
+    days_ahead: int = 1              # 1=D+1, 2=D+2, 3=D+3
+    hours_to_resolution: float = 0.0 # fractional hours until market closes
+    temporal_discount: float = 1.0   # discount applied to forecast_prob (< 1 for D+2/D+3)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -97,6 +111,27 @@ def generate_signals(
         ensemble_skip = bool(forecast_bundle.get("ensemble_skip", False) or ensemble_std > ENSEMBLE_STD_SKIP_THRESHOLD)
         min_confidence = 0.0 if (ENSEMBLE_DISABLE_CLASSIC_CONFIDENCE_GATE and "ensemble_std" in forecast_bundle) else None
 
+        # Observability: extract spread signal and per-model predictions
+        det_spread = float(forecast_bundle.get("det_spread", ensemble_std * 2.0) or 0.0)
+        det_spread_colour = str(forecast_bundle.get("det_spread_colour", "UNKNOWN"))
+        det_model_values: dict = forecast_bundle.get("det_model_values") or {}
+        city_kelly = float(STATIONS.get(station_icao, {}).get("kelly_fraction", KELLY_FRACTION))
+
+        # Temporal discount: D+2 and D+3 markets get a haircut on forecast_prob.
+        # This shrinks the apparent edge so only strongly mispriced D+2/D+3 buckets
+        # pass the alpha threshold — early entries must be genuinely cheap.
+        hours_to_resolution = calculate_hours_to_resolution(end_date_iso)
+        try:
+            days_ahead = (_date.fromisoformat(date) - _date.today()).days
+        except ValueError:
+            days_ahead = 1
+        if days_ahead >= 3:
+            temporal_discount = D3_P_WIN_DISCOUNT
+        elif days_ahead >= 2:
+            temporal_discount = D2_P_WIN_DISCOUNT
+        else:
+            temporal_discount = 1.0
+
         if ensemble_skip:
             continue
 
@@ -137,6 +172,7 @@ def generate_signals(
                     win_prob=min(1.0, max(0.0, sum(item["model_prob"] for item in ladder))),
                     edge=max(0.0, ladder[0]["ladder_edge"]),
                     rounding_confidence=rounding_confidence,
+                    station_icao=station_icao,
                 )
                 if ladder_size >= max(MIN_ORDER_USD, PRACTICAL_MIN_ORDER_USD):
                     each_size = round(ladder_size / len(ladder), 2)
@@ -165,7 +201,9 @@ def generate_signals(
                     continue
 
         for bucket, token_info in market["buckets"].items():
-            forecast_prob = forecast.get(bucket, 0.0)
+            raw_forecast_prob = forecast.get(bucket, 0.0)
+            # Apply temporal discount: D+2/D+3 signals must clear a higher hurdle
+            forecast_prob = raw_forecast_prob * temporal_discount
             market_prob = token_info["price"]
             action, edge, win_prob = calculate_edge(
                 forecast_prob,
@@ -197,11 +235,16 @@ def generate_signals(
                 edge=effective_edge,
                 rounding_confidence=rounding_confidence,
                 high_delta=high_delta,
+                station_icao=station_icao,
             )
             if size < max(MIN_ORDER_USD, PRACTICAL_MIN_ORDER_USD):
                 continue
 
             token_id = token_info["yes_token_id"] if action == "BUY_YES" else token_info["no_token_id"]
+            entry_price = market_prob if action == "BUY_YES" else (1.0 - market_prob)
+            # EV = p_win * profit_if_correct - (1-p_win) * cost
+            # Shares = size / entry_price; profit if win = shares * (1 - entry_price)
+            ev = win_prob * (size / entry_price) * (1.0 - entry_price) - (1.0 - win_prob) * size
             signals.append(
                 Signal(
                     market_id=market["condition_id"],
@@ -217,6 +260,17 @@ def generate_signals(
                     bucket=bucket,
                     rounding_confidence=rounding_confidence,
                     predicted_display_temp=predicted_display_temp,
+                    spread_colour=det_spread_colour,
+                    det_spread=round(det_spread, 3),
+                    model_values_json=json.dumps(
+                        {k: round(v, 2) for k, v in det_model_values.items()},
+                        separators=(",", ":"),
+                    ),
+                    ev_per_bet=round(ev, 3),
+                    kelly_fraction_used=city_kelly,
+                    days_ahead=days_ahead,
+                    hours_to_resolution=round(hours_to_resolution, 1),
+                    temporal_discount=temporal_discount,
                 )
             )
 
@@ -236,9 +290,12 @@ def _compute_size(
     edge: float,
     rounding_confidence: str,
     high_delta: bool = False,
+    station_icao: str = "",
 ) -> float:
+    # Use per-city Kelly fraction from cities.py if available; fall back to global
+    city_kelly = float(STATIONS.get(station_icao, {}).get("kelly_fraction", KELLY_FRACTION))
+
     if bankroll <= FIXED_SIZE_BANKROLL_THRESHOLD:
-        # In fixed-size mode, double up on high-delta regime signals
         base = FIXED_ORDER_USD * (HIGH_DELTA_SIZE_MULTIPLIER if high_delta else 1.0)
         return min(base, MAX_POSITION_SIZE * (HIGH_DELTA_SIZE_MULTIPLIER if high_delta else 1.0))
     size = kelly_size(
@@ -246,7 +303,7 @@ def _compute_size(
         win_prob=win_prob,
         bankroll=bankroll,
         edge=edge,
-        kelly_fraction=KELLY_FRACTION,
+        kelly_fraction=city_kelly,
         max_position=MAX_POSITION_SIZE,
         rounding_confidence=rounding_confidence,
     )

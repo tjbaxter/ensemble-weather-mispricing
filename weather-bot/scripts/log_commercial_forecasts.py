@@ -40,9 +40,13 @@ _WU_FORECAST_URL = "https://api.weather.com/v3/wx/forecast/daily/10day"
 _ACCU_API_BASE = "https://dataservice.accuweather.com"
 
 _ACCU_LOCATION_KEYS: dict[str, str] = {
+    "CYYZ": "55071",     # Toronto Pearson (Mississauga)
     "EGLC": "2532754",   # London City
+    "LTAC": "1294331",   # Ankara Esenboğa
     "KATL": "2140212",   # Atlanta Hartsfield
+    "KBOS": "338701",    # Boston Logan (Winthrop)
     "KDFW": "336107",    # Dallas/Fort Worth
+    "KDEN": "2626644",   # Denver International
     "KLGA": "2627477",   # New York LaGuardia
     "KMIA": "3593859",   # Miami International
     "KORD": "2626577",   # Chicago O'Hare
@@ -50,19 +54,29 @@ _ACCU_LOCATION_KEYS: dict[str, str] = {
     "LFPG": "159190",    # Paris CDG
     "RKSI": "2331998",   # Seoul Incheon
     "SBGR": "36369",     # São Paulo Guarulhos
+    "SAEZ": "7894",      # Buenos Aires Ezeiza
+    "NZWN": "250938",    # Wellington NZ
 }
 
 # All cities we track: name → (lat, lon, icao, unit)
+# Keep in sync with config/cities.py STATIONS — add new markets here as they launch.
 CITIES: dict[str, tuple[float, float, str, str]] = {
-    "Seoul":        (37.4492,  126.451,  "RKSI", "C"),
-    "London":       (51.5053,    0.0553, "EGLC", "C"),
-    "New York":     (40.7769,  -73.8740, "KLGA", "F"),
-    "Atlanta":      (33.6407,  -84.4277, "KATL", "F"),
-    "Chicago":      (41.9742,  -87.9073, "KORD", "F"),
-    "Miami":        (25.7959,  -80.2870, "KMIA", "F"),
-    "Dallas":       (32.8481,  -96.8512, "KDFW", "F"),
-    "Buenos Aires": (-34.8222, -58.5358, "SBGR", "C"),
-    "Paris":        (49.0097,    2.5479, "LFPG", "C"),
+    "Seoul":        ( 37.4492,  126.4510, "RKSI", "C"),
+    "London":       ( 51.5053,    0.0553, "EGLC", "C"),
+    "Paris":        ( 49.0097,    2.5479, "LFPG", "C"),
+    "Toronto":      ( 43.6777,  -79.6248, "CYYZ", "C"),
+    "New York":     ( 40.7769,  -73.8740, "KLGA", "F"),
+    "Chicago":      ( 41.9742,  -87.9073, "KORD", "F"),
+    "Boston":       ( 42.3656,  -71.0096, "KBOS", "F"),
+    "Denver":       ( 39.8561, -104.6737, "KDEN", "F"),
+    "Atlanta":      ( 33.6407,  -84.4277, "KATL", "F"),
+    "Dallas":       ( 32.8481,  -96.8512, "KDFW", "F"),
+    "Miami":        ( 25.7959,  -80.2870, "KMIA", "F"),
+    "Seattle":      ( 47.4502, -122.3088, "KSEA", "F"),
+    "Sao Paulo":    (-23.4356,  -46.4731, "SBGR", "C"),
+    "Ankara":       ( 40.1281,   32.9951, "LTAC", "C"),
+    "Buenos Aires": (-34.8222,  -58.5358, "SAEZ", "C"),
+    "Wellington":   (-41.3272,  174.8050, "NZWN", "C"),
 }
 
 
@@ -84,9 +98,10 @@ def _hround(x: float) -> int:
     return math.floor(x + 0.5)
 
 
-def fetch_wu(lat: float, lon: float, unit: str, target_date: str) -> float | None:
-    """Fetch Weather.com/IBM D+1 forecast high for a given location."""
+def fetch_wu_multi(lat: float, lon: float, unit: str, dates: list[str]) -> dict[str, float]:
+    """Fetch Weather.com/IBM forecast highs for multiple target dates in one call."""
     wu_units = "m" if unit == "C" else "e"
+    results: dict[str, float] = {}
     try:
         r = requests.get(
             _WU_FORECAST_URL,
@@ -104,19 +119,25 @@ def fetch_wu(lat: float, lon: float, unit: str, target_date: str) -> float | Non
                 day = datetime.fromisoformat(str(ts)).date().isoformat()
             except (ValueError, TypeError):
                 continue
-            if day == target_date:
-                return float(high)
+            if day in dates:
+                results[day] = float(high)
     except Exception as exc:
         print(f"    WU error: {exc}")
-    return None
+    return results
 
 
-def fetch_accu(icao: str, unit: str, target_date: str, api_key: str) -> float | None:
-    """Fetch AccuWeather D+1 forecast high for a given ICAO station."""
+def fetch_wu(lat: float, lon: float, unit: str, target_date: str) -> float | None:
+    """Fetch Weather.com/IBM D+1 forecast high for a given location."""
+    return fetch_wu_multi(lat, lon, unit, [target_date]).get(target_date)
+
+
+def fetch_accu_multi(icao: str, unit: str, dates: list[str], api_key: str) -> dict[str, float]:
+    """Fetch AccuWeather forecast highs for multiple target dates in one 5-day call."""
     loc_key = _ACCU_LOCATION_KEYS.get(icao)
     if not loc_key or not api_key:
-        return None
+        return {}
     metric = "true" if unit == "C" else "false"
+    results: dict[str, float] = {}
     try:
         r = requests.get(
             f"{_ACCU_API_BASE}/forecasts/v1/daily/5day/{loc_key}",
@@ -125,16 +146,22 @@ def fetch_accu(icao: str, unit: str, target_date: str, api_key: str) -> float | 
         )
         if r.status_code in (403, 429):
             print(f"    AccuWeather rate-limited ({r.status_code}) for {icao}")
-            return None
+            return {}
         r.raise_for_status()
         for fc in r.json().get("DailyForecasts", []):
             fc_date = str(fc.get("Date", ""))[:10]
-            if fc_date == target_date:
+            if fc_date in dates:
                 temp = fc.get("Temperature", {}).get("Maximum", {}).get("Value")
-                return float(temp) if temp is not None else None
+                if temp is not None:
+                    results[fc_date] = float(temp)
     except Exception as exc:
         print(f"    AccuWeather error: {exc}")
-    return None
+    return results
+
+
+def fetch_accu(icao: str, unit: str, target_date: str, api_key: str) -> float | None:
+    """Fetch AccuWeather forecast high for a single target date."""
+    return fetch_accu_multi(icao, unit, [target_date], api_key).get(target_date)
 
 
 def load_log() -> dict[str, Any]:
@@ -155,10 +182,19 @@ def save_log(log: dict[str, Any]) -> None:
 
 
 def run(target_date: str, dry_run: bool = False) -> None:
+    from datetime import date as _d, timedelta as _td
+    # Derive D+2 and D+3 relative to target_date (which is normally D+1/tomorrow)
+    try:
+        _base = _d.fromisoformat(target_date)
+        date_d2 = (_base + _td(days=1)).isoformat()
+        date_d3 = (_base + _td(days=2)).isoformat()
+    except ValueError:
+        date_d2 = date_d3 = None
+
     print(f"\n{'DRY RUN — ' if dry_run else ''}Commercial Forecast Logger")
-    print(f"Target date: {target_date}")
+    print(f"Target D+1:  {target_date}  D+2: {date_d2}  D+3: {date_d3}")
     print(f"Logged at:   {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')} UTC")
-    print("=" * 60)
+    print("=" * 70)
 
     accu_key = _read_env_key("ACCUWEATHER_API_KEY")
     if not accu_key:
@@ -167,36 +203,49 @@ def run(target_date: str, dry_run: bool = False) -> None:
     log = load_log()
     any_new = False
 
-    header = f"{'City':<16} {'ICAO':<6} {'Unit':<5} {'AccuWeather':>13} {'Weather.com':>13} {'Status'}"
+    header = f"{'City':<16} {'ICAO':<6} {'Unit':<5} {'D+1 Accu':>10} {'D+1 WU':>8} {'D+2 Accu':>10} {'D+3 Accu':>10} Status"
     print(header)
     print("─" * len(header))
 
     for city, (lat, lon, icao, unit) in CITIES.items():
         city_log = log.setdefault(city, {})
+        already = city_log.get(target_date, {})
 
-        # Skip if already logged today (idempotent)
-        if target_date in city_log and not dry_run:
-            entry = city_log[target_date]
-            accu_s = f"{entry['accu']:.1f}°{unit}" if entry.get("accu") is not None else "—"
-            wu_s   = f"{entry['wu']:.1f}°{unit}"   if entry.get("wu")   is not None else "—"
-            print(f"  {city:<14} {icao:<6} °{unit:<4} {accu_s:>13} {wu_s:>13}  (already logged)")
-            continue
+        # Fetch all dates in one API call each
+        accu_dates = [d for d in [target_date, date_d2, date_d3] if d]
+        wu_dates   = [d for d in [target_date, date_d2, date_d3] if d]
 
-        wu_val   = fetch_wu(lat, lon, unit, target_date)
-        accu_val = fetch_accu(icao, unit, target_date, accu_key) if accu_key else None
+        accu_map = fetch_accu_multi(icao, unit, accu_dates, accu_key) if accu_key else {}
+        wu_map   = fetch_wu_multi(lat, lon, unit, wu_dates)
+
+        accu_val  = accu_map.get(target_date)
+        wu_val    = wu_map.get(target_date)
+        accu_d2   = accu_map.get(date_d2) if date_d2 else None
+        wu_d2     = wu_map.get(date_d2)   if date_d2 else None
+        accu_d3   = accu_map.get(date_d3) if date_d3 else None
+        wu_d3     = wu_map.get(date_d3)   if date_d3 else None
 
         u = f"°{unit}"
-        accu_s = f"{accu_val:.1f}{u}" if accu_val is not None else "—"
-        wu_s   = f"{wu_val:.1f}{u}"   if wu_val   is not None else "—"
+        a1 = f"{accu_val:.1f}{u}"  if accu_val  is not None else "—"
+        w1 = f"{wu_val:.1f}{u}"    if wu_val    is not None else "—"
+        a2 = f"{accu_d2:.1f}{u}"   if accu_d2   is not None else "—"
+        a3 = f"{accu_d3:.1f}{u}"   if accu_d3   is not None else "—"
 
         status = "✅" if (accu_val is not None or wu_val is not None) else "⚠ no data"
-        print(f"  {city:<14} {icao:<6} {u:<4}  {accu_s:>13} {wu_s:>13}  {status}")
+        if target_date in city_log and not dry_run:
+            status = "(already logged)"
+        print(f"  {city:<14} {icao:<6} {u:<4} {a1:>10} {w1:>8} {a2:>10} {a3:>10}  {status}")
 
         if not dry_run and (accu_val is not None or wu_val is not None):
+            existing = city_log.get(target_date, {})
             city_log[target_date] = {
-                "accu": accu_val,
-                "wu": wu_val,
-                "unit": unit,
+                "accu":    accu_val  if existing.get("accu")    is None else existing["accu"],
+                "wu":      wu_val    if existing.get("wu")      is None else existing["wu"],
+                "accu_d2": accu_d2   if existing.get("accu_d2") is None else existing["accu_d2"],
+                "wu_d2":   wu_d2     if existing.get("wu_d2")   is None else existing["wu_d2"],
+                "accu_d3": accu_d3   if existing.get("accu_d3") is None else existing["accu_d3"],
+                "wu_d3":   wu_d3     if existing.get("wu_d3")   is None else existing["wu_d3"],
+                "unit":    unit,
                 "logged_at": datetime.now(UTC).isoformat(),
             }
             any_new = True

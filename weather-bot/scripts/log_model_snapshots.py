@@ -71,10 +71,13 @@ CITIES: dict[str, dict] = {
         "unit": "fahrenheit",
         "models": [
             "ncep_nbm_conus",
-            "gfs_seamless",
-            "ecmwf_ifs025",
+            "gfs_graphcast025",
             "icon_seamless",
-            "meteofrance_seamless",
+            "kma_seamless",
+            "gem_seamless",
+            "kma_gdps",
+            "gem_hrdps_continental",
+            "ncep_aigfs025",
         ],
     },
     "Atlanta": {

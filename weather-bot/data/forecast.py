@@ -99,8 +99,135 @@ class StationForecaster:
         data = response.json()
         return data[0] if data else None
 
+    async def _fetch_deterministic_ensemble(
+        self,
+        station: dict[str, Any],
+        target_date: date,
+    ) -> dict[str, float]:
+        """Fetch deterministic D+1 forecasts from per-city validated models.
+
+        Uses previous-runs API to get the latest model run's daily max temp.
+        Returns {model_key: temp} for all models that return data.
+        Falls back gracefully if a model has no coverage for this location.
+        """
+        icao = station["icao"]
+        model_keys: list[str] = STATIONS.get(icao, {}).get("ensemble_models", [])
+        if not model_keys:
+            return {}
+
+        unit = "fahrenheit" if station.get("resolution_unit") == "F" else "celsius"
+        results: dict[str, float] = {}
+
+        for model in model_keys:
+            try:
+                params: dict[str, Any] = {
+                    "latitude": float(station["lat"]),
+                    "longitude": float(station["lon"]),
+                    "daily": "temperature_2m_max",
+                    "models": model,
+                    "temperature_unit": unit,
+                    "timezone": station.get("timezone", "UTC"),
+                    "start_date": target_date.isoformat(),
+                    "end_date": target_date.isoformat(),
+                }
+                resp = await self.http.get(
+                    "https://previous-runs-api.open-meteo.com/v1/forecast",
+                    params=params,
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                if "error" in data:
+                    continue
+                daily = data.get("daily", {})
+                times = daily.get("time", [])
+                temps = daily.get("temperature_2m_max", [])
+                target_str = target_date.isoformat()
+                for t, v in zip(times, temps):
+                    if t == target_str and v is not None:
+                        results[model] = float(v)
+                        break
+            except Exception:
+                continue
+
+        return results
+
     async def get_station_forecast(self, station_icao: str, target_date: date, bucket_labels: list[str]) -> dict[str, Any]:
         station = STATIONS[station_icao]
+        station_cfg = STATIONS.get(station_icao, {})
+
+        # ── Per-city deterministic ensemble (primary path) ─────────────────
+        # Uses validated model lists from cities.py for each station.
+        # Preferred over the global ensemble-API approach because the models
+        # were backtested specifically for each city.
+        det_values = await self._fetch_deterministic_ensemble(station, target_date)
+        if det_values and len(det_values) >= 2:
+            values = list(det_values.values())
+            temp_mean = float(mean(values))
+            det_spread = float(max(values) - min(values))
+            spread_threshold = float(station_cfg.get("spread_threshold", 2.0))
+            spread_colour = "GREEN" if det_spread <= spread_threshold else "RED"
+            p_win = (
+                float(station_cfg.get("p_win_green", 0.60))
+                if spread_colour == "GREEN"
+                else float(station_cfg.get("p_win_red", 0.52))
+            )
+
+            unit = station["resolution_unit"]
+            # Use tighter sigma on GREEN (models agree) vs RED (models disagree)
+            sigma = (1.0 if unit == "C" else 1.8) if spread_colour == "GREEN" else (1.8 if unit == "C" else 3.5)
+            raw_probs = bucket_probabilities(bucket_labels, temp_mean, sigma)
+
+            # Override top-bucket probability with empirically validated p_win.
+            # For all other buckets, rescale to sum to (1 - p_win) so total = 1.0.
+            # This preserves the relative ordering of adjacent buckets while
+            # injecting the backtested win rate for the predicted bucket.
+            if raw_probs:
+                top_bucket = max(raw_probs, key=lambda k: raw_probs[k])
+                other_total = sum(v for k, v in raw_probs.items() if k != top_bucket)
+                if other_total > 0:
+                    scale = (1.0 - p_win) / other_total
+                    probs = {
+                        k: (p_win if k == top_bucket else v * scale)
+                        for k, v in raw_probs.items()
+                    }
+                else:
+                    probs = {k: (p_win if k == top_bucket else 0.0) for k in raw_probs}
+            else:
+                probs = raw_probs
+
+            display_temp = (
+                predict_wu_display_fahrenheit(temp_mean)
+                if unit == "F"
+                else predict_wu_display_celsius(temp_mean)
+            )
+            boundary_low = is_boundary_temperature(temp_mean, unit=unit)
+            confidence = "HIGH" if det_spread <= spread_threshold and not boundary_low else "MEDIUM" if det_spread <= spread_threshold * 1.5 else "LOW"
+
+            wu_crowd_temp = await get_wu_daily_high(
+                self.http,
+                lat=float(station["lat"]),
+                lon=float(station["lon"]),
+                target_date=target_date,
+                unit=unit,
+            )
+
+            return {
+                "probs": probs,
+                "rounding_confidence": confidence,
+                "predicted_display_temp": display_temp,
+                "forecast_temp_raw": temp_mean,
+                "ensemble_std": det_spread / 2.0,   # approximate std from spread
+                "ensemble_skip": False,
+                "forecast_model": "det_ensemble",
+                "ensemble_member_count": len(det_values),
+                "det_spread": det_spread,
+                "det_spread_colour": spread_colour,
+                "det_p_win": p_win,
+                "det_model_values": det_values,
+                "wu_crowd_temp": wu_crowd_temp,
+            }
+
+        # ── Fallback: probabilistic ensemble-API (for stations with no per-city config) ──
         models = [ENSEMBLE_PRIMARY_MODEL, *ENSEMBLE_ADDITIONAL_MODELS]
         if ENABLE_ENSEMBLE_FORECASTS:
             try:
@@ -119,10 +246,6 @@ class StationForecaster:
                 ensemble_std = float(pstdev(members)) if len(members) > 1 else 0.0
 
                 # Apply AI mean-reversion bias correction during high-delta regime.
-                # AI models (trained with MSE loss) systematically under-predict rapid
-                # warming peaks and over-predict rapid cooling troughs. Shift the
-                # distribution centre to correct — letting EV logic pick ONE bucket,
-                # not a spread. Factor starts at 1.0°C empirical; update from calibration.
                 adjusted_mean = temp_mean
                 if primary_temp is not None and baseline_temp is not None:
                     delta = primary_temp - baseline_temp
@@ -130,8 +253,6 @@ class StationForecaster:
                         direction = 1.0 if delta > 0 else -1.0
                         adjusted_mean = temp_mean + direction * HIGH_DELTA_MEAN_SHIFT_DEG
 
-                # Shift all ensemble members by the bias correction offset so
-                # the KDE distribution centre moves without changing its shape.
                 mean_shift = adjusted_mean - temp_mean
                 shifted_members = [m + mean_shift for m in members] if mean_shift != 0.0 else members
                 probs = ensemble_to_bucket_probs(shifted_members, bucket_labels)
@@ -148,7 +269,6 @@ class StationForecaster:
                     confidence = "MEDIUM"
                 else:
                     confidence = "LOW"
-                # Fetch WU crowd baseline (what retail traders see on wunderground.com)
                 wu_crowd_temp = await get_wu_daily_high(
                     self.http,
                     lat=float(station["lat"]),
@@ -167,9 +287,9 @@ class StationForecaster:
                     "forecast_model": model_used,
                     "ensemble_member_count": len(members),
                     "ensemble_endpoint": ENSEMBLE_DAILY_API_URL,
-                    "primary_model_temp": primary_temp,    # ncep_aigfs025 raw mean
-                    "baseline_model_temp": baseline_temp,  # GFS+ECMWF blend (approx IBM GRAF)
-                    "wu_crowd_temp": wu_crowd_temp,        # WU actual forecast = exact crowd baseline
+                    "primary_model_temp": primary_temp,
+                    "baseline_model_temp": baseline_temp,
+                    "wu_crowd_temp": wu_crowd_temp,
                 }
 
         point_mean = await self._fetch_station_daily_high_forecast(station, target_date)

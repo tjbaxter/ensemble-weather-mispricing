@@ -22,16 +22,22 @@ DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS = 6 * 60 * 60
 
 # Stable mapping for our station set so we never need repeated geoposition lookups.
 KNOWN_LOCATION_KEYS: dict[str, str] = {
-    "EGLC": "2532754",
-    "KATL": "2140212",
-    "KDFW": "336107",
-    "KLGA": "2627477",
-    "KMIA": "3593859",
-    "KORD": "2626577",
-    "KSEA": "341357",
-    "LFPG": "159190",
-    "RKSI": "2331998",
-    "SBGR": "36369",
+    "CYYZ": "55071",    # Toronto Pearson
+    "EGLC": "2532754",  # London City
+    "KATL": "2140212",  # Atlanta Hartsfield
+    "KBOS": "338701",   # Boston Logan
+    "KDEN": "347810",   # Denver International
+    "KDFW": "336107",   # Dallas/Fort Worth
+    "KLGA": "2627477",  # NYC LaGuardia
+    "KMIA": "3593859",  # Miami International
+    "KORD": "2626577",  # Chicago O'Hare
+    "KSEA": "341357",   # Seattle-Tacoma
+    "LFPG": "159190",   # Paris CDG
+    "LTAC": "1294331",  # Ankara Esenboga
+    "NZWN": "251059",   # Wellington International
+    "RKSI": "2331998",  # Seoul Incheon
+    "SAEZ": "1864638",  # Buenos Aires Ezeiza
+    "SBGR": "36369",    # Sao Paulo Guarulhos
 }
 
 

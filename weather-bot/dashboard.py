@@ -2338,6 +2338,48 @@ def _build_leaderboard(rows: list[dict], city: str) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Live spread signal (today's D1 forecast, not historical)
 # ---------------------------------------------------------------------------
+# Live position prices from Polymarket CLOB
+# ---------------------------------------------------------------------------
+
+@st.cache_data(ttl=300, show_spinner=False)
+def fetch_live_position_prices(token_ids: tuple) -> dict[str, float]:
+    """Fetch current mark prices for open positions from Polymarket CLOB API.
+
+    Uses POST /prices (batch, up to 100 token IDs per request) which returns the
+    best available SELL price for each token — this is the mark-to-market exit
+    value for our long YES and long NO positions.
+
+    Returns {token_id: sell_price}. Cached for 5 min.
+    """
+    prices: dict[str, float] = {}
+    if not token_ids:
+        return prices
+    batch_size = 100
+    for i in range(0, len(token_ids), batch_size):
+        batch = list(token_ids)[i : i + batch_size]
+        try:
+            r = requests.post(
+                "https://clob.polymarket.com/prices",
+                json=[{"token_id": tid} for tid in batch],
+                timeout=15,
+            )
+            if not r.ok:
+                continue
+            data = r.json()
+            for tid, info in data.items():
+                try:
+                    # SELL key = best price we can exit our position at
+                    sell = info.get("SELL") or info.get("BUY")
+                    if sell is not None:
+                        prices[tid] = float(sell)
+                except (ValueError, TypeError, AttributeError):
+                    pass
+        except Exception:
+            pass
+    return prices
+
+
+# ---------------------------------------------------------------------------
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def fetch_live_spread(city: str) -> dict | None:
@@ -2647,10 +2689,11 @@ def main() -> None:
         st.divider()
         st.markdown("### Auto-refresh")
 
-    refresh_opt = st.sidebar.selectbox("Interval", options=["off", "30s", "60s"], index=1)
+    refresh_opt = st.sidebar.selectbox("Interval", options=["off", "30s", "60s", "5m"], index=1)
     if refresh_opt != "off" and st_autorefresh is not None:
-        interval_ms = 30000 if refresh_opt == "30s" else 60000
+        interval_ms = {"30s": 30_000, "60s": 60_000, "5m": 300_000}[refresh_opt]
         st_autorefresh(interval=interval_ms, key="dashboard-refresh")
+    st.sidebar.caption("Live position prices refresh every 5 min regardless of page interval.")
 
     now_stamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
 
@@ -2705,12 +2748,30 @@ def _render_trading_tab() -> None:
         res_pnl = metrics["realized_pnl"]
         res_wr  = metrics["win_rate"]
 
-    cols = st.columns(6)
+    # ── Fetch live unrealized PnL from Polymarket CLOB ──────────────────────
+    _token_ids = tuple(p["token_id"] for p in positions if p.get("token_id"))
+    _live_prices = fetch_live_position_prices(_token_ids) if _token_ids else {}
+    _live_ts = datetime.now(UTC).strftime("%H:%M UTC")
+
+    unreal_pnl = 0.0
+    for p in positions:
+        tid = p.get("token_id")
+        if not tid or tid not in _live_prices:
+            continue
+        cur  = _live_prices[tid]
+        fill = float(p.get("fill_price", 0) or 0)
+        size = float(p.get("fill_size",  0) or 0)
+        unreal_pnl += (cur - fill) * size
+
+    total_pnl = res_pnl + unreal_pnl
+
+    cols = st.columns(7)
     kpi_items = [
-        ("Realized PnL",      f"${res_pnl:+.2f}",              GREEN if res_pnl >= 0 else RED),
+        ("Total P&L",         f"${total_pnl:+.2f}",            GREEN if total_pnl >= 0 else RED),
+        ("Realized P&L",      f"${res_pnl:+.2f}",              GREEN if res_pnl >= 0 else RED),
+        ("Unrealized P&L",    f"${unreal_pnl:+.2f}",           GREEN if unreal_pnl >= 0 else RED),
         ("Win Rate",          f"{res_wr*100:.1f}%",             BLUE),
         ("Open Positions",    f"{int(metrics['open_positions'])}", BLUE),
-        ("Open Exposure",     f"${metrics['open_exposure']:.2f}", BLUE),
         ("Resolving Today",   f"{int(metrics['resolving_today'])}", BLUE),
         ("Resolving Tomorrow",f"{int(metrics['resolving_tomorrow'])}", BLUE),
     ]
@@ -2742,8 +2803,11 @@ def _render_trading_tab() -> None:
     # Header row with live indicator
     last_pnl   = float(pnl_df["cum_pnl"].iloc[-1]) if has_data else 0.0
     last_ts    = pnl_df["ts"].iloc[-1].strftime("%H:%M UTC") if has_data else "—"
-    pnl_color  = "#00FF88" if last_pnl >= 0 else "#FF4444"
-    pnl_sign   = "+" if last_pnl >= 0 else ""
+    total_color = "#00FF88" if total_pnl >= 0 else "#FF4444"
+    pnl_color   = "#00FF88" if last_pnl  >= 0 else "#FF4444"
+    pnl_sign    = "+" if last_pnl >= 0 else ""
+    unreal_color = "#00FF88" if unreal_pnl >= 0 else "#FF4444"
+    unreal_sign  = "+" if unreal_pnl >= 0 else ""
 
     st.markdown(
         f"""
@@ -2755,21 +2819,28 @@ def _render_trading_tab() -> None:
 }}
 .live-dot {{
   display:inline-block; width:10px; height:10px; border-radius:50%;
-  background:{pnl_color}; animation:pulse 1.8s infinite;
+  background:{total_color}; animation:pulse 1.8s infinite;
   margin-right:7px; vertical-align:middle;
 }}
 .pnl-header {{
-  display:flex; align-items:center; gap:12px; margin-bottom:6px;
+  display:flex; align-items:center; gap:16px; margin-bottom:6px; flex-wrap:wrap;
 }}
-.pnl-title  {{ color:#E6EDF3; font-size:1.05rem; font-weight:600; letter-spacing:.04em; }}
-.pnl-value  {{ color:{pnl_color}; font-size:1.35rem; font-weight:700; }}
-.pnl-stamp  {{ color:#888; font-size:0.8rem; }}
+.pnl-title   {{ color:#E6EDF3; font-size:1.05rem; font-weight:600; letter-spacing:.04em; }}
+.pnl-total   {{ color:{total_color}; font-size:1.35rem; font-weight:700; }}
+.pnl-sub     {{ color:#aaa; font-size:0.85rem; }}
+.pnl-sub-val {{ font-weight:600; }}
+.pnl-stamp   {{ color:#888; font-size:0.8rem; margin-left:auto; }}
 </style>
 <div class="pnl-header">
   <span class="live-dot"></span>
-  <span class="pnl-title">CUMULATIVE REALIZED P&amp;L</span>
-  <span class="pnl-value">{pnl_sign}${last_pnl:.2f}</span>
-  <span class="pnl-stamp">last updated {last_ts}</span>
+  <span class="pnl-title">TOTAL P&amp;L</span>
+  <span class="pnl-total">${total_pnl:+.2f}</span>
+  <span class="pnl-sub">
+    Realized: <span class="pnl-sub-val" style="color:{pnl_color};">${last_pnl:+.2f}</span>
+    &nbsp;+&nbsp;
+    Unrealized: <span class="pnl-sub-val" style="color:{unreal_color};">${unreal_pnl:+.2f}</span>
+  </span>
+  <span class="pnl-stamp">live prices: {_live_ts} · refreshes every 5 min</span>
 </div>
         """,
         unsafe_allow_html=True,
@@ -2814,20 +2885,47 @@ def _render_trading_tab() -> None:
                         customdata=pnl_df.loc[mask, ["city", "bucket"]].values if "city" in pnl_df.columns else None,
                     ))
 
-        # Pulsing dot at the latest point — larger scatter marker
+        # Realized endpoint dot
         fig.add_trace(go.Scatter(
             x=[pnl_df["ts"].iloc[-1]],
             y=[last_pnl],
             mode="markers",
             marker={
                 "color": pnl_color,
-                "size": 14,
+                "size": 12,
                 "symbol": "circle",
                 "line": {"color": "#141A22", "width": 2},
             },
-            hovertemplate=f"Latest: ${last_pnl:+.2f}<extra></extra>",
+            hovertemplate=f"Realized: ${last_pnl:+.2f}<extra></extra>",
             showlegend=False,
         ))
+
+        # Live unrealized extension: dashed line from last realized point → total P&L now
+        now_ts = datetime.now(UTC).replace(tzinfo=None)
+        if unreal_pnl != 0.0:
+            fig.add_trace(go.Scatter(
+                x=[pnl_df["ts"].iloc[-1], now_ts],
+                y=[last_pnl, total_pnl],
+                mode="lines",
+                line={"color": total_color, "width": 2, "dash": "dot"},
+                hovertemplate="%{x|%H:%M}<br>Total (incl. unrealized): $%{y:.2f}<extra></extra>",
+                name="Unrealized",
+                showlegend=True,
+            ))
+            # Pulsing dot at current total P&L
+            fig.add_trace(go.Scatter(
+                x=[now_ts],
+                y=[total_pnl],
+                mode="markers",
+                marker={
+                    "color": total_color,
+                    "size": 14,
+                    "symbol": "circle",
+                    "line": {"color": "#141A22", "width": 2},
+                },
+                hovertemplate=f"Now (total): ${total_pnl:+.2f}<extra></extra>",
+                showlegend=False,
+            ))
 
         # Zero baseline
         fig.add_hline(y=0, line_dash="dot", line_color="#333", line_width=1)
@@ -2848,9 +2946,10 @@ def _render_trading_tab() -> None:
         n_w = int((pnl_df["outcome"] == "WIN").sum()) if "outcome" in pnl_df.columns else res_wins
         n_l = int((pnl_df["outcome"] == "LOSS").sum()) if "outcome" in pnl_df.columns else res_losses
         acc = n_w / (n_w + n_l) * 100 if (n_w + n_l) else 0
+        n_live = len([p for p in positions if p.get("token_id") in _live_prices])
         st.caption(
             f"**{n_w}W / {n_l}L · {acc:.0f}% accuracy · {n_total} total trades**  "
-            f"· refreshes every 15 s"
+            f"· live prices fetched for {n_live}/{len(positions)} open positions · prices refresh every 5 min"
         )
 
     st.markdown("</div>", unsafe_allow_html=True)
@@ -2862,36 +2961,63 @@ def _render_trading_tab() -> None:
     if pos_df.empty:
         st.info("No open positions — bot is scanning, bets logged when signal fires.")
     else:
-        show_cols = ["city", "station_icao", "date", "bucket", "side", "fill_price", "cost", "to_win"]
-        for col in ["city", "station_icao", "date", "bucket", "side", "fill_price", "cost", "fill_size"]:
+        for col in ["city", "station_icao", "date", "bucket", "side", "fill_price", "cost", "fill_size", "token_id"]:
             if col not in pos_df.columns:
                 pos_df[col] = ""
         pos_df["fill_price"] = pd.to_numeric(pos_df["fill_price"], errors="coerce").fillna(0.0)
         pos_df["cost"]       = pd.to_numeric(pos_df["cost"],       errors="coerce").fillna(0.0)
         pos_df["fill_size"]  = pd.to_numeric(pos_df["fill_size"],  errors="coerce").fillna(0.0)
-        # Profit if trade resolves in our favour: shares × $1 payout − cost paid
+
+        # Live current price and unrealized P&L
+        pos_df["live_price"]    = pos_df["token_id"].map(lambda t: _live_prices.get(t))
+        pos_df["unreal_pnl"]    = (
+            (pos_df["live_price"].fillna(pos_df["fill_price"]) - pos_df["fill_price"])
+            * pos_df["fill_size"]
+        ).round(2)
+        pos_df["live_price_fmt"] = pos_df["live_price"].apply(
+            lambda x: f"{x:.3f}" if pd.notna(x) else "—"
+        )
+        pos_df["unreal_pnl_fmt"] = pos_df["unreal_pnl"].apply(
+            lambda x: f"${x:+.2f}"
+        )
+        # Profit if all resolve in our favour: shares × $1 payout − cost paid
         pos_df["to_win"] = (pos_df["fill_size"] - pos_df["cost"]).round(2)
         pos_df = pos_df.sort_values(["date", "city", "bucket"], ascending=True)
-        st.dataframe(
-            pos_df[show_cols].rename(
-                columns={
-                    "city":       "City",
-                    "station_icao": "Station",
-                    "date":       "Date",
-                    "bucket":     "Bucket",
-                    "side":       "Side",
-                    "fill_price": "Entry Price",
-                    "cost":       "Cost ($)",
-                    "to_win":     "To Win ($)",
-                }
-            ),
-            use_container_width=True,
-            hide_index=True,
-        )
-        total_to_win = pos_df["to_win"].sum()
+
+        show_cols = ["city", "station_icao", "date", "bucket", "side",
+                     "fill_price", "live_price_fmt", "unreal_pnl_fmt", "cost", "to_win"]
+
+        # Colour unrealized P&L cells via Styler
+        display_df = pos_df[show_cols].rename(columns={
+            "city":           "City",
+            "station_icao":   "Station",
+            "date":           "Date",
+            "bucket":         "Bucket",
+            "side":           "Side",
+            "fill_price":     "Entry",
+            "live_price_fmt": "Live Price",
+            "unreal_pnl_fmt": "Unreal. P&L",
+            "cost":           "Cost ($)",
+            "to_win":         "To Win ($)",
+        })
+
+        def _colour_unreal(val: str):
+            if val.startswith("$+") or (val.startswith("$") and not val.startswith("$-")):
+                return "color: #00FF88; font-weight:600"
+            elif val.startswith("$-"):
+                return "color: #FF4444; font-weight:600"
+            return ""
+
+        styled = display_df.style.applymap(_colour_unreal, subset=["Unreal. P&L"])
+        st.dataframe(styled, use_container_width=True, hide_index=True)
+
+        total_to_win   = pos_df["to_win"].sum()
+        total_unreal   = pos_df["unreal_pnl"].sum()
+        n_priced = int(pos_df["live_price"].notna().sum())
         st.caption(
             f"Total exposure: **${metrics['open_exposure']:.2f}** · "
-            f"Total to win if all resolve ✅: **${total_to_win:.2f}**"
+            f"Unrealized P&L: **${total_unreal:+.2f}** ({n_priced}/{len(pos_df)} live prices) · "
+            f"To win if all ✅: **${total_to_win:.2f}**  ·  prices updated {_live_ts}"
         )
     st.markdown("</div>", unsafe_allow_html=True)
 

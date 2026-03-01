@@ -11,11 +11,18 @@ from typing import Optional
 
 
 # Trading parameters
-ALPHA_THRESHOLD = 0.08
-MIN_FORECAST_CONFIDENCE = 0.30
-MAX_POSITION_SIZE = 3.00
+# Alpha = model probability minus market implied probability.
+# Lowered to 0.03 to capture cheap bucket opportunities (sub-20¢) where
+# even a 3-5pp edge is strongly +EV due to leverage (6-7x return on win).
+# Kelly sizing handles position sizing — a 3pp edge on a 15¢ bucket gets
+# a tiny Kelly fraction, so no ruin risk from the lower threshold.
+ALPHA_THRESHOLD = 0.03
+MIN_FORECAST_CONFIDENCE = 0.15   # lowered to allow cheap bucket signals through
+MAX_POSITION_SIZE = 5.00         # raised slightly to allow meaningful bet on 15¢ buckets
 MAX_DAILY_EXPOSURE = 50.00
 MAX_POSITIONS_PER_MARKET = 1
+# Global Kelly fraction — overridden per-city by STATIONS[icao]["kelly_fraction"]
+# London uses 0.50 (half-Kelly, 75-day validated), others use 0.25
 KELLY_FRACTION = 0.25
 
 # Risk limits
@@ -26,6 +33,15 @@ INITIAL_BANKROLL = 300.00
 SCAN_INTERVAL_SECONDS = 120
 FORECAST_REFRESH_SECONDS = 1800
 HOURS_BEFORE_RESOLUTION_CUTOFF = 3
+
+# Temporal forecast confidence discount
+# NWP models lose skill further out. We shrink forecast_prob toward 0 before
+# edge calculation so the alpha threshold filters out weakly-priced D+2/D+3 bets.
+# Values are multiplicative: D+2 forecast_prob *= 0.88, D+3 *= 0.80.
+# Based on typical NWP skill decay: AROME/ECMWF ≈ 90-95% skill retention at D+2
+# vs D+1, further degraded by ~8-10pp at D+3.
+D2_P_WIN_DISCOUNT: float = float(os.getenv("D2_P_WIN_DISCOUNT", "0.88"))
+D3_P_WIN_DISCOUNT: float = float(os.getenv("D3_P_WIN_DISCOUNT", "0.80"))
 
 # Event-driven model run scheduler
 # Each tuple is (hour_utc, minute_utc, label).

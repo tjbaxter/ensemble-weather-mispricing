@@ -27,21 +27,37 @@ RESOLVED_JSON = DATA_DIR / "resolved_markets.json"
 PREV_RUNS_URL = "https://previous-runs-api.open-meteo.com/v1/forecast"
 
 ALL_MODELS = [
-    "gfs_seamless", "gfs025",
-    "gfs_graphcast025", "ncep_aigfs025", "ncep_nbm_conus", "cfs",
+    # NCEP / NOAA (US)
+    "gfs_seamless", "gfs025", "gfs_graphcast025",
+    "ncep_aigfs025", "ncep_nbm_conus", "ncep_hgefs025_ensemble_mean", "cfs",
+    # ECMWF
     "ecmwf_ifs025", "ecmwf_ifs04", "ecmwf_aifs025",
+    # ICON (DWD Germany)
     "icon_seamless", "icon_global", "icon_eu", "icon_d2",
+    # MeteoFrance
     "meteofrance_seamless", "meteofrance_arpege_world",
     "meteofrance_arpege_europe", "meteofrance_arome_france",
+    "meteofrance_arome_france_hd",
+    # GEM (Canada)
     "gem_seamless", "gem_global", "gem_regional", "gem_hrdps_continental",
-    "ukmet_seamless", "ukmet_global_deterministic",
+    # UK Met Office
+    "ukmo_seamless", "ukmo_uk_deterministic_2km", "ukmo_global_deterministic_10km",
+    # JMA (Japan)
     "jma_seamless", "jma_gsm", "jma_msm",
+    # DMI (Denmark)
     "dmi_seamless",
+    # KNMI (Netherlands)
     "knmi_seamless",
+    # KMA (South Korea)
     "kma_gdps", "kma_seamless",
+    # BOM (Australia)
     "bom_access_global",
+    # SMHI / MET Norway
     "smhi_seamless", "metno_seamless", "metno_nordic",
+    # ARPAE (Italy)
     "arpae_cosmo_seamless", "arpae_cosmo_2i", "arpae_cosmo_5m",
+    # Open-Meteo best-match
+    "best_match",
 ]
 
 MAX_WORKERS = 12
@@ -52,12 +68,42 @@ CITY_CONFIG = {
     "Seattle": {
         "lat": 47.4502, "lon": -122.3088,
         "timezone": "America/Los_Angeles",
-        "unit": "F",           # "F" or "C"
-        "bucket_style": "range_2f",   # 2°F even-odd pairs
+        "unit": "F",
+        "bucket_style": "range_2f",
     },
     "Toronto": {
         "lat": 43.6772, "lon": -79.6306,
         "timezone": "America/Toronto",
+        "unit": "C",
+        "bucket_style": "exact_1c",
+    },
+    "nyc": {
+        "lat": 40.7769, "lon": -73.874,
+        "timezone": "America/New_York",
+        "unit": "F",
+        "bucket_style": "range_2f",
+    },
+    "Chicago": {
+        "lat": 41.9742, "lon": -87.9073,
+        "timezone": "America/Chicago",
+        "unit": "F",
+        "bucket_style": "range_2f",
+    },
+    "London": {
+        "lat": 51.5053, "lon": 0.0553,
+        "timezone": "Europe/London",
+        "unit": "C",
+        "bucket_style": "exact_1c",
+    },
+    "Ankara": {
+        "lat": 40.1281, "lon": 32.9951,
+        "timezone": "Europe/Istanbul",
+        "unit": "C",
+        "bucket_style": "exact_1c",
+    },
+    "Buenos Aires": {
+        "lat": -34.8222, "lon": -58.5358,
+        "timezone": "America/Argentina/Buenos_Aires",
         "unit": "C",
         "bucket_style": "exact_1c",
     },
