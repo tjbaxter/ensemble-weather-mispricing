@@ -2821,30 +2821,99 @@ def _render_trading_tab() -> None:
         res_pnl = metrics["realized_pnl"]
         res_wr  = metrics["win_rate"]
 
-    # ── Fetch live unrealized PnL from Polymarket CLOB ──────────────────────
+    # ── Fetch live prices from Polymarket CLOB ───────────────────────────────
     _token_ids = tuple(p["token_id"] for p in positions if p.get("token_id"))
     _live_prices = fetch_live_position_prices(_token_ids) if _token_ids else {}
     _live_ts = datetime.now(UTC).strftime("%H:%M UTC")
 
-    unreal_pnl = 0.0
+    # ── Real-time resolution detection ───────────────────────────────────────
+    # When a market resolves, Polymarket instantly moves the YES price to
+    # ~0.001 (lost) or ~0.998 (won). We detect this from live prices directly —
+    # no need to wait for the daily WU resolver cron.
+    #
+    # Thresholds: YES price ≥ 0.95 → resolved YES; YES price ≤ 0.05 → resolved NO
+    RESOLVE_WIN_THRESHOLD  = 0.95
+    RESOLVE_LOSS_THRESHOLD = 0.05
+
+    live_resolved   = []   # positions inferred as resolved from live price
+    still_open      = []   # positions still genuinely live
+
     for p in positions:
-        tid = p.get("token_id")
-        if not tid or tid not in _live_prices:
+        tid       = p.get("token_id")
+        live_p    = _live_prices.get(tid)
+        side      = p.get("side", "BUY_YES")
+        cost      = float(p.get("cost",      0) or 0)
+        fill_size = float(p.get("fill_size", 0) or 0)
+
+        if live_p is None:
+            still_open.append(p)
             continue
-        cur  = _live_prices[tid]
+
+        yes_price = float(live_p)
+
+        # Determine if this side has won based on YES token price
+        if side == "BUY_YES":
+            won  = yes_price >= RESOLVE_WIN_THRESHOLD
+            lost = yes_price <= RESOLVE_LOSS_THRESHOLD
+        else:  # BUY_NO — we hold NO tokens; NO wins when YES is near 0
+            won  = yes_price <= RESOLVE_LOSS_THRESHOLD
+            lost = yes_price >= RESOLVE_WIN_THRESHOLD
+
+        if won or lost:
+            pnl = round(fill_size - cost, 4) if won else round(-cost, 4)
+            live_resolved.append({**p, "live_won": won, "live_pnl": pnl, "live_price": yes_price})
+        else:
+            still_open.append(p)
+
+    # Aggregate live-resolved metrics (these are real-time, no WU needed)
+    live_res_wins   = sum(1 for r in live_resolved if r["live_won"])
+    live_res_losses = len(live_resolved) - live_res_wins
+    live_res_pnl    = sum(r["live_pnl"] for r in live_resolved)
+
+    # Combine: official resolver data + live-inferred (avoid double-counting
+    # if resolver already logged the same position in resolved.csv)
+    # Use (city, date, bucket, side) as dedup key
+    resolver_keys = set()
+    if not resolved_df.empty:
+        for _, row in resolved_df.iterrows():
+            resolver_keys.add((row.get("city",""), row.get("target_date",""),
+                               row.get("bucket",""), row.get("side","")))
+
+    net_live_resolved = [
+        r for r in live_resolved
+        if (r.get("city",""), r.get("date",""), r.get("bucket",""), r.get("side",""))
+           not in resolver_keys
+    ]
+    net_live_pnl    = sum(r["live_pnl"] for r in net_live_resolved)
+    net_live_wins   = sum(1 for r in net_live_resolved if r["live_won"])
+    net_live_losses = len(net_live_resolved) - net_live_wins
+
+    total_wins   = res_wins   + net_live_wins
+    total_losses = res_losses + net_live_losses
+    total_res    = total_wins + total_losses
+    total_res_pnl = res_pnl  + net_live_pnl
+    total_wr     = total_wins / total_res if total_res else 0.0
+
+    # Unrealized: only positions that haven't resolved yet
+    unreal_pnl = 0.0
+    for p in still_open:
+        tid  = p.get("token_id")
+        cur  = _live_prices.get(tid)
+        if cur is None:
+            continue
         fill = float(p.get("fill_price", 0) or 0)
         size = float(p.get("fill_size",  0) or 0)
         unreal_pnl += (cur - fill) * size
 
-    total_pnl = res_pnl + unreal_pnl
+    total_pnl = total_res_pnl + unreal_pnl
 
     cols = st.columns(7)
     kpi_items = [
-        ("Total P&L",         f"${total_pnl:+.2f}",            GREEN if total_pnl >= 0 else RED),
-        ("Realized P&L",      f"${res_pnl:+.2f}",              GREEN if res_pnl >= 0 else RED),
-        ("Unrealized P&L",    f"${unreal_pnl:+.2f}",           GREEN if unreal_pnl >= 0 else RED),
-        ("Win Rate",          f"{res_wr*100:.1f}%",             BLUE),
-        ("Open Positions",    f"{int(metrics['open_positions'])}", BLUE),
+        ("Total P&L",         f"${total_pnl:+.2f}",              GREEN if total_pnl >= 0 else RED),
+        ("Realized P&L",      f"${total_res_pnl:+.2f}",          GREEN if total_res_pnl >= 0 else RED),
+        ("Unrealized P&L",    f"${unreal_pnl:+.2f}",             GREEN if unreal_pnl >= 0 else RED),
+        ("Win Rate",          f"{total_wr*100:.1f}%",             GREEN if total_wr >= 0.5 else RED),
+        ("Resolved (live)",   f"{total_wins}W / {total_losses}L", BLUE),
         ("Resolving Today",   f"{int(metrics['resolving_today'])}", BLUE),
         ("Resolving Tomorrow",f"{int(metrics['resolving_tomorrow'])}", BLUE),
     ]
@@ -3195,9 +3264,35 @@ def _render_trading_tab() -> None:
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # ── Live Resolved (real-time, from price threshold detection) ────────────
+    if net_live_resolved:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.subheader(f"⚡ LIVE RESOLVED ({len(net_live_resolved)}) · updated {_live_ts}")
+        st.caption("Positions where Polymarket price moved to ≥0.95 (WIN) or ≤0.05 (LOSS) — updates every 5 min, no WU scraping needed.")
+        lr_df = pd.DataFrame(net_live_resolved)
+        lr_df["result"]   = lr_df["live_won"].map({True: "✅ WIN", False: "❌ LOSS"})
+        lr_df["pnl_fmt"]  = lr_df["live_pnl"].apply(lambda x: f"${x:+.2f}")
+        lr_df["price_fmt"] = lr_df["live_price"].apply(lambda x: f"{x:.3f}")
+        show_lr = lr_df[["city", "station_icao", "date", "bucket", "side", "fill_price", "price_fmt", "result", "pnl_fmt"]].rename(columns={
+            "city": "City", "station_icao": "Station", "date": "Date",
+            "bucket": "Bucket", "side": "Side", "fill_price": "Entry",
+            "price_fmt": "Settled Price", "result": "Result", "pnl_fmt": "P&L",
+        })
+        def _colour_result(val):
+            if "WIN"  in str(val): return "color:#00FF88;font-weight:700"
+            if "LOSS" in str(val): return "color:#FF4444;font-weight:700"
+            return ""
+        def _colour_pnl(val):
+            return "color:#00FF88;font-weight:600" if str(val).startswith("$+") else "color:#FF4444;font-weight:600"
+        styled_lr = show_lr.style.applymap(_colour_result, subset=["Result"]).applymap(_colour_pnl, subset=["P&L"])
+        st.dataframe(styled_lr, use_container_width=True, hide_index=True)
+        net_lr_pnl = sum(r["live_pnl"] for r in net_live_resolved)
+        st.caption(f"Live P&L from resolved positions: **${net_lr_pnl:+.2f}** · {net_live_wins}W / {net_live_losses}L")
+        st.markdown("</div>", unsafe_allow_html=True)
+
     # ── Open Positions ────────────────────────────────────────────────────────
     _today_str = datetime.now(UTC).strftime("%Y-%m-%d")
-    pos_df = pd.DataFrame(positions)
+    pos_df = pd.DataFrame(still_open)   # only positions not yet resolved
     st.markdown('<div class="panel">', unsafe_allow_html=True)
 
     if pos_df.empty:
