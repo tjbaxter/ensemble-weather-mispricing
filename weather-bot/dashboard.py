@@ -2989,13 +2989,15 @@ def _render_trading_tab() -> None:
     )
 
     now_ts = datetime.now(UTC).replace(tzinfo=None)
-    n_live = len([p for p in positions if p.get("token_id") in _live_prices])
+    n_live = len([p for p in still_open if p.get("token_id") in _live_prices])
 
     if not has_data:
         # ── No resolved history yet: live unrealized P&L chart ───────────────
-        # Build per-position rows
+        # Only show genuinely unresolved positions (still_open).
+        # Positions where the live price has settled to ~0 or ~1 are already
+        # shown in the LIVE RESOLVED panel above — they auto-drop from this chart.
         _bar_rows = []
-        for p in positions:
+        for p in still_open:
             tid = p.get("token_id")
             if not tid or tid not in _live_prices:
                 continue
@@ -3004,14 +3006,14 @@ def _render_trading_tab() -> None:
             size = float(p.get("fill_size",  0) or 0)
             upnl = round((cur - fill) * size, 2)
             _bar_rows.append({
-                "label": f"{p.get('city','?')} {p.get('date','?')} {p.get('bucket','?')}",
-                "city":  p.get("city", "?"),
-                "date":  p.get("date", "?"),
+                "label":  f"{p.get('city','?')} {p.get('date','?')} {p.get('bucket','?')}",
+                "city":   p.get("city", "?"),
+                "date":   p.get("date", "?"),
                 "bucket": p.get("bucket", "?"),
-                "side":  p.get("side", "?"),
-                "fill":  fill,
-                "cur":   cur,
-                "upnl":  upnl,
+                "side":   p.get("side", "?"),
+                "fill":   fill,
+                "cur":    cur,
+                "upnl":   upnl,
             })
 
         if _bar_rows:
@@ -3259,7 +3261,7 @@ def _render_trading_tab() -> None:
         acc = n_w / (n_w + n_l) * 100 if (n_w + n_l) else 0
         st.caption(
             f"**{n_w}W / {n_l}L · {acc:.0f}% accuracy · {n_total} total trades**  "
-            f"· live prices fetched for {n_live}/{len(positions)} open positions · prices refresh every 5 min"
+            f"· live prices fetched for {n_live}/{len(still_open)} open positions · prices refresh every 5 min"
         )
 
     st.markdown("</div>", unsafe_allow_html=True)
