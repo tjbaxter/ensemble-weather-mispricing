@@ -2907,19 +2907,40 @@ def _render_trading_tab() -> None:
             })
 
         if _bar_rows:
-            # Toggle
-            chart_view = st.radio(
-                "View",
-                options=["📊 Waterfall", "📈 Cumulative line"],
-                horizontal=True,
-                label_visibility="collapsed",
-                key="unreal_chart_toggle",
-            )
+            # Toggles row
+            _tcol1, _tcol2 = st.columns([1, 1])
+            with _tcol1:
+                chart_view = st.radio(
+                    "View",
+                    options=["📊 Waterfall", "📈 Cumulative line"],
+                    horizontal=True,
+                    label_visibility="collapsed",
+                    key="unreal_chart_toggle",
+                )
+            with _tcol2:
+                color_mode = st.radio(
+                    "Color",
+                    options=["🟢 P&L", "🔵 YES / NO"],
+                    horizontal=True,
+                    label_visibility="collapsed",
+                    key="unreal_color_toggle",
+                )
 
             _bar_rows_sorted = sorted(_bar_rows, key=lambda r: r["upnl"])
             bar_labels = [r["label"] for r in _bar_rows_sorted]
             bar_vals   = [r["upnl"]  for r in _bar_rows_sorted]
-            bar_colors = ["#00FF88" if v >= 0 else "#FF4444" for v in bar_vals]
+
+            # Colour by P&L (green profit / red loss) or by side (blue YES / orange NO)
+            if color_mode == "🔵 YES / NO":
+                bar_colors = ["#3B82F6" if r["side"] == "BUY_YES" else "#F97316" for r in _bar_rows_sorted]
+                legend_html = (
+                    '<span style="color:#3B82F6;font-size:0.8rem;">■ BUY YES</span>'
+                    '&nbsp;&nbsp;'
+                    '<span style="color:#F97316;font-size:0.8rem;">■ BUY NO</span>'
+                )
+                st.markdown(legend_html, unsafe_allow_html=True)
+            else:
+                bar_colors = ["#00FF88" if v >= 0 else "#FF4444" for v in bar_vals]
 
             if chart_view == "📊 Waterfall":
                 fig = go.Figure()
@@ -2930,7 +2951,18 @@ def _render_trading_tab() -> None:
                     marker_color=bar_colors,
                     text=[f"${v:+.2f}" for v in bar_vals],
                     textposition="outside",
-                    hovertemplate="%{y}<br>Unrealized: $%{x:.2f}<extra></extra>",
+                    hovertemplate="%{y}<br>Side: " +
+                        "<br>".join(
+                            [f"{r['side']}" for r in _bar_rows_sorted]
+                        ) + "<br>Unrealized: $%{x:.2f}<extra></extra>"
+                        if False else "%{y}<br>Unrealized: $%{x:.2f}<extra></extra>",
+                    customdata=[[r["side"], r["fill"], r["cur"]] for r in _bar_rows_sorted],
+                    hovertemplate=(
+                        "%{y}<br>"
+                        "Side: %{customdata[0]}<br>"
+                        "Entry: %{customdata[1]:.3f} → Now: %{customdata[2]:.3f}<br>"
+                        "Unrealized: $%{x:.2f}<extra></extra>"
+                    ),
                     showlegend=False,
                 ))
                 fig.add_vline(x=0, line_color="#444", line_width=1)
@@ -2953,7 +2985,10 @@ def _render_trading_tab() -> None:
                     cum += r["upnl"]
                     cum_vals.append(round(cum, 2))
                     labels.append(r["label"])
-                    colors.append("#00FF88" if r["upnl"] >= 0 else "#FF4444")
+                    if color_mode == "🔵 YES / NO":
+                        colors.append("#3B82F6" if r["side"] == "BUY_YES" else "#F97316")
+                    else:
+                        colors.append("#00FF88" if r["upnl"] >= 0 else "#FF4444")
                     hovers.append(
                         f"{r['city']} · {r['date']} · {r['bucket']}<br>"
                         f"Side: {r['side']}  Entry: {r['fill']:.3f}  Now: {r['cur']:.3f}<br>"
