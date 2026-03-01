@@ -11,9 +11,14 @@ venv/
 
 # Weather bot local artifacts
 weather-bot/.env
-weather-bot/logs/
 weather-bot/.venv/
 weather-bot/__pycache__/
+
+# Ignore most of logs/ but track the key output CSVs so Streamlit Cloud sees them
+weather-bot/logs/
+!weather-bot/logs/resolved.csv
+!weather-bot/logs/signals.csv
+!weather-bot/logs/trades.csv
 
 
 http://localhost:8502

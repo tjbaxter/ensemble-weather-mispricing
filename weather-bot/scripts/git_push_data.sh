@@ -26,6 +26,13 @@ git add \
   weather-bot/backtest/data/resolved_markets.csv \
   2>/dev/null || true
 
+# Log files need -f because logs/ is gitignored (exceptions added in .gitignore)
+git add -f \
+  weather-bot/logs/resolved.csv \
+  weather-bot/logs/signals.csv \
+  weather-bot/logs/trades.csv \
+  2>/dev/null || true
+
 # Only commit if there are actual changes
 if git diff --cached --quiet; then
   echo "[git_push_data] No changes to commit."
