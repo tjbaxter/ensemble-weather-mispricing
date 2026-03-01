@@ -2377,17 +2377,22 @@ def _build_leaderboard(rows: list[dict], city: str) -> pd.DataFrame:
 
 @st.cache_data(ttl=300, show_spinner=False)
 def fetch_live_position_prices(token_ids: tuple) -> dict[str, float]:
-    """Fetch current mark prices for open positions from Polymarket CLOB API.
+    """Fetch current mark prices for open positions.
 
-    Uses POST /prices (batch, up to 100 token IDs per request) which returns the
-    best available SELL price for each token — this is the mark-to-market exit
-    value for our long YES and long NO positions.
+    Strategy:
+    1. POST clob.polymarket.com/prices — best SELL price from active orderbook.
+       Fast, but returns nothing for illiquid/thin markets (D+2, D+3 often).
+    2. Gamma API fallback — for any token still missing after step 1, fetch
+       outcomePrices from gamma-api.polymarket.com.  Works even with no active
+       orderbook (uses last-trade / mid price).
 
-    Returns {token_id: sell_price}. Cached for 5 min.
+    Returns {token_id: price}. Cached for 5 min.
     """
     prices: dict[str, float] = {}
     if not token_ids:
         return prices
+
+    # ── Step 1: CLOB /prices batch ───────────────────────────────────────────
     batch_size = 100
     for i in range(0, len(token_ids), batch_size):
         batch = list(token_ids)[i : i + batch_size]
@@ -2402,7 +2407,6 @@ def fetch_live_position_prices(token_ids: tuple) -> dict[str, float]:
             data = r.json()
             for tid, info in data.items():
                 try:
-                    # SELL key = best price we can exit our position at
                     sell = info.get("SELL") or info.get("BUY")
                     if sell is not None:
                         prices[tid] = float(sell)
@@ -2410,6 +2414,41 @@ def fetch_live_position_prices(token_ids: tuple) -> dict[str, float]:
                     pass
         except Exception:
             pass
+
+    # ── Step 2: Gamma API fallback for tokens still missing ──────────────────
+    missing = [tid for tid in token_ids if tid not in prices]
+    if missing:
+        gamma_batch = 50   # gamma API is less strict but keep batches small
+        for i in range(0, len(missing), gamma_batch):
+            batch = missing[i : i + gamma_batch]
+            try:
+                r = requests.get(
+                    "https://gamma-api.polymarket.com/markets",
+                    params={"clob_token_ids": ",".join(batch)},
+                    timeout=15,
+                )
+                if not r.ok:
+                    continue
+                markets = r.json()
+                if not isinstance(markets, list):
+                    continue
+                for mkt in markets:
+                    # outcomePrices is ["yes_price", "no_price"] as strings
+                    outcome_prices = mkt.get("outcomePrices")
+                    clob_ids = mkt.get("clobTokenIds")
+                    if not outcome_prices or not clob_ids:
+                        continue
+                    try:
+                        clob_list = json.loads(clob_ids) if isinstance(clob_ids, str) else clob_ids
+                        price_list = json.loads(outcome_prices) if isinstance(outcome_prices, str) else outcome_prices
+                        for tid, p in zip(clob_list, price_list):
+                            if tid in missing and tid not in prices:
+                                prices[tid] = float(p)
+                    except (ValueError, TypeError, json.JSONDecodeError):
+                        pass
+            except Exception:
+                pass
+
     return prices
 
 
