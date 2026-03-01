@@ -69,6 +69,11 @@ class Signal:
     days_ahead: int = 1              # 1=D+1, 2=D+2, 3=D+3
     hours_to_resolution: float = 0.0 # fractional hours until market closes
     temporal_discount: float = 1.0   # discount applied to forecast_prob (< 1 for D+2/D+3)
+    # Strategy tag — used for A/B comparison
+    # LADDER    = one of several adjacent buckets placed by the ladder strategy
+    # CONVICTION = shadow signal: single highest-probability bucket, full Kelly, never executed
+    # SINGLE    = non-ladder directional pick
+    strategy: str = "SINGLE"
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -176,6 +181,7 @@ def generate_signals(
                 )
                 if ladder_size >= max(MIN_ORDER_USD, PRACTICAL_MIN_ORDER_USD):
                     each_size = round(ladder_size / len(ladder), 2)
+                    total_cost = 0.0
                     for item in ladder:
                         if item["price"] < HARD_MIN_YES_ENTRY_PRICE or item["price"] > HARD_MAX_YES_ENTRY_PRICE:
                             continue
@@ -196,6 +202,60 @@ def generate_signals(
                                 bucket=bucket,
                                 rounding_confidence=rounding_confidence,
                                 predicted_display_temp=predicted_display_temp,
+                                spread_colour=det_spread_colour,
+                                det_spread=round(det_spread, 3),
+                                model_values_json=json.dumps(
+                                    {k: round(v, 2) for k, v in det_model_values.items()},
+                                    separators=(",", ":"),
+                                ),
+                                kelly_fraction_used=city_kelly,
+                                days_ahead=days_ahead,
+                                hours_to_resolution=round(hours_to_resolution, 1),
+                                temporal_discount=temporal_discount,
+                                strategy="LADDER",
+                            )
+                        )
+                        total_cost += each_size
+
+                    # Shadow CONVICTION signal: single best bucket, full ladder budget.
+                    # Never executed — logged so the resolver can score it for A/B comparison.
+                    if center_bucket in market["buckets"]:
+                        center_info = market["buckets"][center_bucket]
+                        center_item = next((i for i in ladder if i["bucket"] == center_bucket), ladder[0])
+                        conviction_size = round(total_cost or ladder_size, 2)
+                        ev_conviction = (
+                            center_item["model_prob"]
+                            * (conviction_size / max(center_item["price"], 0.001))
+                            * (1.0 - center_item["price"])
+                            - (1.0 - center_item["model_prob"]) * conviction_size
+                        )
+                        signals.append(
+                            Signal(
+                                market_id=market["condition_id"],
+                                token_id=center_info["yes_token_id"],
+                                side="BUY_YES",
+                                edge=center_item["ladder_edge"],
+                                forecast_prob=center_item["model_prob"],
+                                market_prob=center_item["price"],
+                                size_usd=conviction_size,
+                                city=city,
+                                station_icao=station_icao,
+                                date=date,
+                                bucket=center_bucket,
+                                rounding_confidence=rounding_confidence,
+                                predicted_display_temp=predicted_display_temp,
+                                spread_colour=det_spread_colour,
+                                det_spread=round(det_spread, 3),
+                                model_values_json=json.dumps(
+                                    {k: round(v, 2) for k, v in det_model_values.items()},
+                                    separators=(",", ":"),
+                                ),
+                                ev_per_bet=round(ev_conviction, 3),
+                                kelly_fraction_used=city_kelly,
+                                days_ahead=days_ahead,
+                                hours_to_resolution=round(hours_to_resolution, 1),
+                                temporal_discount=temporal_discount,
+                                strategy="CONVICTION",
                             )
                         )
                     continue
@@ -271,6 +331,7 @@ def generate_signals(
                     days_ahead=days_ahead,
                     hours_to_resolution=round(hours_to_resolution, 1),
                     temporal_discount=temporal_discount,
+                    strategy="SINGLE",
                 )
             )
 

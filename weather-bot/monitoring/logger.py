@@ -71,6 +71,7 @@ class BotLogger:
                         "hours_to_resolution",
                         "temporal_discount",
                         "action_taken",
+                        "strategy",
                     ]
                 )
         if not self.accuweather_file.exists():
@@ -123,6 +124,7 @@ class BotLogger:
                     signal.get("hours_to_resolution", ""),
                     signal.get("temporal_discount", ""),
                     action_taken,
+                    signal.get("strategy", ""),
                 ]
             )
 

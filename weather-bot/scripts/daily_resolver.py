@@ -56,6 +56,7 @@ RESOLVED_HEADER = [
     "pnl_usd",
     "miss_distance",  # actual_temp - ensemble_mean (signed)
     "signal_timestamp",
+    "strategy",       # LADDER | CONVICTION | SINGLE
 ]
 
 
@@ -65,38 +66,45 @@ def _ensure_resolved_csv() -> None:
             csv.writer(f).writerow(RESOLVED_HEADER)
 
 
-def _load_resolved_keys() -> set[tuple[str, str, str]]:
-    """Return set of (target_date, city, bucket) already in resolved.csv."""
-    keys: set[tuple[str, str, str]] = set()
+def _load_resolved_keys() -> set[tuple[str, str, str, str]]:
+    """Return set of (target_date, city, bucket, strategy) already in resolved.csv."""
+    keys: set[tuple[str, str, str, str]] = set()
     if not RESOLVED_CSV.exists():
         return keys
     with RESOLVED_CSV.open(encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            keys.add((row["target_date"], row["city"], row["bucket"]))
+            keys.add((row["target_date"], row["city"], row["bucket"],
+                       row.get("strategy", "LADDER")))
     return keys
 
 
 def _load_pending_trades() -> list[dict]:
-    """Read signals.csv, return rows where action='trade' and date < today."""
+    """Read signals.csv for rows to resolve:
+    - action_taken='trade'             → LADDER / SINGLE actual bets
+    - action_taken='conviction_signal' → CONVICTION shadow picks (never executed)
+    Both are scored against actuals for A/B comparison.
+    """
     if not SIGNALS_CSV.exists():
         print("signals.csv not found — nothing to resolve.")
         return []
 
     today = date.today().isoformat()
-    pending: dict[tuple[str, str, str], dict] = {}  # (date, city, bucket) → row
+    # Key = (date, city, bucket, strategy) → keep earliest signal
+    pending: dict[tuple[str, str, str, str], dict] = {}
 
     with SIGNALS_CSV.open(encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            if row.get("action_taken") != "trade":
+            action = row.get("action_taken", "")
+            if action not in ("trade", "conviction_signal"):
                 continue
             target_date = row.get("date", "")
             if not target_date or target_date >= today:
                 continue
-            key = (target_date, row.get("city", ""), row.get("bucket", ""))
-            # Keep the earliest signal per (date, city, bucket)
+            strategy = row.get("strategy", "LADDER" if action == "trade" else "CONVICTION")
+            key = (target_date, row.get("city", ""), row.get("bucket", ""), strategy)
             if key not in pending:
-                pending[key] = row
+                pending[key] = {**row, "strategy": strategy}
 
     return list(pending.values())
 
@@ -169,7 +177,8 @@ async def resolve_all() -> dict:
             station_icao = row.get("station_icao", "")
             side = row.get("side", "BUY_YES")
 
-            key = (target_date_str, city, bucket)
+            strategy = row.get("strategy", "LADDER")
+            key = (target_date_str, city, bucket, strategy)
             if key in already_resolved:
                 continue
 
@@ -245,6 +254,7 @@ async def resolve_all() -> dict:
                 "pnl_usd": pnl,
                 "miss_distance": miss_distance,
                 "signal_timestamp": row.get("timestamp", ""),
+                "strategy": strategy,
             }
 
             with RESOLVED_CSV.open("a", newline="", encoding="utf-8") as f:
@@ -284,35 +294,73 @@ def print_summary(stats: dict) -> None:
         all_rows = []
         with RESOLVED_CSV.open(encoding="utf-8") as f:
             all_rows = list(csv.DictReader(f))
-        if all_rows:
-            total_wins = sum(1 for r in all_rows if r.get("outcome") == "WIN")
-            total_pnl = sum(float(r.get("pnl_usd") or 0) for r in all_rows)
-            total = len(all_rows)
-            print(f"\n  ALL-TIME: {total} resolved | {total_wins}W/{total-total_wins}L | "
+        if not all_rows:
+            return
+
+        # ── Overall stats (LADDER + SINGLE only — real money) ────────────────
+        real_rows = [r for r in all_rows if r.get("strategy", "") != "CONVICTION"]
+        total_wins = sum(1 for r in real_rows if r.get("outcome") == "WIN")
+        total_pnl = sum(float(r.get("pnl_usd") or 0) for r in real_rows)
+        total = len(real_rows)
+        if total:
+            print(f"\n  ALL-TIME (executed): {total} resolved | {total_wins}W/{total-total_wins}L | "
                   f"{total_wins/total*100:.0f}% acc | ${total_pnl:+.2f} cumulative P&L")
 
-            # Breakdown by spread colour
-            green = [r for r in all_rows if r.get("spread_colour") == "GREEN"]
-            red   = [r for r in all_rows if r.get("spread_colour") == "RED"]
-            if green:
-                g_wins = sum(1 for r in green if r["outcome"] == "WIN")
-                print(f"  GREEN days: {g_wins}/{len(green)} = {g_wins/len(green)*100:.0f}% "
-                      f"(target 75%)")
-            if red:
-                r_wins = sum(1 for r in red if r["outcome"] == "WIN")
-                print(f"  RED days:   {r_wins}/{len(red)} = {r_wins/len(red)*100:.0f}% "
-                      f"(target 55%)")
+        # ── LADDER vs CONVICTION head-to-head ─────────────────────────────────
+        ladder_rows     = [r for r in all_rows if r.get("strategy") == "LADDER"]
+        conviction_rows = [r for r in all_rows if r.get("strategy") == "CONVICTION"]
+        if ladder_rows or conviction_rows:
+            print(f"\n  ┌─────────────── A/B STRATEGY COMPARISON ──────────────┐")
 
-            # Calibration check: group by city
-            cities: dict[str, list] = {}
-            for r in all_rows:
-                cities.setdefault(r["city"], []).append(r)
-            print(f"\n  PER-CITY ACCURACY:")
-            for city_name, rows in sorted(cities.items()):
-                cw = sum(1 for r in rows if r["outcome"] == "WIN")
-                cp = sum(float(r.get("pnl_usd") or 0) for r in rows)
-                print(f"    {city_name:<16} {cw}/{len(rows)} = "
-                      f"{cw/len(rows)*100:.0f}%  P&L ${cp:+.2f}")
+            def _strat_summary(rows: list[dict], label: str) -> None:
+                if not rows:
+                    print(f"  │  {label:<12} — no data yet")
+                    return
+                w  = sum(1 for r in rows if r.get("outcome") == "WIN")
+                n  = len(rows)
+                p  = sum(float(r.get("pnl_usd") or 0) for r in rows)
+                s  = sum(float(r.get("size_usd") or 0) for r in rows)
+                roi = p / s * 100 if s else 0
+                print(f"  │  {label:<12} {w}/{n} ({w/n*100:.0f}% acc)  P&L ${p:+.2f}  "
+                      f"ROI {roi:+.1f}%  (${s:.0f} staked)")
+
+            _strat_summary(ladder_rows,     "LADDER")
+            _strat_summary(conviction_rows, "CONVICTION")
+
+            # Head-to-head: only days where both strategies resolved
+            l_dict = {(r["target_date"], r["city"]): r for r in ladder_rows}
+            c_dict = {(r["target_date"], r["city"]): r for r in conviction_rows}
+            shared = set(l_dict) & set(c_dict)
+            if len(shared) >= 3:
+                l_pnl = sum(float(l_dict[k]["pnl_usd"] or 0) for k in shared)
+                c_pnl = sum(float(c_dict[k]["pnl_usd"] or 0) for k in shared)
+                winner = "CONVICTION" if c_pnl > l_pnl else "LADDER"
+                print(f"  │  Head-to-head ({len(shared)} city-days): LADDER ${l_pnl:+.2f} vs "
+                      f"CONVICTION ${c_pnl:+.2f}  → {winner} wins")
+            print(f"  └───────────────────────────────────────────────────────┘")
+
+        # ── Breakdown by spread colour ────────────────────────────────────────
+        green = [r for r in real_rows if r.get("spread_colour") == "GREEN"]
+        red   = [r for r in real_rows if r.get("spread_colour") == "RED"]
+        if green:
+            g_wins = sum(1 for r in green if r["outcome"] == "WIN")
+            print(f"  GREEN days: {g_wins}/{len(green)} = {g_wins/len(green)*100:.0f}% "
+                  f"(target 75%)")
+        if red:
+            r_wins = sum(1 for r in red if r["outcome"] == "WIN")
+            print(f"  RED days:   {r_wins}/{len(red)} = {r_wins/len(red)*100:.0f}% "
+                  f"(target 55%)")
+
+        # ── Calibration check: group by city ─────────────────────────────────
+        cities: dict[str, list] = {}
+        for r in real_rows:
+            cities.setdefault(r["city"], []).append(r)
+        print(f"\n  PER-CITY ACCURACY (executed bets):")
+        for city_name, rows in sorted(cities.items()):
+            cw = sum(1 for r in rows if r["outcome"] == "WIN")
+            cp = sum(float(r.get("pnl_usd") or 0) for r in rows)
+            print(f"    {city_name:<16} {cw}/{len(rows)} = "
+                  f"{cw/len(rows)*100:.0f}%  P&L ${cp:+.2f}")
 
 
 if __name__ == "__main__":

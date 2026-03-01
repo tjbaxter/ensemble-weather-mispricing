@@ -3159,6 +3159,136 @@ def _render_trading_tab() -> None:
         )
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # ── A/B Strategy Comparison: LADDER vs CONVICTION ─────────────────────────
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.subheader("A/B: LADDER vs CONVICTION")
+    if resolved_df.empty or "strategy" not in resolved_df.columns:
+        st.info(
+            "A/B data starts accumulating after the first daily resolution (10:00 UTC). "
+            "Both strategies will be scored automatically from tomorrow."
+        )
+    else:
+        # Separate executed bets from shadow conviction signals
+        ladder_df     = resolved_df[resolved_df["strategy"] == "LADDER"].copy()
+        conviction_df = resolved_df[resolved_df["strategy"] == "CONVICTION"].copy()
+        single_df     = resolved_df[resolved_df["strategy"] == "SINGLE"].copy()
+        # Combine LADDER + SINGLE as "executed" for overall stats
+        executed_df = pd.concat([ladder_df, single_df], ignore_index=True)
+
+        def _strat_metrics(df: pd.DataFrame) -> dict:
+            if df.empty:
+                return {"n": 0, "wins": 0, "acc": 0.0, "pnl": 0.0, "staked": 0.0, "roi": 0.0}
+            n  = len(df)
+            w  = int((df["outcome"] == "WIN").sum())
+            p  = float(df["pnl_usd"].sum())
+            s  = float(df.get("size_usd", pd.Series(dtype=float)).fillna(0).sum())
+            return {"n": n, "wins": w, "acc": w / n * 100, "pnl": p,
+                    "staked": s, "roi": p / s * 100 if s else 0.0}
+
+        lm = _strat_metrics(ladder_df)
+        cm = _strat_metrics(conviction_df)
+        sm = _strat_metrics(single_df)
+
+        # KPI comparison cards
+        ab_cols = st.columns(3)
+        for col, (label, m, color_if_better) in zip(
+            ab_cols,
+            [
+                ("⚡ LADDER (executed)", lm, None),
+                ("🎯 CONVICTION (shadow)", cm, None),
+                ("🔹 SINGLE (executed)", sm, None),
+            ],
+        ):
+            pnl_c = GREEN if m["pnl"] >= 0 else RED
+            with col:
+                st.markdown(
+                    f"""
+<div class="panel" style="text-align:center; padding:12px 8px;">
+  <div style="font-size:0.85rem; font-weight:700; color:#aaa; letter-spacing:.06em; margin-bottom:8px;">{label}</div>
+  <div style="font-size:1.5rem; font-weight:700; color:{pnl_c};">${m['pnl']:+.2f}</div>
+  <div style="color:#888; font-size:0.8rem; margin-top:4px;">
+    {m['wins']}/{m['n']} trades · {m['acc']:.0f}% acc · ROI {m['roi']:+.1f}%
+  </div>
+</div>""",
+                    unsafe_allow_html=True,
+                )
+
+        # Head-to-head chart: cumulative PnL for LADDER and CONVICTION over time
+        if not ladder_df.empty and not conviction_df.empty:
+            ladder_df  = ladder_df.sort_values("resolved_at")
+            conviction_df = conviction_df.sort_values("resolved_at")
+            ladder_df["cum_pnl_l"]  = ladder_df["pnl_usd"].cumsum()
+            conviction_df["cum_pnl_c"] = conviction_df["pnl_usd"].cumsum()
+
+            fig_ab = go.Figure()
+            fig_ab.add_trace(go.Scatter(
+                x=ladder_df["resolved_at"],
+                y=ladder_df["cum_pnl_l"],
+                mode="lines+markers",
+                name="LADDER",
+                line={"color": "#4CC9F0", "width": 2},
+                marker={"size": 6},
+                hovertemplate="%{x|%b %d}<br>LADDER cum: $%{y:.2f}<extra></extra>",
+            ))
+            fig_ab.add_trace(go.Scatter(
+                x=conviction_df["resolved_at"],
+                y=conviction_df["cum_pnl_c"],
+                mode="lines+markers",
+                name="CONVICTION",
+                line={"color": "#F72585", "width": 2, "dash": "dash"},
+                marker={"size": 6},
+                hovertemplate="%{x|%b %d}<br>CONVICTION cum: $%{y:.2f}<extra></extra>",
+            ))
+            fig_ab.add_hline(y=0, line_dash="dot", line_color="#333", line_width=1)
+            fig_ab.update_layout(
+                plot_bgcolor=BG,
+                paper_bgcolor=PANEL,
+                font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+                margin={"l": 20, "r": 10, "t": 10, "b": 20},
+                xaxis={"gridcolor": "#1f2937", "tickformat": "%b %d"},
+                yaxis={"gridcolor": "#1f2937", "title": "Cumulative P&L ($)", "zeroline": False},
+                legend={"bgcolor": "rgba(0,0,0,0)", "font": {"size": 12}},
+                height=300,
+            )
+            st.plotly_chart(fig_ab, use_container_width=True)
+
+            # City-level head-to-head table
+            l_by_city = ladder_df.groupby("city").agg(
+                L_n=("pnl_usd", "count"), L_pnl=("pnl_usd", "sum"),
+                L_wins=("outcome", lambda x: (x == "WIN").sum())
+            ).reset_index()
+            c_by_city = conviction_df.groupby("city").agg(
+                C_n=("pnl_usd", "count"), C_pnl=("pnl_usd", "sum"),
+                C_wins=("outcome", lambda x: (x == "WIN").sum())
+            ).reset_index()
+            merged = l_by_city.merge(c_by_city, on="city", how="outer").fillna(0)
+            merged["L_acc"]   = (merged["L_wins"] / merged["L_n"].replace(0, 1) * 100).round(0)
+            merged["C_acc"]   = (merged["C_wins"] / merged["C_n"].replace(0, 1) * 100).round(0)
+            merged["winner"]  = merged.apply(
+                lambda r: "🎯 CONVICTION" if r["C_pnl"] > r["L_pnl"] else "⚡ LADDER", axis=1
+            )
+            merged["L_pnl"]   = merged["L_pnl"].round(2)
+            merged["C_pnl"]   = merged["C_pnl"].round(2)
+            st.dataframe(
+                merged[["city", "L_n", "L_acc", "L_pnl", "C_n", "C_acc", "C_pnl", "winner"]].rename(columns={
+                    "city":    "City",
+                    "L_n":     "Ladder N", "L_acc": "Ladder Acc%", "L_pnl": "Ladder P&L",
+                    "C_n":     "Conv N",   "C_acc": "Conv Acc%",   "C_pnl": "Conv P&L",
+                    "winner":  "Better?",
+                }),
+                use_container_width=True,
+                hide_index=True,
+            )
+            n_l_wins = int((merged["L_pnl"] > merged["C_pnl"]).sum())
+            n_c_wins = int((merged["C_pnl"] > merged["L_pnl"]).sum())
+            st.caption(
+                f"City-level score: LADDER wins {n_l_wins} cities · CONVICTION wins {n_c_wins} cities  "
+                f"· resolves update at 10:00 UTC daily"
+            )
+        else:
+            st.caption("Both LADDER and CONVICTION data needed before head-to-head chart appears.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
     # ── Recent resolutions ────────────────────────────────────────────────────
     st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.subheader(f"RECENT RESOLVED TRADES  ({res_wins}W / {res_losses}L)")

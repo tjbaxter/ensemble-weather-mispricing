@@ -109,6 +109,11 @@ class PaperTrader:
         skipped_execution = 0
         skipped_already_held = 0
         for signal in signals:
+            # Shadow CONVICTION signals are never executed — just logged for A/B scoring.
+            if signal.strategy == "CONVICTION":
+                self.logger.log_signal(signal.to_dict(), "conviction_signal")
+                continue
+
             if self.portfolio.holds_market_bucket(signal.market_id, signal.bucket):
                 self.logger.log_signal(signal.to_dict(), "already_held")
                 skipped_already_held += 1
