@@ -2993,10 +2993,12 @@ def _render_trading_tab() -> None:
 
     if not has_data:
         # ── No resolved history yet: live unrealized P&L chart ───────────────
-        # Only show genuinely unresolved positions (still_open).
-        # Positions where the live price has settled to ~0 or ~1 are already
-        # shown in the LIVE RESOLVED panel above — they auto-drop from this chart.
+        # Build rows for ALL positions: still-open (unrealized) + live-resolved (final P&L).
+        # Resolved positions are tagged so they get a distinct colour in the chart —
+        # you can see the full picture at a glance: live bars vs settled bars.
         _bar_rows = []
+
+        # Still-open: unrealized P&L
         for p in still_open:
             tid = p.get("token_id")
             if not tid or tid not in _live_prices:
@@ -3006,14 +3008,35 @@ def _render_trading_tab() -> None:
             size = float(p.get("fill_size",  0) or 0)
             upnl = round((cur - fill) * size, 2)
             _bar_rows.append({
-                "label":  f"{p.get('city','?')} {p.get('date','?')} {p.get('bucket','?')}",
-                "city":   p.get("city", "?"),
-                "date":   p.get("date", "?"),
-                "bucket": p.get("bucket", "?"),
-                "side":   p.get("side", "?"),
-                "fill":   fill,
-                "cur":    cur,
-                "upnl":   upnl,
+                "label":    f"{p.get('city','?')} {p.get('date','?')} {p.get('bucket','?')}",
+                "city":     p.get("city", "?"),
+                "date":     p.get("date", "?"),
+                "bucket":   p.get("bucket", "?"),
+                "side":     p.get("side", "?"),
+                "fill":     fill,
+                "cur":      cur,
+                "upnl":     upnl,
+                "resolved": False,
+                "won":      None,
+            })
+
+        # Live-resolved: final P&L (fill_size - cost if WIN, else -cost)
+        for r in net_live_resolved:
+            cost      = float(r.get("cost",      0) or 0)
+            fill_size = float(r.get("fill_size", 0) or 0)
+            fill      = float(r.get("fill_price", 0) or 0)
+            final_pnl = r["live_pnl"]
+            _bar_rows.append({
+                "label":    f"{r.get('city','?')} {r.get('date','?')} {r.get('bucket','?')} ✓",
+                "city":     r.get("city", "?"),
+                "date":     r.get("date", "?"),
+                "bucket":   r.get("bucket", "?"),
+                "side":     r.get("side", "?"),
+                "fill":     fill,
+                "cur":      r.get("live_price", fill),
+                "upnl":     final_pnl,
+                "resolved": True,
+                "won":      r["live_won"],
             })
 
         if _bar_rows:
@@ -3036,21 +3059,47 @@ def _render_trading_tab() -> None:
                     key="unreal_color_toggle",
                 )
 
-            _bar_rows_sorted = sorted(_bar_rows, key=lambda r: r["upnl"])
+            # Sort: resolved positions at the top (positive end), open below
+            _bar_rows_sorted = sorted(
+                _bar_rows,
+                key=lambda r: (r["resolved"], r["upnl"])
+            )
             bar_labels = [r["label"] for r in _bar_rows_sorted]
             bar_vals   = [r["upnl"]  for r in _bar_rows_sorted]
 
-            # Colour by P&L (green profit / red loss) or by side (blue YES / orange NO)
+            # Colour scheme:
+            #   Resolved WIN  → gold  (#F59E0B)
+            #   Resolved LOSS → dark grey (#6B7280)
+            #   Open by P&L   → green / red
+            #   Open by side  → blue YES / orange NO
+            def _bar_colour(r, v, mode):
+                if r["resolved"]:
+                    return "#F59E0B" if r["won"] else "#6B7280"   # gold WIN / grey LOSS
+                if mode == "🔵 YES / NO":
+                    return "#3B82F6" if r["side"] == "BUY_YES" else "#F97316"
+                return "#00FF88" if v >= 0 else "#FF4444"
+
+            bar_colors = [_bar_colour(r, v, color_mode) for r, v in zip(_bar_rows_sorted, bar_vals)]
+
+            legend_html = (
+                '<span style="color:#F59E0B;font-size:0.8rem;">■ Resolved WIN</span>'
+                '&nbsp;&nbsp;'
+                '<span style="color:#6B7280;font-size:0.8rem;">■ Resolved LOSS</span>'
+                '&nbsp;&nbsp;'
+            )
             if color_mode == "🔵 YES / NO":
-                bar_colors = ["#3B82F6" if r["side"] == "BUY_YES" else "#F97316" for r in _bar_rows_sorted]
-                legend_html = (
-                    '<span style="color:#3B82F6;font-size:0.8rem;">■ BUY YES</span>'
+                legend_html += (
+                    '<span style="color:#3B82F6;font-size:0.8rem;">■ Open YES</span>'
                     '&nbsp;&nbsp;'
-                    '<span style="color:#F97316;font-size:0.8rem;">■ BUY NO</span>'
+                    '<span style="color:#F97316;font-size:0.8rem;">■ Open NO</span>'
                 )
-                st.markdown(legend_html, unsafe_allow_html=True)
             else:
-                bar_colors = ["#00FF88" if v >= 0 else "#FF4444" for v in bar_vals]
+                legend_html += (
+                    '<span style="color:#00FF88;font-size:0.8rem;">■ Open +P&L</span>'
+                    '&nbsp;&nbsp;'
+                    '<span style="color:#FF4444;font-size:0.8rem;">■ Open -P&L</span>'
+                )
+            st.markdown(legend_html, unsafe_allow_html=True)
 
             if chart_view == "📊 Waterfall":
                 fig = go.Figure()
@@ -3061,12 +3110,16 @@ def _render_trading_tab() -> None:
                     marker_color=bar_colors,
                     text=[f"${v:+.2f}" for v in bar_vals],
                     textposition="outside",
-                    customdata=[[r["side"], r["fill"], r["cur"]] for r in _bar_rows_sorted],
+                    customdata=[[r["side"], r["fill"], r["cur"],
+                                 "✅ SETTLED" if r["resolved"] and r["won"]
+                                 else "❌ SETTLED" if r["resolved"]
+                                 else "⏳ LIVE"] for r in _bar_rows_sorted],
                     hovertemplate=(
                         "%{y}<br>"
+                        "%{customdata[3]}<br>"
                         "Side: %{customdata[0]}<br>"
-                        "Entry: %{customdata[1]:.3f} → Now: %{customdata[2]:.3f}<br>"
-                        "Unrealized: $%{x:.2f}<extra></extra>"
+                        "Entry: %{customdata[1]:.3f} → Settled/Now: %{customdata[2]:.3f}<br>"
+                        "P&L: $%{x:.2f}<extra></extra>"
                     ),
                     showlegend=False,
                 ))
