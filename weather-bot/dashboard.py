@@ -3127,10 +3127,12 @@ def _render_trading_tab() -> None:
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Open Positions ────────────────────────────────────────────────────────
+    _today_str = datetime.now(UTC).strftime("%Y-%m-%d")
     pos_df = pd.DataFrame(positions)
     st.markdown('<div class="panel">', unsafe_allow_html=True)
-    st.subheader(f"OPEN POSITIONS ({len(positions)})")
+
     if pos_df.empty:
+        st.subheader("OPEN POSITIONS (0)")
         st.info("No open positions — bot is scanning, bets logged when signal fires.")
     else:
         for col in ["city", "station_icao", "date", "bucket", "side", "fill_price", "cost", "fill_size", "token_id"]:
@@ -3141,56 +3143,79 @@ def _render_trading_tab() -> None:
         pos_df["fill_size"]  = pd.to_numeric(pos_df["fill_size"],  errors="coerce").fillna(0.0)
 
         # Live current price and unrealized P&L
-        pos_df["live_price"]    = pos_df["token_id"].map(lambda t: _live_prices.get(t))
-        pos_df["unreal_pnl"]    = (
+        pos_df["live_price"] = pos_df["token_id"].map(lambda t: _live_prices.get(t))
+        pos_df["unreal_pnl"] = (
             (pos_df["live_price"].fillna(pos_df["fill_price"]) - pos_df["fill_price"])
             * pos_df["fill_size"]
         ).round(2)
-        pos_df["live_price_fmt"] = pos_df["live_price"].apply(
-            lambda x: f"{x:.3f}" if pd.notna(x) else "—"
-        )
-        pos_df["unreal_pnl_fmt"] = pos_df["unreal_pnl"].apply(
-            lambda x: f"${x:+.2f}"
-        )
-        # Profit if all resolve in our favour: shares × $1 payout − cost paid
-        pos_df["to_win"] = (pos_df["fill_size"] - pos_df["cost"]).round(2)
-        pos_df = pos_df.sort_values(["date", "city", "bucket"], ascending=True)
 
-        show_cols = ["city", "station_icao", "date", "bucket", "side",
-                     "fill_price", "live_price_fmt", "unreal_pnl_fmt", "cost", "to_win"]
+        # Split: active = date >= today OR has a live price; expired = past date with no price
+        # (Polymarket stops serving prices for closed markets — positions.json may lag resolver)
+        pos_df["_expired"] = (pos_df["date"] < _today_str) & pos_df["live_price"].isna()
+        active_df  = pos_df[~pos_df["_expired"]].copy()
+        expired_df = pos_df[ pos_df["_expired"]].copy()
 
-        # Colour unrealized P&L cells via Styler
-        display_df = pos_df[show_cols].rename(columns={
-            "city":           "City",
-            "station_icao":   "Station",
-            "date":           "Date",
-            "bucket":         "Bucket",
-            "side":           "Side",
-            "fill_price":     "Entry",
-            "live_price_fmt": "Live Price",
-            "unreal_pnl_fmt": "Unreal. P&L",
-            "cost":           "Cost ($)",
-            "to_win":         "To Win ($)",
-        })
+        # Show expired banner first if any exist
+        if not expired_df.empty:
+            exp_dates = sorted(expired_df["date"].unique())
+            st.warning(
+                f"⚠️ **{len(expired_df)} positions from {len(exp_dates)} past date(s) "
+                f"({', '.join(exp_dates)}) are still in positions.json** — "
+                f"their markets have closed on Polymarket so no live price is available. "
+                f"Run `daily_resolver.py` on the VM to prune them automatically.",
+                icon=None,
+            )
 
-        def _colour_unreal(val: str):
-            if val.startswith("$+") or (val.startswith("$") and not val.startswith("$-")):
-                return "color: #00FF88; font-weight:600"
-            elif val.startswith("$-"):
-                return "color: #FF4444; font-weight:600"
-            return ""
+        st.subheader(f"OPEN POSITIONS ({len(active_df)})")
 
-        styled = display_df.style.applymap(_colour_unreal, subset=["Unreal. P&L"])
-        st.dataframe(styled, use_container_width=True, hide_index=True)
+        if active_df.empty:
+            st.info("No active open positions.")
+        else:
+            active_df["live_price_fmt"] = active_df["live_price"].apply(
+                lambda x: f"{x:.3f}" if pd.notna(x) else "—"
+            )
+            active_df["unreal_pnl_fmt"] = active_df["unreal_pnl"].apply(
+                lambda x: f"${x:+.2f}"
+            )
+            # Profit if all resolve in our favour: shares × $1 payout − cost paid
+            active_df["to_win"] = (active_df["fill_size"] - active_df["cost"]).round(2)
+            active_df = active_df.sort_values(["date", "city", "bucket"], ascending=True)
 
-        total_to_win   = pos_df["to_win"].sum()
-        total_unreal   = pos_df["unreal_pnl"].sum()
-        n_priced = int(pos_df["live_price"].notna().sum())
-        st.caption(
-            f"Total exposure: **${metrics['open_exposure']:.2f}** · "
-            f"Unrealized P&L: **${total_unreal:+.2f}** ({n_priced}/{len(pos_df)} live prices) · "
-            f"To win if all ✅: **${total_to_win:.2f}**  ·  prices updated {_live_ts}"
-        )
+            show_cols = ["city", "station_icao", "date", "bucket", "side",
+                         "fill_price", "live_price_fmt", "unreal_pnl_fmt", "cost", "to_win"]
+
+            display_df = active_df[show_cols].rename(columns={
+                "city":           "City",
+                "station_icao":   "Station",
+                "date":           "Date",
+                "bucket":         "Bucket",
+                "side":           "Side",
+                "fill_price":     "Entry",
+                "live_price_fmt": "Live Price",
+                "unreal_pnl_fmt": "Unreal. P&L",
+                "cost":           "Cost ($)",
+                "to_win":         "To Win ($)",
+            })
+
+            def _colour_unreal(val: str):
+                if val.startswith("$+") or (val.startswith("$") and not val.startswith("$-")):
+                    return "color: #00FF88; font-weight:600"
+                elif val.startswith("$-"):
+                    return "color: #FF4444; font-weight:600"
+                return ""
+
+            styled = display_df.style.applymap(_colour_unreal, subset=["Unreal. P&L"])
+            st.dataframe(styled, use_container_width=True, hide_index=True)
+
+            total_to_win = active_df["to_win"].sum()
+            total_unreal = active_df["unreal_pnl"].sum()
+            n_priced     = int(active_df["live_price"].notna().sum())
+            st.caption(
+                f"Total exposure: **${active_df['cost'].sum():.2f}** · "
+                f"Unrealized P&L: **${total_unreal:+.2f}** ({n_priced}/{len(active_df)} live prices) · "
+                f"To win if all ✅: **${total_to_win:.2f}**  ·  prices updated {_live_ts}"
+            )
+
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── A/B Strategy Comparison: LADDER vs CONVICTION ─────────────────────────

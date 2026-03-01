@@ -32,9 +32,10 @@ if str(ROOT) not in sys.path:
 
 from config.cities import STATIONS
 
-SIGNALS_CSV = ROOT / "logs" / "signals.csv"
-TRADES_CSV  = ROOT / "logs" / "trades.csv"
-RESOLVED_CSV = ROOT / "logs" / "resolved.csv"
+SIGNALS_CSV   = ROOT / "logs" / "signals.csv"
+TRADES_CSV    = ROOT / "logs" / "trades.csv"
+RESOLVED_CSV  = ROOT / "logs" / "resolved.csv"
+POSITIONS_JSON = ROOT / "data" / "positions.json"
 
 WU_HIGH_PATTERN = re.compile(r'"temperatureMax":\{"value":(-?\d+(?:\.\d+)?)')
 
@@ -363,7 +364,45 @@ def print_summary(stats: dict) -> None:
                   f"{cw/len(rows)*100:.0f}%  P&L ${cp:+.2f}")
 
 
+def prune_expired_positions() -> int:
+    """Remove positions from positions.json whose target date is strictly before today.
+
+    These positions have already resolved on Polymarket (their markets are closed).
+    The resolver has scored them in resolved.csv; keeping them in positions.json
+    only clutters the dashboard's OPEN POSITIONS table with stale entries that
+    return no live price from the CLOB API.
+
+    Returns number of positions removed.
+    """
+    if not POSITIONS_JSON.exists():
+        return 0
+    try:
+        positions = json.loads(POSITIONS_JSON.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"  [prune] Could not load positions.json: {exc}")
+        return 0
+
+    today_str = date.today().isoformat()
+    before = len(positions)
+    active  = [p for p in positions if p.get("date", "9999") >= today_str]
+    removed = before - len(active)
+
+    if removed:
+        POSITIONS_JSON.write_text(
+            json.dumps(active, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        print(f"  [prune] Removed {removed} expired position(s) from positions.json "
+              f"(kept {len(active)} active).")
+    else:
+        print("  [prune] No expired positions to remove.")
+
+    return removed
+
+
 if __name__ == "__main__":
     print(f"[{datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}] Running daily resolver...")
     stats = asyncio.run(resolve_all())
     print_summary(stats)
+    print()
+    prune_expired_positions()
