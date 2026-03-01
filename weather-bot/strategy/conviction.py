@@ -24,10 +24,24 @@ _ACCURACY_CACHE  = ROOT / "data" / "accuracy_rows_cache.json"
 _COMMERCIAL_LOG  = ROOT / "data" / "commercial_forecast_log.json"
 
 # ── Tunable parameters ───────────────────────────────────────────────────────
-HOT_HAND_WINDOW       = 7     # days of history for rolling accuracy
-HOT_HAND_MAX_WEIGHT   = 2.0   # weight for a model with 100% recent accuracy
-HOT_HAND_MIN_WEIGHT   = 0.20  # weight for a model with 0% recent accuracy
-HOT_HAND_NEUTRAL_ACC  = 0.50  # accuracy at which weight == 1.0 (neutral)
+HOT_HAND_WINDOW       = 7     # days of history to look back for streak detection
+
+# Streak-to-weight lookup.
+# The PRIMARY driver is the consecutive streak ending on the most recent day
+# (i.e. was the model right on day-1, day-2, day-3 ... right up to our event?).
+# Longer streaks get compounding weight; models on a cold streak get discounted.
+_STREAK_WEIGHTS = {
+     5: 2.50,   # on fire: right 5 days in a row right up to today
+     4: 2.10,
+     3: 1.75,
+     2: 1.40,   # right the last 2 days — meaningful signal
+     1: 1.15,   # right only yesterday — small bonus
+     0: 1.00,   # no data
+    -1: 0.70,
+    -2: 0.42,
+    -3: 0.25,
+    -4: 0.18,
+}
 
 MIN_MODELS_FOR_SCORE  = 3     # need at least this many models with data
 CONSENSUS_SOFT_MIN    = 4     # below this, consensus score starts dropping off
@@ -64,21 +78,33 @@ def _load_json(path: Path) -> dict:
 
 # ── Hot-hand ─────────────────────────────────────────────────────────────────
 
+def _streak_weight(streak: int) -> float:
+    """Convert consecutive streak to vote multiplier using the lookup table.
+    Streaks beyond the table's range clamp to the nearest boundary value."""
+    if streak >= 5:
+        return _STREAK_WEIGHTS[5]
+    if streak <= -4:
+        return _STREAK_WEIGHTS[-4]
+    return _STREAK_WEIGHTS.get(streak, 1.0)
+
+
 def compute_hot_hand(city: str, model_keys: list[str]) -> dict[str, dict]:
     """
     Returns {model_key: {"accuracy": float|None, "streak": int, "weight": float}}
 
-    streak > 0  = consecutive wins from most recent day
-    streak < 0  = consecutive losses
-    streak == 0 = no data or alternating
+    streak > 0  = model was correct on each of the last N consecutive days
+                  ending with the most recent resolved day (the day before our event)
+    streak < 0  = model was wrong on each of the last N consecutive days
+    streak == 0 = no data
 
-    weight is a multiplier applied to that model's vote when computing
-    hot-hand-weighted consensus (neutral=1.0, hot=up to 2.0, cold=0.2).
+    Weight is primarily driven by streak length (see _STREAK_WEIGHTS).
+    Accuracy over the full window is a 30% secondary modifier so a model
+    that's been on a streak but was flaky before gets a slight haircut.
     """
     cache = _load_json(_ACCURACY_CACHE)
     rows  = cache.get(city, [])
 
-    # Take last HOT_HAND_WINDOW resolved rows (most recent first)
+    # Take last HOT_HAND_WINDOW resolved rows, most recent first
     resolved = sorted(
         [r for r in rows if isinstance(r, dict) and r.get("date")],
         key=lambda r: r["date"],
@@ -94,9 +120,11 @@ def compute_hot_hand(city: str, model_keys: list[str]) -> dict[str, dict]:
             result[mk] = {"accuracy": None, "streak": 0, "weight": 1.0}
             continue
 
+        # Rolling accuracy over the full window (secondary signal)
         accuracy = sum(bool(o) for o in outcomes) / len(outcomes)
 
-        # Streak: count consecutive same result from most recent
+        # Streak: consecutive same result starting from the MOST RECENT day.
+        # This is the "was the model right right up to our event?" question.
         streak = 0
         first  = bool(outcomes[0])
         for o in outcomes:
@@ -105,16 +133,23 @@ def compute_hot_hand(city: str, model_keys: list[str]) -> dict[str, dict]:
             else:
                 break
 
-        # Weight: linear from HOT_HAND_MIN at 0% acc → 1.0 at neutral → HOT_HAND_MAX at 100%
-        # Neutral point is HOT_HAND_NEUTRAL_ACC (default 0.50)
-        if accuracy >= HOT_HAND_NEUTRAL_ACC:
-            t = (accuracy - HOT_HAND_NEUTRAL_ACC) / (1.0 - HOT_HAND_NEUTRAL_ACC)
-            weight = 1.0 + t * (HOT_HAND_MAX_WEIGHT - 1.0)
-        else:
-            t = accuracy / HOT_HAND_NEUTRAL_ACC
-            weight = HOT_HAND_MIN_WEIGHT + t * (1.0 - HOT_HAND_MIN_WEIGHT)
+        # Primary weight from streak table
+        primary = _streak_weight(streak)
 
-        result[mk] = {"accuracy": round(accuracy, 3), "streak": streak, "weight": round(weight, 3)}
+        # Secondary accuracy modifier: scale ±20% around primary
+        # accuracy=1.0 → +20%, accuracy=0.5 → neutral, accuracy=0.0 → -20%
+        acc_modifier = 1.0 + 0.20 * (accuracy - 0.5) / 0.5
+
+        # Blend: 70% streak, 30% accuracy-modified
+        weight = 0.70 * primary + 0.30 * (primary * acc_modifier)
+        weight = max(0.10, min(3.0, weight))
+
+        result[mk] = {
+            "accuracy":   round(accuracy, 3),
+            "streak":     streak,
+            "weight":     round(weight, 3),
+            "streak_w":   round(primary, 3),
+        }
 
     return result
 
