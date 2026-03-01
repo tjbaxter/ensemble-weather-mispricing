@@ -1717,6 +1717,7 @@ ACCURACY_CITIES: dict[str, dict] = {
             "kma_gdps":                ("KMA GDPS",           "🇰🇷"),
             "meteofrance_arpege_world": ("MF ARPEGE World",   "🇫🇷"),
             "gem_global":              ("GEM Global",         "🇨🇦"),
+            "dmi_seamless":            ("DMI Seamless",       "🇩🇰"),
             "ncep_aigfs025":           ("NCEP AI-GFS",        "🤖"),
             "gem_regional":            ("GEM Regional",       "🇨🇦"),
             "gfs_seamless":            ("GFS Seamless",       "🇺🇸"),
@@ -1833,6 +1834,10 @@ ACCURACY_CITIES: dict[str, dict] = {
             "2026-02-22": ("0°C",    0,  False),
             "2026-02-23": ("-1°C",  -1,  False),
             "2026-02-24": ("-4°C",  -4,  False),
+            "2026-02-25": ("2°C",    2,  False),
+            "2026-02-26": ("-2°C",  -2,  False),
+            "2026-02-27": ("7°C",    7,  False),
+            "2026-02-28": ("≥6°C",   6,  True),
         },
     },
     "Ankara": {
