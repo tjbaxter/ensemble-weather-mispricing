@@ -2862,29 +2862,37 @@ def _render_trading_tab() -> None:
     if pos_df.empty:
         st.info("No open positions — bot is scanning, bets logged when signal fires.")
     else:
-        show_cols = ["city", "station_icao", "date", "bucket", "side", "fill_price", "cost"]
-        for col in show_cols:
+        show_cols = ["city", "station_icao", "date", "bucket", "side", "fill_price", "cost", "to_win"]
+        for col in ["city", "station_icao", "date", "bucket", "side", "fill_price", "cost", "fill_size"]:
             if col not in pos_df.columns:
                 pos_df[col] = ""
         pos_df["fill_price"] = pd.to_numeric(pos_df["fill_price"], errors="coerce").fillna(0.0)
-        pos_df["cost"] = pd.to_numeric(pos_df["cost"], errors="coerce").fillna(0.0)
+        pos_df["cost"]       = pd.to_numeric(pos_df["cost"],       errors="coerce").fillna(0.0)
+        pos_df["fill_size"]  = pd.to_numeric(pos_df["fill_size"],  errors="coerce").fillna(0.0)
+        # Profit if trade resolves in our favour: shares × $1 payout − cost paid
+        pos_df["to_win"] = (pos_df["fill_size"] - pos_df["cost"]).round(2)
         pos_df = pos_df.sort_values(["date", "city", "bucket"], ascending=True)
         st.dataframe(
             pos_df[show_cols].rename(
                 columns={
-                    "city": "City",
+                    "city":       "City",
                     "station_icao": "Station",
-                    "date": "Date",
-                    "bucket": "Bucket",
-                    "side": "Side",
+                    "date":       "Date",
+                    "bucket":     "Bucket",
+                    "side":       "Side",
                     "fill_price": "Entry Price",
-                    "cost": "Cost",
+                    "cost":       "Cost ($)",
+                    "to_win":     "To Win ($)",
                 }
             ),
             use_container_width=True,
             hide_index=True,
         )
-        st.caption(f"Total exposure: ${metrics['open_exposure']:.2f}")
+        total_to_win = pos_df["to_win"].sum()
+        st.caption(
+            f"Total exposure: **${metrics['open_exposure']:.2f}** · "
+            f"Total to win if all resolve ✅: **${total_to_win:.2f}**"
+        )
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Recent resolutions ────────────────────────────────────────────────────
