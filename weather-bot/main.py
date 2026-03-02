@@ -17,7 +17,7 @@ from data.polymarket import PolymarketDataClient
 from execution.order_manager import OrderManager
 from strategy.signals import generate_signals
 from scripts.metar_scanner import run_metar_scanner
-from scripts.price_scanner import run_price_scanner
+from scripts.ws_price_monitor import run_ws_price_monitor
 
 
 async def startup_checks() -> None:
@@ -158,14 +158,14 @@ async def main() -> None:
 
     trader = PaperTrader()
     # Run all three strategies concurrently:
-    #   1. Forecast bot   — wakes at 5 NWP trigger times, caches model probs, executes on mispriced buckets
-    #   2. METAR scanner  — polls every 60s on resolution days, trades on confirmed temps
-    #   3. Price scanner  — polls Polymarket prices every 5 min, catches dips between model runs
+    #   1. Forecast bot       — wakes at 5 NWP trigger times, caches model probs, executes on mispriced buckets
+    #   2. METAR scanner      — polls every 60s on resolution days, trades on confirmed temps
+    #   3. WS price monitor   — persistent WebSocket to Polymarket market channel; real-time price dip detection
     # Either task crashing propagates and restarts the whole service via systemd.
     await asyncio.gather(
         trader.run_forever(),
         run_metar_scanner(),
-        run_price_scanner(),
+        run_ws_price_monitor(),
     )
 
 
