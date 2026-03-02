@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -38,6 +39,97 @@ from strategy.signals import (
 )
 
 
+class ShadowTrader:
+    """Fully independent paper book for one TOP2 shadow variant (2A / 2B / 2C).
+
+    Receives pre-fetched markets + forecasts from the main PaperTrader so it adds
+    zero extra API calls.  Each instance maintains its own Portfolio (separate
+    positions file), its own BotLogger (separate CSV directory), and its own
+    OrderManager — giving a fully isolated P&L track comparable to the live book.
+    """
+
+    _SLUGS: dict[str, str] = {
+        "TOP2_EQUAL": "shadow_2a",
+        "TOP2_COND":  "shadow_2b",
+        "TOP2_PROP":  "shadow_2c",
+    }
+
+    def __init__(self, variant: str) -> None:
+        if variant not in self._SLUGS:
+            raise ValueError(f"Unknown shadow variant: {variant}")
+        self.variant = variant
+        slug = self._SLUGS[variant]
+        self.logger = BotLogger(output_dir=f"logs/{slug}")
+        self.portfolio = Portfolio(
+            initial_bankroll=INITIAL_BANKROLL,
+            positions_path=f"data/positions_{slug}.json",
+        )
+        self.order_manager = OrderManager(live_trading=False)
+        self._log = logging.getLogger(f"weather-bot.{slug}")
+
+    def run_once(self, markets: list[dict], forecasts: dict, bankroll: float) -> None:
+        """Execute one scan using shared market + forecast data."""
+        all_shadows = generate_top2_shadow_signals(markets, forecasts, bankroll)
+        signals = [s for s in all_shadows if s.strategy == self.variant]
+
+        deployed = 0.0
+        executed = 0
+        for signal in signals:
+            if self.portfolio.holds_market_bucket(signal.market_id, signal.bucket):
+                continue
+            if self._existing_positions(signal.market_id) >= MAX_POSITIONS_PER_MARKET:
+                continue
+            if deployed + signal.size_usd > MAX_DAILY_EXPOSURE:
+                continue
+            result = self.order_manager.place_order(signal.to_dict())
+            if result.status.startswith("skipped"):
+                continue
+            self.portfolio.open_position(signal.to_dict(), result.fill_price)
+            deployed += signal.size_usd
+            executed += 1
+            self.logger.log_signal(signal.to_dict(), "trade")
+            self._log.info(
+                f"SHADOW_TRADE {self.variant} {signal.city} {signal.date} "
+                f"{signal.bucket} {signal.side} ${signal.size_usd:.2f} @ {result.fill_price:.3f}"
+            )
+
+        self._log.info(
+            f"SHADOW_HEARTBEAT variant={self.variant} executed={executed} "
+            f"open_positions={len(self.portfolio.positions)} "
+            f"cash={self.portfolio.current_cash:.2f} "
+            f"exposure={self.portfolio.active_exposure():.2f}"
+        )
+
+    def _existing_positions(self, market_id: str) -> int:
+        return sum(1 for p in self.portfolio.positions if p.market_id == market_id)
+
+    async def resolve_matured_positions(self, wu_client: "WeatherUndergroundClient") -> None:
+        today = date.today()
+        for position in list(self.portfolio.positions):
+            target = datetime.fromisoformat(position.date).date()
+            if target >= today:
+                continue
+            station = STATIONS.get(position.station_icao)
+            if not station:
+                continue
+            observed = await wu_client.get_daily_high(station["wu_url"], target)
+            if observed is None:
+                continue
+            won = _is_winning_bucket(position.bucket, observed)
+            closed = self.portfolio.resolve_position(position, won)
+            row = {
+                "city": closed.city, "date": closed.date, "bucket": closed.bucket,
+                "side": closed.side, "forecast_prob": 0.0,
+                "market_prob": closed.fill_price, "edge": 0.0,
+                "size_usd": closed.cost, "fill_price": closed.fill_price,
+            }
+            self.logger.log_trade(row, "won" if won else "lost", closed.pnl)
+            self._log.info(
+                f"SHADOW_RESOLVED {self.variant} {closed.city} {closed.date} "
+                f"{closed.bucket} {'WIN' if won else 'LOSS'} pnl={closed.pnl:.2f}"
+            )
+
+
 class PaperTrader:
     def __init__(self) -> None:
         self.logger = BotLogger(output_dir="logs")
@@ -55,6 +147,11 @@ class PaperTrader:
         self.forecasts: dict[str, dict[str, dict]] = {}
         self.intraday_observed_highs: dict[str, dict[str, float]] = {}
         self.last_forecast_refresh = 0.0
+        self.shadows = [
+            ShadowTrader("TOP2_EQUAL"),
+            ShadowTrader("TOP2_COND"),
+            ShadowTrader("TOP2_PROP"),
+        ]
 
     async def close(self) -> None:
         if self.accuweather_client is not None:
@@ -112,15 +209,10 @@ class PaperTrader:
         # so the price scanner catches dips on any bucket the model likes.
         _write_signal_cache(signals, markets)
 
-        # Shadow models 2A / 2B / 2C — never executed, logged for resolver scoring.
-        # TOP2_EQUAL: always top-2 buckets, equal Kelly.
-        # TOP2_COND:  top-2 only when model is genuinely split.
-        # TOP2_PROP:  always top-2, secondary gets LOW Kelly (proportional sizing).
-        top2_shadows = generate_top2_shadow_signals(
-            markets, self.forecasts, self.portfolio.current_cash
-        )
-        for shadow in top2_shadows:
-            self.logger.log_signal(shadow.to_dict(), "conviction_signal")
+        # Shadow books 2A / 2B / 2C — fully independent paper portfolios.
+        # Each runs its own execution loop against the same market + forecast data.
+        for shadow in self.shadows:
+            shadow.run_once(markets, self.forecasts, self.portfolio.current_cash)
 
         deployed = 0.0
         trades_executed = 0
@@ -387,6 +479,12 @@ class PaperTrader:
                 f"RESOLVED {closed.city} {closed.date} {closed.bucket} "
                 f"{'WIN' if won else 'LOSS'} pnl={closed.pnl:.2f}"
             )
+
+        for shadow in self.shadows:
+            try:
+                await shadow.resolve_matured_positions(self.wu_client)
+            except (httpx.HTTPError, RuntimeError, ValueError) as exc:
+                self.logger.warning(f"Shadow resolution failed for {shadow.variant}: {exc}")
 
 
 _CACHED_SIGNALS_PATH = Path(__file__).resolve().parent.parent / "data" / "cached_signals.json"
