@@ -3050,19 +3050,19 @@ def main() -> None:
 
     with tab_2a:
         _render_model_detail_tab(
-            "2A Equal", load_shadow_resolved_df("shadow_2a"),
+            "2A Equal", _strat_df("TOP2_EQUAL"),
             note="Shadow — always top-2 YES buckets, equal (MEDIUM) Kelly on both",
         )
 
     with tab_2b:
         _render_model_detail_tab(
-            "2B Cond", load_shadow_resolved_df("shadow_2b"),
+            "2B Cond", _strat_df("TOP2_COND"),
             note="Shadow — dual only when the model is genuinely split between two buckets",
         )
 
     with tab_2c:
         _render_model_detail_tab(
-            "2C Prop", load_shadow_resolved_df("shadow_2c"),
+            "2C Prop", _strat_df("TOP2_PROP"),
             note="Shadow — always top-2 but proportional sizing (MEDIUM top1, LOW top2)",
         )
 
@@ -4078,9 +4078,9 @@ def _render_overview_tab() -> None:
         ("⚡ SINGLE",     "SINGLE",     _strat_slice("SINGLE"),              False),
         ("🪜 LADDER",     "LADDER",     _strat_slice("LADDER"),              False),
         ("🎯 CONVICTION", "CONVICTION", _strat_slice("CONVICTION"),          True),
-        ("2A Equal",      "2A Equal",   load_shadow_resolved_df("shadow_2a"), True),
-        ("2B Cond",       "2B Cond",    load_shadow_resolved_df("shadow_2b"), True),
-        ("2C Prop",       "2C Prop",    load_shadow_resolved_df("shadow_2c"), True),
+        ("2A Equal",      "TOP2_EQUAL",  _strat_slice("TOP2_EQUAL"),  True),
+        ("2B Cond",       "TOP2_COND",   _strat_slice("TOP2_COND"),   True),
+        ("2C Prop",       "TOP2_PROP",   _strat_slice("TOP2_PROP"),   True),
     ]
 
     all_stats = [(label, key, _strat_stats(df), is_shadow, df)

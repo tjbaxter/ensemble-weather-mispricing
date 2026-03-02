@@ -30,7 +30,7 @@ KELLY_MIN_BET_USD = 5.00    # floor: Kelly below this still fires at minimum via
 
 # Risk limits
 MAX_DRAWDOWN_PCT = 0.15
-INITIAL_BANKROLL = 300.00
+INITIAL_BANKROLL = 250.00
 
 # Timing
 SCAN_INTERVAL_SECONDS = 120

@@ -170,9 +170,10 @@ def _load_pending_trades() -> list[dict]:
     else:
         print("positions.json not found — will fall back to signals.csv only.")
 
-        # ── 2. signals.csv — all conviction_signal shadow picks ───────────────────
-    # Includes CONVICTION (single-bucket) and TOP2_EQUAL / TOP2_COND / TOP2_PROP.
-    # Each shadow strategy gets its own key so their P&L is tracked independently.
+        # ── 2. signals.csv — CONVICTION shadow picks only ─────────────────────────
+    # CONVICTION signals are logged to the main signals.csv (not a sub-directory)
+    # with action_taken="conviction_signal".  TOP2_* shadow models use their own
+    # positions files (see step 3 below) so we only filter CONVICTION here.
     if SIGNALS_CSV.exists():
         with SIGNALS_CSV.open(encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -184,16 +185,61 @@ def _load_pending_trades() -> list[dict]:
                     continue
                 side     = row.get("side", "BUY_YES")
                 strategy = row.get("strategy", "CONVICTION")
+                if strategy not in _SHADOW_STRATEGIES:
+                    continue
                 # Strategy is part of the key so each shadow model resolves separately
                 key = (target_date, row.get("city", ""), row.get("bucket", ""), side, strategy)
                 if key not in pending:
                     pending[key] = {
                         **row,
-                        "strategy":   strategy,
+                        "strategy":    strategy,
                         "market_prob": row.get("market_prob", "0"),
                         "size_usd":    row.get("size_usd", "0"),
                         "ev_per_bet":  row.get("ev_per_bet", "0"),
                     }
+
+    # ── 3. Shadow positions files (TOP2_EQUAL / TOP2_COND / TOP2_PROP) ────────
+    # ShadowTrader writes executed positions to data/positions_shadow_*.json.
+    # These are independent portfolios; each gets its own strategy tag in resolved.csv
+    # so the dashboard can track them separately.
+    _SHADOW_FILES: list[tuple[Path, str]] = [
+        (ROOT / "data" / "positions_shadow_2a.json", "TOP2_EQUAL"),
+        (ROOT / "data" / "positions_shadow_2b.json", "TOP2_COND"),
+        (ROOT / "data" / "positions_shadow_2c.json", "TOP2_PROP"),
+    ]
+    for shadow_path, shadow_strategy in _SHADOW_FILES:
+        if not shadow_path.exists():
+            continue
+        try:
+            raw_shadow = json.loads(shadow_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            print(f"  [resolver] Could not load {shadow_path.name}: {exc}")
+            continue
+        for p in raw_shadow:
+            target_date = p.get("date", "")
+            if not target_date or target_date >= today:
+                continue
+            city   = p.get("city", "")
+            bucket = p.get("bucket", "")
+            side   = p.get("side", "BUY_YES")
+            # 5-tuple key so each shadow strategy tracks independently
+            key = (target_date, city, bucket, side, shadow_strategy)
+            if key not in pending:
+                pending[key] = {
+                    "date":              target_date,
+                    "city":              city,
+                    "station_icao":      p.get("station_icao", ""),
+                    "bucket":            bucket,
+                    "side":              side,
+                    "market_prob":       p.get("fill_price", p.get("entry_price", 0.0)),
+                    "size_usd":          p.get("cost",       p.get("size_usd",    0.0)),
+                    "ev_per_bet":        p.get("ev_at_entry", p.get("ev_per_bet", 0.0)),
+                    "spread_colour":     p.get("spread_colour", ""),
+                    "det_spread":        p.get("det_spread", ""),
+                    "model_values_json": p.get("model_values_json", "{}"),
+                    "timestamp":         p.get("timestamp", ""),
+                    "strategy":          shadow_strategy,
+                }
 
     return list(pending.values())
 
@@ -303,6 +349,7 @@ async def resolve_all() -> dict:
             station_icao = row.get("station_icao", "")
             side = row.get("side", "BUY_YES")
 
+            strategy = row.get("strategy", "")
             strategy_key = strategy if strategy in _SHADOW_STRATEGIES else ""
             key = (target_date_str, city, bucket, side, strategy_key)
             if key in already_resolved:
