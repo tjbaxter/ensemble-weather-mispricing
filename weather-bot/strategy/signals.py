@@ -14,10 +14,13 @@ from config.settings import (
     ENABLE_LADDER_STRATEGY,
     ENSEMBLE_DISABLE_CLASSIC_CONFIDENCE_GATE,
     ENSEMBLE_STD_SKIP_THRESHOLD,
+    ENABLE_TOP2_SHADOWS,
     FIXED_ORDER_USD,
     HIGH_DELTA_SIZE_MULTIPLIER,
     KELLY_MAX_BET_USD,
     KELLY_MIN_BET_USD,
+    TOP2_SHADOW_MIN_PROB,
+    TOP2_SHADOW_SPLIT_THRESHOLD,
     HIGH_DELTA_THRESHOLD_DEG,
     HOURS_BEFORE_RESOLUTION_CUTOFF,
     KELLY_FRACTION,
@@ -588,6 +591,175 @@ def summarize_top_missed_edges(
     counts_part = ",".join(f"{k}={v}" for k, v in sorted(reason_counts.items()))
     top_part = ";".join(top_bits) if top_bits else "none"
     return f"reasons[{counts_part}] top[{top_part}] conf_min={MIN_FORECAST_CONFIDENCE:.2f} edge_min={ALPHA_THRESHOLD:.2f}"
+
+
+def generate_top2_shadow_signals(
+    markets: list[dict],
+    forecasts: dict[str, dict[str, dict]],
+    bankroll: float,
+) -> list["Signal"]:
+    """Generate TOP2_EQUAL / TOP2_COND / TOP2_PROP shadow signals.
+
+    These are *never executed* — logged to signals.csv with action='conviction_signal'
+    and resolved daily so we can compare three dual-bucket sizing strategies against
+    the live single-bucket approach.
+
+    Variant definitions
+    -------------------
+    TOP2_EQUAL  (2A)  Always buy the top-2 YES buckets by model probability.
+                      Both legs get MEDIUM Kelly sizing (equal capital on each).
+
+    TOP2_COND   (2B)  Buy top-2 only when the model is genuinely split
+                      (second_prob ≥ TOP2_SHADOW_SPLIT_THRESHOLD × first_prob).
+                      If there's a clear favourite, acts like a single-bucket pick.
+                      Both legs MEDIUM Kelly when it does go dual.
+
+    TOP2_PROP   (2C)  Always top-2 but with proportional sizing:
+                      primary → MEDIUM Kelly, secondary → LOW Kelly (~half size).
+                      Tests whether saving capital on the weaker leg beats equal sizing.
+
+    Rationale: empirically the model is almost always within one bucket when wrong.
+    Buying both the favourite and runner-up should raise the virtual win rate
+    significantly.  Running all three variants simultaneously finds the best
+    risk/return tradeoff without committing real capital.
+    """
+    if not ENABLE_TOP2_SHADOWS:
+        return []
+    if _in_metar_danger_window(datetime.now(UTC)):
+        return []
+
+    shadows: list[Signal] = []
+
+    for market in markets:
+        station_icao  = market["station_icao"]
+        city          = market["city"]
+        date          = market["date"]
+        end_date_iso  = market["end_date_iso"]
+
+        if calculate_hours_to_resolution(end_date_iso) < HOURS_BEFORE_RESOLUTION_CUTOFF:
+            continue
+
+        forecast_bundle = forecasts.get(station_icao, {}).get(date)
+        if not forecast_bundle:
+            continue
+
+        forecast           = forecast_bundle.get("probs", {})
+        rounding_conf      = forecast_bundle.get("rounding_confidence", "LOW")
+        pred_display_temp  = forecast_bundle.get("predicted_display_temp")
+        ensemble_std       = float(forecast_bundle.get("ensemble_std", 0.0) or 0.0)
+        ensemble_skip      = bool(
+            forecast_bundle.get("ensemble_skip", False)
+            or ensemble_std > ENSEMBLE_STD_SKIP_THRESHOLD
+        )
+        if ensemble_skip:
+            continue
+
+        det_spread        = float(forecast_bundle.get("det_spread", ensemble_std * 2.0) or 0.0)
+        det_spread_colour = str(forecast_bundle.get("det_spread_colour", "UNKNOWN"))
+        det_model_values  = forecast_bundle.get("det_model_values") or {}
+        city_kelly        = float(STATIONS.get(station_icao, {}).get("kelly_fraction", KELLY_FRACTION))
+
+        hours_to_res = calculate_hours_to_resolution(end_date_iso)
+        try:
+            days_ahead = (_date.fromisoformat(date) - _date.today()).days
+        except ValueError:
+            days_ahead = 1
+
+        if days_ahead >= 3:
+            temporal_discount = D3_P_WIN_DISCOUNT
+        elif days_ahead >= 2:
+            temporal_discount = D2_P_WIN_DISCOUNT
+        else:
+            temporal_discount = 1.0
+
+        # Collect BUY_YES candidates: positive edge, price guards, minimum model prob
+        candidates: list[dict] = []
+        for bucket, token_info in market["buckets"].items():
+            model_prob  = forecast.get(bucket, 0.0) * temporal_discount
+            market_prob = token_info["price"]
+            if model_prob < TOP2_SHADOW_MIN_PROB:
+                continue
+            if model_prob <= market_prob:               # no positive edge
+                continue
+            if market_prob < HARD_MIN_YES_ENTRY_PRICE or market_prob > HARD_MAX_YES_ENTRY_PRICE:
+                continue
+            candidates.append({
+                "bucket":      bucket,
+                "token_id":    token_info["yes_token_id"],
+                "model_prob":  model_prob,
+                "market_prob": market_prob,
+                "edge":        model_prob - market_prob,
+            })
+
+        candidates.sort(key=lambda c: c["model_prob"], reverse=True)
+        if not candidates:
+            continue
+
+        top1 = candidates[0]
+        top2 = candidates[1] if len(candidates) >= 2 else None
+
+        mv_json = json.dumps({k: round(v, 2) for k, v in det_model_values.items()}, separators=(",", ":"))
+
+        def _make(cand: dict, strategy: str, confidence: str) -> Signal:
+            sz = kelly_size(
+                market_price=cand["market_prob"],
+                win_prob=cand["model_prob"],
+                bankroll=bankroll,
+                edge=cand["edge"],
+                kelly_fraction=city_kelly,
+                max_position=KELLY_MAX_BET_USD,
+                rounding_confidence=confidence,
+            )
+            sz = max(sz, KELLY_MIN_BET_USD) if sz > 0 else KELLY_MIN_BET_USD
+            ev = (
+                cand["model_prob"] * (sz / cand["market_prob"]) * (1.0 - cand["market_prob"])
+                - (1.0 - cand["model_prob"]) * sz
+            )
+            return Signal(
+                market_id=market["condition_id"],
+                token_id=cand["token_id"],
+                side="BUY_YES",
+                edge=cand["edge"],
+                forecast_prob=cand["model_prob"],
+                market_prob=cand["market_prob"],
+                size_usd=round(sz, 2),
+                city=city,
+                station_icao=station_icao,
+                date=date,
+                bucket=cand["bucket"],
+                rounding_confidence=rounding_conf,
+                predicted_display_temp=pred_display_temp,
+                spread_colour=det_spread_colour,
+                det_spread=round(det_spread, 3),
+                model_values_json=mv_json,
+                ev_per_bet=round(ev, 3),
+                kelly_fraction_used=city_kelly,
+                days_ahead=days_ahead,
+                hours_to_resolution=round(hours_to_res, 1),
+                temporal_discount=temporal_discount,
+                strategy=strategy,
+            )
+
+        # ── 2A — TOP2_EQUAL: always top-2, equal (MEDIUM) Kelly on both ────────
+        shadows.append(_make(top1, "TOP2_EQUAL", "MEDIUM"))
+        if top2:
+            shadows.append(_make(top2, "TOP2_EQUAL", "MEDIUM"))
+
+        # ── 2B — TOP2_COND: dual only when model is genuinely split ───────────
+        is_split = (
+            top2 is not None
+            and (top2["model_prob"] / top1["model_prob"]) >= TOP2_SHADOW_SPLIT_THRESHOLD
+        )
+        shadows.append(_make(top1, "TOP2_COND", "MEDIUM"))
+        if is_split and top2:
+            shadows.append(_make(top2, "TOP2_COND", "MEDIUM"))
+
+        # ── 2C — TOP2_PROP: always top-2, proportional sizing ─────────────────
+        shadows.append(_make(top1, "TOP2_PROP", "MEDIUM"))
+        if top2:
+            shadows.append(_make(top2, "TOP2_PROP", "LOW"))
+
+    return shadows
 
 
 def _effective_edge_with_soft_guardrails(action: str, yes_price: float, edge: float) -> tuple[float, bool]:

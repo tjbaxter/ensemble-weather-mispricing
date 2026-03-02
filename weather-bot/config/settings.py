@@ -154,6 +154,23 @@ LADDER_WIDTH = 3
 LADDER_MAX_TOTAL_COST = 0.85
 LADDER_MIN_EDGE = 0.08
 
+# ── TOP2 shadow models (2A / 2B / 2C) ─────────────────────────────────────────
+# Three parallel shadow strategies that never execute real trades but are logged
+# and resolved daily so we can compare their virtual P&L against each other and
+# the live strategy.  After enough data, graduate the best one to live execution.
+#
+#  TOP2_EQUAL  (2A) — always bets top-2 YES buckets by model prob, equal Kelly
+#  TOP2_COND   (2B) — only bets 2 if model is split (2nd ≥ SPLIT_THRESHOLD × 1st)
+#  TOP2_PROP   (2C) — always top-2 but secondary gets LOW Kelly (half the size)
+#
+# Rationale: model is empirically "one bucket off" when wrong, so buying both the
+# favourite and runner-up should dramatically improve virtual win rate.  The three
+# variants test whether always-2 or conditional-2, and equal vs proportional sizing,
+# actually outperform the single-bucket live strategy net of the extra capital spent.
+ENABLE_TOP2_SHADOWS = True
+TOP2_SHADOW_MIN_PROB = 0.10         # second bucket must have ≥ 10% model probability to qualify
+TOP2_SHADOW_SPLIT_THRESHOLD = 0.65  # 2B: second/first ratio must be ≥ this to count as "split"
+
 # Price scanner (Strategy 3) — continuous price monitoring between model runs
 PRICE_SCAN_ENABLED        = True
 PRICE_SCAN_INTERVAL       = 300      # seconds between price polls (5 min)

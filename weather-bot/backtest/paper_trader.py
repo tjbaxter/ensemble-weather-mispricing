@@ -31,7 +31,11 @@ from execution.order_manager import OrderManager
 from execution.portfolio import Portfolio
 from monitoring.dashboard import render_dashboard
 from monitoring.logger import BotLogger
-from strategy.signals import generate_signals, summarize_top_missed_edges
+from strategy.signals import (
+    generate_signals,
+    generate_top2_shadow_signals,
+    summarize_top_missed_edges,
+)
 
 
 class PaperTrader:
@@ -107,6 +111,16 @@ class PaperTrader:
         # Writes ALL signals (including ones not executed due to position limits/exposure)
         # so the price scanner catches dips on any bucket the model likes.
         _write_signal_cache(signals, markets)
+
+        # Shadow models 2A / 2B / 2C — never executed, logged for resolver scoring.
+        # TOP2_EQUAL: always top-2 buckets, equal Kelly.
+        # TOP2_COND:  top-2 only when model is genuinely split.
+        # TOP2_PROP:  always top-2, secondary gets LOW Kelly (proportional sizing).
+        top2_shadows = generate_top2_shadow_signals(
+            markets, self.forecasts, self.portfolio.current_cash
+        )
+        for shadow in top2_shadows:
+            self.logger.log_signal(shadow.to_dict(), "conviction_signal")
 
         deployed = 0.0
         trades_executed = 0

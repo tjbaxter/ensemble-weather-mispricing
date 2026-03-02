@@ -73,18 +73,33 @@ def _ensure_resolved_csv() -> None:
             csv.writer(f).writerow(RESOLVED_HEADER)
 
 
-def _load_resolved_keys() -> set[tuple[str, str, str, str]]:
-    """Return set of (target_date, city, bucket, side) already in resolved.csv."""
-    keys: set[tuple[str, str, str, str]] = set()
+_SHADOW_STRATEGIES = {"CONVICTION", "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP"}
+
+
+def _load_resolved_keys() -> set[tuple[str, str, str, str, str]]:
+    """Return set of already-resolved keys from resolved.csv.
+
+    For real trades (PAPER / METAR / WS_PRICE): key = (date, city, bucket, side, "")
+    so the strategy doesn't matter — one real position per bucket.
+
+    For shadow models (CONVICTION / TOP2_*): key includes strategy so each
+    model gets its own row in resolved.csv and its own independent P&L tracking.
+    Without strategy in the key, the second shadow model to resolve the same bucket
+    would be skipped as a duplicate of the first.
+    """
+    keys: set[tuple[str, str, str, str, str]] = set()
     if not RESOLVED_CSV.exists():
         return keys
     with RESOLVED_CSV.open(encoding="utf-8") as f:
         for row in csv.DictReader(f):
+            strategy = row.get("strategy", "")
+            strategy_key = strategy if strategy in _SHADOW_STRATEGIES else ""
             keys.add((
                 row.get("target_date", ""),
                 row.get("city", ""),
                 row.get("bucket", ""),
                 row.get("side", "BUY_YES"),
+                strategy_key,
             ))
     return keys
 
@@ -155,7 +170,9 @@ def _load_pending_trades() -> list[dict]:
     else:
         print("positions.json not found — will fall back to signals.csv only.")
 
-    # ── 2. signals.csv — CONVICTION shadow picks only ─────────────────────────
+        # ── 2. signals.csv — all conviction_signal shadow picks ───────────────────
+    # Includes CONVICTION (single-bucket) and TOP2_EQUAL / TOP2_COND / TOP2_PROP.
+    # Each shadow strategy gets its own key so their P&L is tracked independently.
     if SIGNALS_CSV.exists():
         with SIGNALS_CSV.open(encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -165,10 +182,18 @@ def _load_pending_trades() -> list[dict]:
                 target_date = row.get("date", "")
                 if not target_date or target_date >= today:
                     continue
-                side = row.get("side", "BUY_YES")
-                key  = (target_date, row.get("city", ""), row.get("bucket", ""), side)
+                side     = row.get("side", "BUY_YES")
+                strategy = row.get("strategy", "CONVICTION")
+                # Strategy is part of the key so each shadow model resolves separately
+                key = (target_date, row.get("city", ""), row.get("bucket", ""), side, strategy)
                 if key not in pending:
-                    pending[key] = {**row, "strategy": "CONVICTION"}
+                    pending[key] = {
+                        **row,
+                        "strategy":   strategy,
+                        "market_prob": row.get("market_prob", "0"),
+                        "size_usd":    row.get("size_usd", "0"),
+                        "ev_per_bet":  row.get("ev_per_bet", "0"),
+                    }
 
     return list(pending.values())
 
@@ -278,7 +303,8 @@ async def resolve_all() -> dict:
             station_icao = row.get("station_icao", "")
             side = row.get("side", "BUY_YES")
 
-            key = (target_date_str, city, bucket, side)
+            strategy_key = strategy if strategy in _SHADOW_STRATEGIES else ""
+            key = (target_date_str, city, bucket, side, strategy_key)
             if key in already_resolved:
                 continue
 
@@ -402,8 +428,8 @@ def print_summary(stats: dict) -> None:
         if not all_rows:
             return
 
-        # ── Overall stats (LADDER + SINGLE only — real money) ────────────────
-        real_rows = [r for r in all_rows if r.get("strategy", "") != "CONVICTION"]
+        # ── Overall stats (executed real trades only — not shadow models) ────
+        real_rows = [r for r in all_rows if r.get("strategy", "") not in _SHADOW_STRATEGIES]
         total_wins = sum(1 for r in real_rows if r.get("outcome") == "WIN")
         total_pnl = sum(float(r.get("pnl_usd") or 0) for r in real_rows)
         total = len(real_rows)
@@ -411,38 +437,35 @@ def print_summary(stats: dict) -> None:
             print(f"\n  ALL-TIME (executed): {total} resolved | {total_wins}W/{total-total_wins}L | "
                   f"{total_wins/total*100:.0f}% acc | ${total_pnl:+.2f} cumulative P&L")
 
-        # ── LADDER vs CONVICTION head-to-head ─────────────────────────────────
-        ladder_rows     = [r for r in all_rows if r.get("strategy") == "LADDER"]
-        conviction_rows = [r for r in all_rows if r.get("strategy") == "CONVICTION"]
-        if ladder_rows or conviction_rows:
-            print(f"\n  ┌─────────────── A/B STRATEGY COMPARISON ──────────────┐")
+        # ── Shadow model comparison ────────────────────────────────────────────
+        shadow_labels = {
+            "CONVICTION": "CONVICTION (single best)",
+            "TOP2_EQUAL": "TOP2_EQUAL  (2A always-2 equal)",
+            "TOP2_COND":  "TOP2_COND   (2B split-only)",
+            "TOP2_PROP":  "TOP2_PROP   (2C proportional)",
+        }
 
-            def _strat_summary(rows: list[dict], label: str) -> None:
-                if not rows:
-                    print(f"  │  {label:<12} — no data yet")
-                    return
-                w  = sum(1 for r in rows if r.get("outcome") == "WIN")
-                n  = len(rows)
-                p  = sum(float(r.get("pnl_usd") or 0) for r in rows)
-                s  = sum(float(r.get("size_usd") or 0) for r in rows)
-                roi = p / s * 100 if s else 0
-                print(f"  │  {label:<12} {w}/{n} ({w/n*100:.0f}% acc)  P&L ${p:+.2f}  "
-                      f"ROI {roi:+.1f}%  (${s:.0f} staked)")
+        def _strat_summary(rows: list[dict], label: str) -> None:
+            if not rows:
+                print(f"  │  {label:<32} — no data yet")
+                return
+            w   = sum(1 for r in rows if r.get("outcome") == "WIN")
+            n   = len(rows)
+            p   = sum(float(r.get("pnl_usd") or 0) for r in rows)
+            s   = sum(float(r.get("size_usd") or 0) for r in rows)
+            roi = p / s * 100 if s else 0
+            print(f"  │  {label:<32} {w}/{n} ({w/n*100:.0f}%)  P&L ${p:+.2f}  ROI {roi:+.1f}%")
 
-            _strat_summary(ladder_rows,     "LADDER")
-            _strat_summary(conviction_rows, "CONVICTION")
-
-            # Head-to-head: only days where both strategies resolved
-            l_dict = {(r["target_date"], r["city"]): r for r in ladder_rows}
-            c_dict = {(r["target_date"], r["city"]): r for r in conviction_rows}
-            shared = set(l_dict) & set(c_dict)
-            if len(shared) >= 3:
-                l_pnl = sum(float(l_dict[k]["pnl_usd"] or 0) for k in shared)
-                c_pnl = sum(float(c_dict[k]["pnl_usd"] or 0) for k in shared)
-                winner = "CONVICTION" if c_pnl > l_pnl else "LADDER"
-                print(f"  │  Head-to-head ({len(shared)} city-days): LADDER ${l_pnl:+.2f} vs "
-                      f"CONVICTION ${c_pnl:+.2f}  → {winner} wins")
-            print(f"  └───────────────────────────────────────────────────────┘")
+        any_shadow = any(
+            [r for r in all_rows if r.get("strategy") == s]
+            for s in _SHADOW_STRATEGIES
+        )
+        if any_shadow:
+            print(f"\n  ┌──────────────── SHADOW MODEL COMPARISON ─────────────────┐")
+            for strat_key, strat_label in shadow_labels.items():
+                rows = [r for r in all_rows if r.get("strategy") == strat_key]
+                _strat_summary(rows, strat_label)
+            print(f"  └───────────────────────────────────────────────────────────┘")
 
         # ── Breakdown by spread colour ────────────────────────────────────────
         green = [r for r in real_rows if r.get("spread_colour") == "GREEN"]
