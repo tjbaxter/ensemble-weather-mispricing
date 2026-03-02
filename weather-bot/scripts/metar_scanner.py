@@ -100,6 +100,11 @@ LOGS_DIR        = _ROOT / "logs"
 TELEGRAM_TOKEN   = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
+# State-change tracker: only alert when action changes for a (icao, date) pair.
+# Always-alert actions bypass this gate regardless.
+_ALWAYS_ALERT = {"STRONG_BUY", "CLI_BOUNDARY_RESOLVED", "HEDGE_WARNING"}
+_last_telegram_action: dict[str, str] = {}  # key: "ICAO:YYYY-MM-DD"
+
 # ── Positions helpers ─────────────────────────────────────────────────────────
 
 def _load_positions() -> list[dict]:
@@ -390,12 +395,26 @@ def _send_telegram(text: str) -> None:
 
 
 def _telegram_signal(sig: dict, traded: bool) -> None:
-    action = sig["action"]
-    city   = sig["city"]
-    high   = sig["daily_high_res"]
-    unit   = sig["unit"]
-    bkt    = sig["winning_bucket"] or "?"
-    conf   = sig["confidence"]
+    action     = sig["action"]
+    icao       = sig.get("icao", "")
+    local_date = sig.get("local_date", "")
+    city       = sig["city"]
+    high       = sig["daily_high_res"]
+    unit       = sig["unit"]
+    bkt        = sig["winning_bucket"] or "?"
+    conf       = sig["confidence"]
+
+    # Skip silent actions
+    if action in ("OBSERVE", "HOLD_WINNER"):
+        return
+
+    # Rate-gate: only fire when action changes for this station+date,
+    # unless it's an always-alert action (STRONG_BUY, HEDGE_WARNING, CLI confirmed).
+    gate_key = f"{icao}:{local_date}"
+    if action not in _ALWAYS_ALERT:
+        if _last_telegram_action.get(gate_key) == action:
+            return  # Same action as last alert — suppress repeat
+    _last_telegram_action[gate_key] = action
 
     if action == "STRONG_BUY":
         emoji = "🟢🟢"
@@ -405,7 +424,7 @@ def _telegram_signal(sig: dict, traded: bool) -> None:
         trade_note = ""
     elif action == "NO_TRADE_NEAR_BOUNDARY":
         emoji = "⚠️"
-        trade_note = ""
+        trade_note = " — watching, waiting for CLI or next METAR"
     elif action == "HEDGE_WARNING":
         emoji = "🔴"
         trade_note = ""
@@ -413,7 +432,7 @@ def _telegram_signal(sig: dict, traded: bool) -> None:
         emoji = "✅"
         trade_note = " — <b>CLI confirmed</b>"
     else:
-        return   # OBSERVE, HOLD_WINNER — not worth a Telegram ping
+        return
 
     reason = sig.get("reason", "")
     msg = (
