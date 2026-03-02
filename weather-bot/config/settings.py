@@ -151,6 +151,12 @@ LADDER_WIDTH = 3
 LADDER_MAX_TOTAL_COST = 0.85
 LADDER_MIN_EDGE = 0.08
 
+# Price scanner (Strategy 3) — continuous price monitoring between model runs
+PRICE_SCAN_ENABLED        = True
+PRICE_SCAN_INTERVAL       = 300      # seconds between price polls (5 min)
+PRICE_SCAN_MIN_EV         = ALPHA_THRESHOLD  # min EV to trigger a dip trade
+PRICE_SCAN_MAX_DAYS_AHEAD = 2        # skip D+3+ signals (too uncertain for dip-trading)
+
 # Data-release danger windows
 METAR_DANGER_PRE_MINUTE = 53
 METAR_DANGER_POST_MINUTE = 58

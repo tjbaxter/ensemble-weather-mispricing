@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -101,6 +102,11 @@ class PaperTrader:
 
         signals = generate_signals(markets, self.forecasts, self.portfolio.current_cash)
         missed_summary = summarize_top_missed_edges(markets, self.forecasts, self.portfolio.current_cash)
+
+        # Cache signals so the price scanner can re-check prices between model runs.
+        # Writes ALL signals (including ones not executed due to position limits/exposure)
+        # so the price scanner catches dips on any bucket the model likes.
+        _write_signal_cache(signals, markets)
 
         deployed = 0.0
         trades_executed = 0
@@ -367,6 +373,68 @@ class PaperTrader:
                 f"RESOLVED {closed.city} {closed.date} {closed.bucket} "
                 f"{'WIN' if won else 'LOSS'} pnl={closed.pnl:.2f}"
             )
+
+
+_CACHED_SIGNALS_PATH = Path(__file__).resolve().parent.parent / "data" / "cached_signals.json"
+
+
+def _write_signal_cache(signals: list, markets: list[dict]) -> None:
+    """Write all evaluated signals to disk so the price scanner can poll prices between model runs.
+
+    Includes every signal above the alpha threshold (LADDER + CONVICTION + SINGLE),
+    keyed by token_id. The price scanner reads this, fetches live ask prices, and fires
+    a trade when EV = model_prob - live_ask exceeds the threshold.
+    """
+    # Build a market end_date lookup so we can store expiry in the cache
+    end_dates: dict[str, str] = {}
+    for m in markets:
+        for bucket, info in m.get("buckets", {}).items():
+            tid = info.get("yes_token_id", "")
+            if tid:
+                end_dates[tid] = str(m.get("end_date_iso", ""))
+
+    cache_entries: list[dict] = []
+    seen: set[str] = set()
+    for sig in signals:
+        tid = sig.token_id
+        if not tid or tid in seen:
+            continue
+        seen.add(tid)
+        cache_entries.append({
+            "condition_id":    sig.market_id,
+            "token_id":        tid,
+            "station_icao":    sig.station_icao,
+            "city":            sig.city,
+            "date":            sig.date,
+            "bucket":          sig.bucket,
+            "side":            sig.side,
+            "model_prob":      round(sig.forecast_prob, 4),
+            "market_prob_at_scan": round(sig.market_prob, 4),
+            "edge_at_scan":    round(sig.edge, 4),
+            "ev_per_bet":      round(sig.ev_per_bet, 4),
+            "spread_colour":   sig.spread_colour,
+            "det_spread":      sig.det_spread,
+            "model_values_json": sig.model_values_json,
+            "days_ahead":      sig.days_ahead,
+            "end_date_iso":    end_dates.get(tid, ""),
+            "strategy":        sig.strategy,
+        })
+
+    payload = {
+        "computed_at": datetime.now(UTC).isoformat(),
+        "signal_count": len(cache_entries),
+        "signals": cache_entries,
+    }
+    try:
+        _CACHED_SIGNALS_PATH.write_text(
+            __import__("json").dumps(payload, indent=2),
+            encoding="utf-8",
+        )
+    except Exception as exc:
+        import logging
+        logging.getLogger("weather-bot.paper-trader").warning(
+            "Could not write signal cache: %s", exc
+        )
 
 
 def _parse_bucket_bounds(bucket_label: str) -> tuple[float, float | None] | None:
