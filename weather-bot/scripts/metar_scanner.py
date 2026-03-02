@@ -60,7 +60,13 @@ if str(_ROOT) not in sys.path:
 load_dotenv(_ROOT / ".env")
 
 from config.cities import STATIONS
-from config.settings import FIXED_ORDER_USD
+from config.settings import (
+    INITIAL_BANKROLL,
+    KELLY_FRACTION,
+    KELLY_MAX_BET_USD,
+    KELLY_MIN_BET_USD,
+)
+from strategy.kelly import kelly_size as _kelly_size
 from data.metar import (
     AWCClient,
     DailyHighRecord,
@@ -86,7 +92,12 @@ POLL_INTERVAL_SECONDS       = 60
 PEAK_HEAT_LOCAL_HOUR        = 15   # >= this hour → "past peak" → STRONG_BUY eligible
 MIDDAY_LOCAL_HOUR           = 12   # >= this hour → BUY eligible
 METAR_MAX_DAILY_NOTIONAL    = float(os.getenv("METAR_MAX_DAILY_NOTIONAL_USD", "50"))
-METAR_PAPER_SIZE_USD        = FIXED_ORDER_USD   # $5 per paper trade (matches forecast bot)
+# Kelly sizing: STRONG_BUY (post-peak) = HIGH confidence; BUY (midday) = MEDIUM.
+# Win-probability priors are conservative and direction-only — the METAR tells us
+# which bucket is winning, but not with certainty (another SPECI could still move
+# the daily high).  Post-peak past 15:00 local the daily high is effectively set.
+_METAR_WIN_PROB = {"STRONG_BUY": 0.75, "BUY": 0.62, "CLI_BOUNDARY_RESOLVED": 0.82}
+_METAR_KELLY_CONFIDENCE = {"STRONG_BUY": "HIGH", "BUY": "MEDIUM", "CLI_BOUNDARY_RESOLVED": "HIGH"}
 METAR_MAX_LIVE_PRICE        = 0.90              # don't paper-trade above 90¢
 PAPER_TRADING               = os.getenv("PAPER_TRADING",  "false").lower() in ("1", "true", "yes")
 METAR_SCANNER_ENABLED       = os.getenv("METAR_SCANNER_ENABLED", "true").lower() in ("1", "true", "yes")
@@ -332,14 +343,6 @@ async def paper_trade(sig: dict) -> bool:
         log.debug("Already hold %s %s — skip paper trade", icao, winning_bucket)
         return False
 
-    used = _metar_notional_used()
-    if used + METAR_PAPER_SIZE_USD > METAR_MAX_DAILY_NOTIONAL:
-        log.warning(
-            "METAR daily notional cap reached ($%.2f / $%.2f) — skip %s %s",
-            used, METAR_MAX_DAILY_NOTIONAL, icao, winning_bucket,
-        )
-        return False
-
     market_id, token_id, ask = await _fetch_market_for_bucket(icao, local_date, winning_bucket)
     if ask is None:
         log.warning("Could not find market price for %s %s — skip", icao, winning_bucket)
@@ -349,34 +352,59 @@ async def paper_trade(sig: dict) -> bool:
         log.info("Ask %.2f > max %.2f for %s %s — market already pricing it in", ask, METAR_MAX_LIVE_PRICE, icao, winning_bucket)
         return False
 
-    fill_size = METAR_PAPER_SIZE_USD / ask if ask > 0 else 0.0
+    # Kelly sizing: scale by signal confidence (STRONG_BUY → HIGH, BUY → MEDIUM)
+    action     = sig["action"]
+    win_prob   = _METAR_WIN_PROB.get(action, 0.62)
+    confidence = _METAR_KELLY_CONFIDENCE.get(action, "MEDIUM")
+    bet_size   = _kelly_size(
+        market_price=ask,
+        win_prob=win_prob,
+        bankroll=INITIAL_BANKROLL,
+        edge=win_prob - ask,
+        kelly_fraction=KELLY_FRACTION,
+        max_position=KELLY_MAX_BET_USD,
+        rounding_confidence=confidence,
+    )
+    bet_size = max(bet_size, KELLY_MIN_BET_USD) if bet_size > 0 else KELLY_MIN_BET_USD
+
+    used = _metar_notional_used()
+    if used + bet_size > METAR_MAX_DAILY_NOTIONAL:
+        log.warning(
+            "METAR daily notional cap reached ($%.2f / $%.2f) — skip %s %s",
+            used, METAR_MAX_DAILY_NOTIONAL, icao, winning_bucket,
+        )
+        return False
+
+    fill_size = bet_size / ask if ask > 0 else 0.0
 
     position = {
-        "market_id":    market_id or "",
-        "token_id":     token_id  or "",
-        "side":         "BUY_YES",
-        "city":         STATIONS.get(icao, {}).get("market_label", icao),
-        "station_icao": icao,
-        "date":         local_date,
-        "bucket":       winning_bucket,
-        "fill_price":   ask,
-        "fill_size":    fill_size,
-        "cost":         METAR_PAPER_SIZE_USD,
-        "timestamp":    datetime.now(UTC).isoformat(),
-        "strategy":     "METAR_SCANNER",
-        "metar_signal": sig["action"],
+        "market_id":        market_id or "",
+        "token_id":         token_id  or "",
+        "side":             "BUY_YES",
+        "city":             STATIONS.get(icao, {}).get("market_label", icao),
+        "station_icao":     icao,
+        "date":             local_date,
+        "bucket":           winning_bucket,
+        "fill_price":       ask,
+        "fill_size":        fill_size,
+        "cost":             bet_size,
+        "timestamp":        datetime.now(UTC).isoformat(),
+        "strategy":         "METAR_SCANNER",
+        "metar_signal":     action,
         "metar_confidence": sig["confidence"],
+        "kelly_confidence": confidence,
+        "kelly_win_prob":   win_prob,
     }
 
     positions = _load_positions()
     positions.append(position)
     _save_positions(positions)
-    _add_metar_notional(METAR_PAPER_SIZE_USD)
+    _add_metar_notional(bet_size)
 
     log.info(
-        "📡 METAR PAPER TRADE: %s %s %s @ %.2f  cost=$%.2f",
+        "📡 METAR PAPER TRADE: %s %s %s @ %.2f  kelly=%s  cost=$%.2f",
         STATIONS.get(icao, {}).get("market_label", icao),
-        winning_bucket, "BUY_YES", ask, METAR_PAPER_SIZE_USD,
+        winning_bucket, "BUY_YES", ask, confidence, bet_size,
     )
     return True
 

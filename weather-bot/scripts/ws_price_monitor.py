@@ -42,10 +42,14 @@ load_dotenv(_ROOT / ".env")
 
 from config.settings import (
     ALPHA_THRESHOLD,
-    FIXED_ORDER_USD,
     HARD_MAX_YES_ENTRY_PRICE,
     HARD_MIN_YES_ENTRY_PRICE,
+    INITIAL_BANKROLL,
+    KELLY_FRACTION,
+    KELLY_MAX_BET_USD,
+    KELLY_MIN_BET_USD,
 )
+from strategy.kelly import kelly_size
 
 # ── Logging ────────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -166,6 +170,26 @@ def _send_telegram(text: str) -> None:
 
 # ── Trade placement ────────────────────────────────────────────────────────────
 
+def _kelly_size_ws(model_prob: float, ask: float) -> float:
+    """Fractional Kelly for WS dip trades — MEDIUM confidence by default.
+
+    WS trades use the same model probability from the morning forecast scan
+    but at a better live price.  Confidence is MEDIUM because we trust the
+    model but the dip could be noise.  HIGH is reserved for multi-model
+    consensus signals (those come with their own sizing from Strategy 1).
+    """
+    size = kelly_size(
+        market_price=ask,
+        win_prob=model_prob,
+        bankroll=INITIAL_BANKROLL,
+        edge=model_prob - ask,
+        kelly_fraction=KELLY_FRACTION,
+        max_position=KELLY_MAX_BET_USD,
+        rounding_confidence="MEDIUM",
+    )
+    return max(size, KELLY_MIN_BET_USD) if size > 0 else KELLY_MIN_BET_USD
+
+
 def _place_paper_trade(sig: dict, live_ask: float, ev: float) -> None:
     if not PAPER_TRADING:
         return
@@ -176,7 +200,8 @@ def _place_paper_trade(sig: dict, live_ask: float, ev: float) -> None:
         )
         return
 
-    cost      = FIXED_ORDER_USD
+    model_prob = float(sig.get("model_prob", 0.5))
+    cost      = _kelly_size_ws(model_prob, live_ask)
     fill_size = round(cost / live_ask, 4) if live_ask > 0 else 0.0
 
     position = {

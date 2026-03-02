@@ -15,15 +15,15 @@ from config.settings import (
     ENSEMBLE_DISABLE_CLASSIC_CONFIDENCE_GATE,
     ENSEMBLE_STD_SKIP_THRESHOLD,
     FIXED_ORDER_USD,
-    FIXED_SIZE_BANKROLL_THRESHOLD,
     HIGH_DELTA_SIZE_MULTIPLIER,
+    KELLY_MAX_BET_USD,
+    KELLY_MIN_BET_USD,
     HIGH_DELTA_THRESHOLD_DEG,
     HOURS_BEFORE_RESOLUTION_CUTOFF,
     KELLY_FRACTION,
     LADDER_MAX_TOTAL_COST,
     LADDER_MIN_EDGE,
     LADDER_WIDTH,
-    MAX_POSITION_SIZE,
     HARD_MAX_YES_ENTRY_PRICE,
     HARD_MIN_YES_ENTRY_PRICE,
     METAR_DANGER_POST_MINUTE,
@@ -402,24 +402,33 @@ def _compute_size(
     high_delta: bool = False,
     station_icao: str = "",
 ) -> float:
-    # Use per-city Kelly fraction from cities.py if available; fall back to global
+    """Return Kelly-sized bet in USD, with floor and ceiling applied.
+
+    Kelly runs from day one regardless of bankroll size — the math is
+    identical whether we have $300 or $30 000.  Flat-fee fallbacks mask
+    calibration by spending the same on weak and strong signals alike.
+
+    The three tiers in kelly_size() (HIGH / MEDIUM / LOW) scale the
+    effective fraction, so the confidence level already does the heavy
+    lifting of de-risking uncertain signals.
+    """
     city_kelly = float(STATIONS.get(station_icao, {}).get("kelly_fraction", KELLY_FRACTION))
 
-    if bankroll <= FIXED_SIZE_BANKROLL_THRESHOLD:
-        base = FIXED_ORDER_USD * (HIGH_DELTA_SIZE_MULTIPLIER if high_delta else 1.0)
-        return min(base, MAX_POSITION_SIZE * (HIGH_DELTA_SIZE_MULTIPLIER if high_delta else 1.0))
     size = kelly_size(
         market_price=market_prob,
         win_prob=win_prob,
         bankroll=bankroll,
         edge=edge,
         kelly_fraction=city_kelly,
-        max_position=MAX_POSITION_SIZE,
+        max_position=KELLY_MAX_BET_USD,
         rounding_confidence=rounding_confidence,
     )
     if high_delta:
-        size = min(size * HIGH_DELTA_SIZE_MULTIPLIER, MAX_POSITION_SIZE * HIGH_DELTA_SIZE_MULTIPLIER)
-    return size
+        size = min(size * HIGH_DELTA_SIZE_MULTIPLIER, KELLY_MAX_BET_USD)
+
+    # Minimum viable trade — Kelly output below this floor still fires but at
+    # minimum size.  Signals too small even at minimum are filtered upstream.
+    return max(size, KELLY_MIN_BET_USD) if size > 0 else 0.0
 
 
 def summarize_top_missed_edges(
@@ -538,19 +547,17 @@ def summarize_top_missed_edges(
                 )
                 continue
 
-            if bankroll <= FIXED_SIZE_BANKROLL_THRESHOLD:
-                size = FIXED_ORDER_USD
-            else:
-                trade_price = market_prob if action == "BUY_YES" else (1.0 - market_prob)
-                size = kelly_size(
-                    market_price=trade_price,
-                    win_prob=win_prob,
-                    bankroll=bankroll,
-                    edge=effective_edge,
-                    kelly_fraction=KELLY_FRACTION,
-                    max_position=MAX_POSITION_SIZE,
-                    rounding_confidence=rounding_confidence,
-                )
+            trade_price = market_prob if action == "BUY_YES" else (1.0 - market_prob)
+            size = kelly_size(
+                market_price=trade_price,
+                win_prob=win_prob,
+                bankroll=bankroll,
+                edge=effective_edge,
+                kelly_fraction=KELLY_FRACTION,
+                max_position=KELLY_MAX_BET_USD,
+                rounding_confidence=rounding_confidence,
+            )
+            size = max(size, KELLY_MIN_BET_USD) if size > 0 else 0.0
 
             if size < max(MIN_ORDER_USD, PRACTICAL_MIN_ORDER_USD):
                 reason_counts["size_below_min_order"] = reason_counts.get("size_below_min_order", 0) + 1

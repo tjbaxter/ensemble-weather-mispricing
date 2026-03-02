@@ -18,12 +18,15 @@ from typing import Optional
 # a tiny Kelly fraction, so no ruin risk from the lower threshold.
 ALPHA_THRESHOLD = 0.03
 MIN_FORECAST_CONFIDENCE = 0.15   # lowered to allow cheap bucket signals through
-MAX_POSITION_SIZE = 5.00         # raised slightly to allow meaningful bet on 15¢ buckets
+MAX_POSITION_SIZE = 25.00        # hard cap per position (Kelly output is always ≤ this)
 MAX_DAILY_EXPOSURE = 50.00
 MAX_POSITIONS_PER_MARKET = 1
 # Global Kelly fraction — overridden per-city by STATIONS[icao]["kelly_fraction"]
-# London uses 0.50 (half-Kelly, 75-day validated), others use 0.25
+# London uses 0.50 (half-Kelly, 75-day validated), others use 0.25 (quarter-Kelly)
 KELLY_FRACTION = 0.25
+# Bet size guardrails applied after Kelly formula
+KELLY_MAX_BET_USD = 25.00   # absolute ceiling regardless of bankroll × Kelly
+KELLY_MIN_BET_USD = 5.00    # floor: Kelly below this still fires at minimum viable size
 
 # Risk limits
 MAX_DRAWDOWN_PCT = 0.15
