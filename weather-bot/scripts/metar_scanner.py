@@ -102,8 +102,10 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 # State-change tracker: only alert when action changes for a (icao, date) pair.
 # Always-alert actions bypass this gate regardless.
-_ALWAYS_ALERT = {"STRONG_BUY", "CLI_BOUNDARY_RESOLVED", "HEDGE_WARNING"}
-_last_telegram_action: dict[str, str] = {}  # key: "ICAO:YYYY-MM-DD"
+_ALWAYS_ALERT = {"STRONG_BUY", "CLI_BOUNDARY_RESOLVED"}
+_last_telegram_action: dict[str, str] = {}   # key: "ICAO:YYYY-MM-DD"
+_last_hedge_alert_time: dict[str, float] = {}  # key: "ICAO:YYYY-MM-DD" → epoch seconds
+HEDGE_WARNING_COOLDOWN_SECONDS = 3600  # re-alert at most once per hour
 
 # ── Positions helpers ─────────────────────────────────────────────────────────
 
@@ -409,9 +411,15 @@ def _telegram_signal(sig: dict, traded: bool) -> None:
         return
 
     # Rate-gate: only fire when action changes for this station+date,
-    # unless it's an always-alert action (STRONG_BUY, HEDGE_WARNING, CLI confirmed).
+    # unless it's an always-alert action (STRONG_BUY, CLI confirmed).
     gate_key = f"{icao}:{local_date}"
-    if action not in _ALWAYS_ALERT:
+    if action == "HEDGE_WARNING":
+        import time
+        last = _last_hedge_alert_time.get(gate_key, 0.0)
+        if time.time() - last < HEDGE_WARNING_COOLDOWN_SECONDS:
+            return  # Already alerted recently — suppress repeat
+        _last_hedge_alert_time[gate_key] = time.time()
+    elif action not in _ALWAYS_ALERT:
         if _last_telegram_action.get(gate_key) == action:
             return  # Same action as last alert — suppress repeat
     _last_telegram_action[gate_key] = action
