@@ -3258,113 +3258,17 @@ def _render_trading_tab() -> None:
 
     else:
         n_total = len(pnl_df)
-        fig = go.Figure()
-
-        # Fill area + line
-        fig.add_trace(
-            go.Scatter(
-                x=pnl_df["ts"],
-                y=pnl_df["cum_pnl"],
-                mode="lines",
-                line={"color": pnl_color, "width": 2},
-                fill="tozeroy",
-                fillcolor="rgba(0,255,136,0.12)" if last_pnl >= 0 else "rgba(255,68,68,0.12)",
-                hovertemplate="%{x|%b %d %H:%M}<br>Cumulative P&L: $%{y:.2f}<extra></extra>",
-                showlegend=False,
-                name="Realized",
-            )
-        )
-
-        # Individual trade markers (WIN=green dot, LOSS=red dot)
-        if "outcome" in pnl_df.columns:
-            for outcome, dot_color, symbol in [("WIN", "#00FF88", "circle"), ("LOSS", "#FF4444", "x")]:
-                mask = pnl_df["outcome"] == outcome
-                if mask.any():
-                    fig.add_trace(go.Scatter(
-                        x=pnl_df.loc[mask, "ts"],
-                        y=pnl_df.loc[mask, "cum_pnl"],
-                        mode="markers",
-                        marker={"color": dot_color, "size": 7, "symbol": symbol, "opacity": 0.85},
-                        name=outcome,
-                        hovertemplate=(
-                            "%{x|%b %d}<br>"
-                            + ("city" in pnl_df.columns and "%{customdata[0]} %{customdata[1]}<br>" or "")
-                            + f"{outcome}: $%{{y:.2f}}<extra></extra>"
-                        ),
-                        customdata=pnl_df.loc[mask, ["city", "bucket"]].values if "city" in pnl_df.columns else None,
-                    ))
-
-        # Realized endpoint dot
-        fig.add_trace(go.Scatter(
-            x=[pnl_df["ts"].iloc[-1]],
-            y=[last_pnl],
-            mode="markers",
-            marker={
-                "color": pnl_color,
-                "size": 12,
-                "symbol": "circle",
-                "line": {"color": "#141A22", "width": 2},
-            },
-            hovertemplate=f"Realized: ${last_pnl:+.2f}<extra></extra>",
-            showlegend=False,
-        ))
-
-        # Live unrealized extension: dashed line from last realized point → total P&L now
-        if unreal_pnl != 0.0:
-            fig.add_trace(go.Scatter(
-                x=[pnl_df["ts"].iloc[-1], now_ts],
-                y=[last_pnl, total_pnl],
-                mode="lines",
-                line={"color": total_color, "width": 2, "dash": "dot"},
-                hovertemplate="%{x|%H:%M}<br>Total (incl. unrealized): $%{y:.2f}<extra></extra>",
-                name="Unrealized",
-                showlegend=True,
-            ))
-            # Pulsing dot at current total P&L
-            fig.add_trace(go.Scatter(
-                x=[now_ts],
-                y=[total_pnl],
-                mode="markers",
-                marker={
-                    "color": total_color,
-                    "size": 14,
-                    "symbol": "circle",
-                    "line": {"color": "#141A22", "width": 2},
-                },
-                hovertemplate=f"Now (total): ${total_pnl:+.2f}<extra></extra>",
-                showlegend=False,
-            ))
-
-        # Zero baseline
-        fig.add_hline(y=0, line_dash="dot", line_color="#333", line_width=1)
-
-        fig.update_layout(
-            plot_bgcolor=BG,
-            paper_bgcolor=PANEL,
-            font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
-            margin={"l": 20, "r": 10, "t": 10, "b": 20},
-            xaxis={"gridcolor": "#1f2937", "tickformat": "%b %d"},
-            yaxis={"gridcolor": "#1f2937", "title": "USD", "zeroline": False},
-            legend={"bgcolor": "rgba(0,0,0,0)", "font": {"size": 11}},
-            height=340,
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-        # Breakdown strip below chart
         n_w = int((pnl_df["outcome"] == "WIN").sum()) if "outcome" in pnl_df.columns else res_wins
         n_l = int((pnl_df["outcome"] == "LOSS").sum()) if "outcome" in pnl_df.columns else res_losses
         acc = n_w / (n_w + n_l) * 100 if (n_w + n_l) else 0
         st.caption(
-            f"**{n_w}W / {n_l}L · {acc:.0f}% accuracy · {n_total} total trades**  "
+            f"**{n_w}W / {n_l}L · {acc:.0f}% accuracy · {n_total} resolved trades**  "
             f"· live prices fetched for {n_live}/{len(still_open)} open positions · prices refresh every 5 min"
         )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── Position Waterfall (always visible when resolved history exists) ──────
-    # When has_data=False this chart is already shown as the primary P&L chart above.
-    # When has_data=True the cumulative realized line is primary; we still want the
-    # waterfall so the user can see every open position at a glance.
+    # ── Position Waterfall (open + today's resolved) ─────────────────────────
     if has_data:
         _wf_rows: list[dict] = []
 
