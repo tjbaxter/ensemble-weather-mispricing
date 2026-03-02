@@ -62,11 +62,9 @@ load_dotenv(_ROOT / ".env")
 from config.cities import STATIONS
 from config.settings import (
     INITIAL_BANKROLL,
-    KELLY_FRACTION,
     KELLY_MAX_BET_USD,
     KELLY_MIN_BET_USD,
 )
-from strategy.kelly import kelly_size as _kelly_size
 from data.metar import (
     AWCClient,
     DailyHighRecord,
@@ -92,12 +90,31 @@ POLL_INTERVAL_SECONDS       = 60
 PEAK_HEAT_LOCAL_HOUR        = 15   # >= this hour → "past peak" → STRONG_BUY eligible
 MIDDAY_LOCAL_HOUR           = 12   # >= this hour → BUY eligible
 METAR_MAX_DAILY_NOTIONAL    = float(os.getenv("METAR_MAX_DAILY_NOTIONAL_USD", "50"))
-# Kelly sizing: STRONG_BUY (post-peak) = HIGH confidence; BUY (midday) = MEDIUM.
-# Win-probability priors are conservative and direction-only — the METAR tells us
-# which bucket is winning, but not with certainty (another SPECI could still move
-# the daily high).  Post-peak past 15:00 local the daily high is effectively set.
-_METAR_WIN_PROB = {"STRONG_BUY": 0.75, "BUY": 0.62, "CLI_BOUNDARY_RESOLVED": 0.82}
-_METAR_KELLY_CONFIDENCE = {"STRONG_BUY": "HIGH", "BUY": "MEDIUM", "CLI_BOUNDARY_RESOLVED": "HIGH"}
+# Fixed-fraction sizing for METAR trades.
+#
+# We do NOT use Kelly here because Kelly requires an empirical win rate, and
+# METAR-triggered resolutions don't exist yet.  Feeding a made-up win_prob to
+# kelly_size() is math theatre — it produces a precise-looking number from a
+# number we invented.
+#
+# Instead: allocate a fixed percentage of initial bankroll per signal type.
+# This is honest about uncertainty while still differentiating by confidence.
+#
+# TODO: After 30+ resolved METAR trades, compute empirical win rates from
+# resolved.csv (filter strategy='METAR_SCANNER'), then replace these fractions
+# with kelly_size(market_price=ask, win_prob=empirical_rate, ...).
+_METAR_BANKROLL_PCT = {
+    "STRONG_BUY":           0.08,   # post-peak, daily high effectively locked in → 8%
+    "BUY":                  0.04,   # midday, temperature may still move → 4%
+    "CLI_BOUNDARY_RESOLVED": 0.10,  # NWS official CLI confirms outcome → 10%
+}
+
+
+def _metar_fixed_size(action: str) -> float:
+    """Return USD bet size as a fixed fraction of bankroll, clamped to guardrails."""
+    pct  = _METAR_BANKROLL_PCT.get(action, 0.04)
+    size = INITIAL_BANKROLL * pct
+    return float(min(max(size, KELLY_MIN_BET_USD), KELLY_MAX_BET_USD))
 METAR_MAX_LIVE_PRICE        = 0.90              # don't paper-trade above 90¢
 PAPER_TRADING               = os.getenv("PAPER_TRADING",  "false").lower() in ("1", "true", "yes")
 METAR_SCANNER_ENABLED       = os.getenv("METAR_SCANNER_ENABLED", "true").lower() in ("1", "true", "yes")
@@ -352,20 +369,8 @@ async def paper_trade(sig: dict) -> bool:
         log.info("Ask %.2f > max %.2f for %s %s — market already pricing it in", ask, METAR_MAX_LIVE_PRICE, icao, winning_bucket)
         return False
 
-    # Kelly sizing: scale by signal confidence (STRONG_BUY → HIGH, BUY → MEDIUM)
-    action     = sig["action"]
-    win_prob   = _METAR_WIN_PROB.get(action, 0.62)
-    confidence = _METAR_KELLY_CONFIDENCE.get(action, "MEDIUM")
-    bet_size   = _kelly_size(
-        market_price=ask,
-        win_prob=win_prob,
-        bankroll=INITIAL_BANKROLL,
-        edge=win_prob - ask,
-        kelly_fraction=KELLY_FRACTION,
-        max_position=KELLY_MAX_BET_USD,
-        rounding_confidence=confidence,
-    )
-    bet_size = max(bet_size, KELLY_MIN_BET_USD) if bet_size > 0 else KELLY_MIN_BET_USD
+    action   = sig["action"]
+    bet_size = _metar_fixed_size(action)
 
     used = _metar_notional_used()
     if used + bet_size > METAR_MAX_DAILY_NOTIONAL:
@@ -392,8 +397,7 @@ async def paper_trade(sig: dict) -> bool:
         "strategy":         "METAR_SCANNER",
         "metar_signal":     action,
         "metar_confidence": sig["confidence"],
-        "kelly_confidence": confidence,
-        "kelly_win_prob":   win_prob,
+        "bankroll_pct":     _METAR_BANKROLL_PCT.get(action, 0.04),
     }
 
     positions = _load_positions()
@@ -402,9 +406,9 @@ async def paper_trade(sig: dict) -> bool:
     _add_metar_notional(bet_size)
 
     log.info(
-        "📡 METAR PAPER TRADE: %s %s %s @ %.2f  kelly=%s  cost=$%.2f",
+        "📡 METAR PAPER TRADE: %s %s %s @ %.2f  signal=%s  cost=$%.2f",
         STATIONS.get(icao, {}).get("market_label", icao),
-        winning_bucket, "BUY_YES", ask, confidence, bet_size,
+        winning_bucket, "BUY_YES", ask, action, bet_size,
     )
     return True
 
