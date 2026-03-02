@@ -619,6 +619,73 @@ def load_resolved_df() -> pd.DataFrame:
     return df
 
 
+@st.cache_data(ttl=30)
+def load_shadow_resolved_df(slug: str) -> pd.DataFrame:
+    """Load resolved.csv for a shadow model (shadow_2a / shadow_2b / shadow_2c)."""
+    path = ROOT / "logs" / slug / "resolved.csv"
+    try:
+        df = pd.read_csv(path, index_col=False)
+    except Exception:
+        return pd.DataFrame()
+    for col in ("resolved_at", "target_date", "city", "bucket", "outcome", "side"):
+        if col not in df.columns:
+            df[col] = ""
+    for col in ("pnl_usd", "entry_price", "size_usd", "ev_per_bet"):
+        if col not in df.columns:
+            df[col] = 0.0
+    df["resolved_at"] = pd.to_datetime(df["resolved_at"], errors="coerce", utc=True)
+    df["target_date_dt"] = pd.to_datetime(df["target_date"], errors="coerce", utc=True)
+    df["pnl_usd"] = pd.to_numeric(df["pnl_usd"], errors="coerce").fillna(0.0)
+    sort_cols = ["target_date_dt"]
+    if "signal_timestamp" in df.columns:
+        sort_cols.append("signal_timestamp")
+    df = df.sort_values(sort_cols, ascending=True)
+    df["cum_pnl"] = df["pnl_usd"].cumsum()
+    return df
+
+
+def load_shadow_positions(slug: str) -> list[dict]:
+    """Load open positions for a shadow model."""
+    path = ROOT / "data" / f"positions_{slug}.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(payload, list):
+            return [p for p in payload if isinstance(p, dict)]
+        if isinstance(payload, dict):
+            return [p for p in payload.values() if isinstance(p, dict)]
+    except Exception:
+        pass
+    return []
+
+
+def _strat_stats(df: pd.DataFrame) -> dict:
+    """Summary stats from a resolved DataFrame slice."""
+    if df.empty:
+        return {
+            "pnl": 0.0, "wins": 0, "losses": 0, "n": 0,
+            "wr": 0.0, "avg_win": 0.0, "avg_loss": 0.0,
+            "staked": 0.0, "roi": 0.0,
+        }
+    wins   = int((df["outcome"] == "WIN").sum())
+    losses = int((df["outcome"] == "LOSS").sum())
+    n      = wins + losses
+    pnl    = float(df["pnl_usd"].sum())
+    staked = float(df["size_usd"].fillna(0).sum()) if "size_usd" in df.columns else 0.0
+    win_pnls  = df.loc[df["outcome"] == "WIN",  "pnl_usd"]
+    loss_pnls = df.loc[df["outcome"] == "LOSS", "pnl_usd"]
+    return {
+        "pnl":      pnl,
+        "wins":     wins,
+        "losses":   losses,
+        "n":        n,
+        "wr":       wins / n if n else 0.0,
+        "avg_win":  float(win_pnls.mean())  if len(win_pnls)  else 0.0,
+        "avg_loss": float(loss_pnls.mean()) if len(loss_pnls) else 0.0,
+        "staked":   staked,
+        "roi":      pnl / staked * 100 if staked else 0.0,
+    }
+
+
 def _render_pnl_chart_html(
     dates_x: list,
     realized_y: list,
@@ -2946,12 +3013,60 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    tab_trading, tab_accuracy = st.tabs(["⚡ Trading", "📊 Model Accuracy"])
+    (
+        tab_ov, tab_single, tab_ladder, tab_conv,
+        tab_2a, tab_2b, tab_2c, tab_acc,
+    ) = st.tabs([
+        "🏆 Overview",
+        "⚡ SINGLE",
+        "🪜 LADDER",
+        "🎯 CONVICTION",
+        "2A Equal",
+        "2B Cond",
+        "2C Prop",
+        "📊 Accuracy",
+    ])
 
-    with tab_trading:
-        _render_trading_tab()
+    resolved_df = load_resolved_df()
+    has_strat   = not resolved_df.empty and "strategy" in resolved_df.columns
 
-    with tab_accuracy:
+    def _strat_df(s: str) -> pd.DataFrame:
+        return resolved_df[resolved_df["strategy"] == s].copy() if has_strat else pd.DataFrame()
+
+    with tab_ov:
+        _render_overview_tab()
+
+    with tab_single:
+        _render_model_detail_tab("SINGLE", _strat_df("SINGLE"))
+
+    with tab_ladder:
+        _render_model_detail_tab("LADDER", _strat_df("LADDER"))
+
+    with tab_conv:
+        _render_model_detail_tab(
+            "CONVICTION", _strat_df("CONVICTION"),
+            note="Shadow only — signals scored and logged but not executed",
+        )
+
+    with tab_2a:
+        _render_model_detail_tab(
+            "2A Equal", load_shadow_resolved_df("shadow_2a"),
+            note="Shadow — always top-2 YES buckets, equal (MEDIUM) Kelly on both",
+        )
+
+    with tab_2b:
+        _render_model_detail_tab(
+            "2B Cond", load_shadow_resolved_df("shadow_2b"),
+            note="Shadow — dual only when the model is genuinely split between two buckets",
+        )
+
+    with tab_2c:
+        _render_model_detail_tab(
+            "2C Prop", load_shadow_resolved_df("shadow_2c"),
+            note="Shadow — always top-2 but proportional sizing (MEDIUM top1, LOW top2)",
+        )
+
+    with tab_acc:
         _render_accuracy_tab()
 
 
@@ -3936,6 +4051,312 @@ def _render_trading_tab() -> None:
 
     st.markdown("### Wallet")
     st.button("Connect Polygon Wallet (Coming Soon)", disabled=True, help="Wallet integration will be added later.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+_MODEL_COLORS: dict[str, str] = {
+    "SINGLE":     "#00FF88",
+    "LADDER":     "#4CC9F0",
+    "CONVICTION": "#F72585",
+    "2A Equal":   "#FFB347",
+    "2B Cond":    "#9B59B6",
+    "2C Prop":    "#F1C40F",
+}
+
+
+def _render_overview_tab() -> None:
+    """Comparison scoreboard: all strategies side-by-side, plus live open-book."""
+    resolved_df = load_resolved_df()
+    positions   = load_positions()
+
+    has_strat = not resolved_df.empty and "strategy" in resolved_df.columns
+
+    def _strat_slice(s: str) -> pd.DataFrame:
+        return resolved_df[resolved_df["strategy"] == s].copy() if has_strat else pd.DataFrame()
+
+    MODELS: list[tuple[str, str, pd.DataFrame, bool]] = [
+        ("⚡ SINGLE",     "SINGLE",     _strat_slice("SINGLE"),              False),
+        ("🪜 LADDER",     "LADDER",     _strat_slice("LADDER"),              False),
+        ("🎯 CONVICTION", "CONVICTION", _strat_slice("CONVICTION"),          True),
+        ("2A Equal",      "2A Equal",   load_shadow_resolved_df("shadow_2a"), True),
+        ("2B Cond",       "2B Cond",    load_shadow_resolved_df("shadow_2b"), True),
+        ("2C Prop",       "2C Prop",    load_shadow_resolved_df("shadow_2c"), True),
+    ]
+
+    all_stats = [(label, key, _strat_stats(df), is_shadow, df)
+                 for label, key, df, is_shadow in MODELS]
+    ranked    = sorted(all_stats, key=lambda x: x[2]["pnl"], reverse=True)
+
+    # ── Comparison cards ──────────────────────────────────────────────────────
+    st.markdown(
+        '<div style="font-size:1.1rem;font-weight:700;color:#E6EDF3;'
+        'letter-spacing:.05em;margin:6px 0 14px;">STRATEGY SCOREBOARD</div>',
+        unsafe_allow_html=True,
+    )
+
+    rank_emojis = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣"]
+    for row_start in range(0, len(ranked), 3):
+        cols = st.columns(3)
+        for i, col in enumerate(cols):
+            idx = row_start + i
+            if idx >= len(ranked):
+                break
+            label, key, m, is_shadow, _ = ranked[idx]
+            pnl_c  = GREEN if m["pnl"] >= 0 else RED
+            glow   = "#1a4d2e" if m["pnl"] >= 0 else "#4d1a1a"
+            badge  = " · shadow" if is_shadow else " · live"
+            accent = _MODEL_COLORS.get(key, BLUE)
+            with col:
+                st.markdown(
+                    f"""
+<div style="background:#141A22;border:1px solid {glow};border-left:4px solid {accent};
+     border-radius:10px;padding:16px 14px;margin-bottom:12px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+    <span style="font-weight:700;color:#E6EDF3;font-size:0.92rem;">{label}</span>
+    <span style="font-size:0.72rem;color:#666;">{rank_emojis[idx]}{badge}</span>
+  </div>
+  <div style="font-size:2rem;font-weight:800;color:{pnl_c};line-height:1.1;">${m['pnl']:+.2f}</div>
+  <div style="color:#aaa;font-size:0.8rem;margin-top:6px;">
+    {m['wins']}W&nbsp;/&nbsp;{m['losses']}L&nbsp;·&nbsp;{m['wr']*100:.0f}% WR
+    &nbsp;·&nbsp;ROI {m['roi']:+.1f}%
+  </div>
+  <div style="color:#555;font-size:0.73rem;margin-top:3px;">{m['n']} resolved trades</div>
+</div>""",
+                    unsafe_allow_html=True,
+                )
+
+    # ── Multi-model cumulative P&L chart ─────────────────────────────────────
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="font-size:0.95rem;font-weight:700;color:#aaa;'
+        'letter-spacing:.05em;margin-bottom:10px;">CUMULATIVE P&L — ALL STRATEGIES</div>',
+        unsafe_allow_html=True,
+    )
+    fig_all = go.Figure()
+    any_data = False
+    for label, key, m, is_shadow, df in all_stats:
+        if df.empty:
+            continue
+        df_s = df.sort_values("target_date_dt")
+        df_s["_cum"] = df_s["pnl_usd"].cumsum()
+        color = _MODEL_COLORS.get(key, BLUE)
+        dash  = "dash" if is_shadow else "solid"
+        fig_all.add_trace(go.Scatter(
+            x=df_s["target_date_dt"],
+            y=df_s["_cum"],
+            mode="lines+markers",
+            name=label,
+            line={"color": color, "width": 2, "dash": dash},
+            marker={"size": 5},
+            hovertemplate=f"{label}<br>%{{x|%b %d}}<br>Cum: $%{{y:.2f}}<extra></extra>",
+        ))
+        any_data = True
+    if any_data:
+        fig_all.add_hline(y=0, line_dash="dot", line_color="#333", line_width=1)
+        fig_all.update_layout(
+            plot_bgcolor=BG, paper_bgcolor=PANEL,
+            font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+            margin={"l": 20, "r": 10, "t": 10, "b": 20},
+            xaxis={"gridcolor": "#1f2937", "tickformat": "%b %d"},
+            yaxis={"gridcolor": "#1f2937", "title": "Cumulative P&L ($)", "zeroline": False},
+            legend={"bgcolor": "rgba(0,0,0,0)", "font": {"size": 11}, "orientation": "h",
+                    "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
+            height=320,
+        )
+        st.plotly_chart(fig_all, use_container_width=True)
+    else:
+        st.info("No resolved trades yet across any strategy.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Live open-book positions ───────────────────────────────────────────────
+    if positions:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.markdown(
+            '<div style="font-size:0.95rem;font-weight:700;color:#aaa;'
+            'letter-spacing:.05em;margin-bottom:10px;">LIVE BOOK — OPEN POSITIONS</div>',
+            unsafe_allow_html=True,
+        )
+        _token_ids   = tuple(p["token_id"] for p in positions if p.get("token_id"))
+        _live_prices = fetch_live_position_prices(_token_ids) if _token_ids else {}
+        _live_ts     = datetime.now(UTC).strftime("%H:%M UTC")
+
+        rows = []
+        for p in positions:
+            tid   = p.get("token_id")
+            cur   = _live_prices.get(tid)
+            fill  = float(p.get("fill_price", 0) or 0)
+            size  = float(p.get("fill_size",  0) or 0)
+            cost  = float(p.get("cost",       0) or 0)
+            upnl  = round((cur - fill) * size, 2) if cur is not None else None
+            rows.append({
+                "City":    p.get("city", ""),
+                "Date":    p.get("date", ""),
+                "Bucket":  p.get("bucket", ""),
+                "Side":    p.get("side", ""),
+                "Entry":   round(fill, 3),
+                "Live":    round(cur, 3) if cur is not None else "—",
+                "Cost":    round(cost, 2),
+                "Unreal P&L": f"${upnl:+.2f}" if upnl is not None else "—",
+            })
+        pos_df = pd.DataFrame(rows)
+        st.dataframe(pos_df, use_container_width=True, hide_index=True)
+        st.caption(f"Live prices as of {_live_ts} · {len(positions)} open positions")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Trading mode ──────────────────────────────────────────────────────────
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.subheader("TRADING MODE")
+    _, live_mode = load_mode_from_env(DEFAULT_ENV)
+    mode_choice = st.radio("Mode", options=["Paper", "Live"], index=1 if live_mode else 0, horizontal=True, key="ov_mode")
+    env_target = st.selectbox("Env file target", options=[str(DEFAULT_ENV), str(VM_ENV)], index=0, key="ov_env")
+    if env_target == str(VM_ENV):
+        st.warning("Writing /etc/weather-bot.env usually requires sudo/root privileges.")
+    st.warning("Live mode is still blocked by main.py safety guard unless code is changed.")
+    if st.button("Apply Mode Change", key="ov_apply_mode"):
+        target_live = mode_choice == "Live"
+        ok, msg = write_mode_to_env(Path(env_target), target_live=target_live)
+        if ok:
+            st.success(msg)
+        else:
+            st.error(msg)
+    restart_cmd = "sudo systemctl restart weather-bot" if env_target == str(VM_ENV) else "python3 main.py"
+    st.code(restart_cmd, language="bash")
+    st.caption("Manual restart required after mode change.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def _render_model_detail_tab(
+    label: str,
+    df: pd.DataFrame,
+    note: str = "",
+) -> None:
+    """Per-model detail view: KPI strip, cumulative P&L, waterfall, trade log."""
+    m     = _strat_stats(df)
+    color = _MODEL_COLORS.get(label.split()[0].upper(), BLUE)
+    if not color or color == BLUE:
+        # Try matching by label keywords
+        for k, c in _MODEL_COLORS.items():
+            if k.lower() in label.lower():
+                color = c
+                break
+
+    if note:
+        st.caption(f"ℹ️ {note}")
+
+    # ── KPI strip ─────────────────────────────────────────────────────────────
+    pnl_c = GREEN if m["pnl"] >= 0 else RED
+    wr_c  = GREEN if m["wr"] >= 0.5 else RED
+    cols  = st.columns(6)
+    kpi_items = [
+        ("Total P&L",  f"${m['pnl']:+.2f}",          pnl_c),
+        ("Win Rate",   f"{m['wr']*100:.1f}%",          wr_c),
+        ("Trades",     str(m["n"]),                    BLUE),
+        ("W / L",      f"{m['wins']} / {m['losses']}", BLUE),
+        ("Avg Win",    f"${m['avg_win']:+.2f}",        GREEN),
+        ("Avg Loss",   f"${m['avg_loss']:+.2f}",       RED),
+    ]
+    for col, (lbl, val, c) in zip(cols, kpi_items):
+        with col:
+            st.markdown(
+                f"""<div class="kpi-card">
+  <div class="kpi-value" style="color:{c};">{val}</div>
+  <div class="kpi-label">{lbl}</div>
+</div>""",
+                unsafe_allow_html=True,
+            )
+
+    if df.empty:
+        st.info(f"No resolved trades yet for **{label}**.")
+        return
+
+    df_s = df.sort_values("target_date_dt").copy()
+    df_s["_cum"] = df_s["pnl_usd"].cumsum()
+
+    # ── Cumulative P&L chart ─────────────────────────────────────────────────
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="font-size:0.88rem;font-weight:700;color:#aaa;'
+        'letter-spacing:.05em;margin-bottom:8px;">CUMULATIVE P&L</div>',
+        unsafe_allow_html=True,
+    )
+    fig_cum = go.Figure()
+    fig_cum.add_trace(go.Scatter(
+        x=df_s["target_date_dt"],
+        y=df_s["_cum"],
+        mode="lines+markers",
+        line={"color": pnl_c, "width": 2.5},
+        marker={"size": 6, "color": pnl_c},
+        fill="tozeroy",
+        fillcolor=f"{'rgba(0,255,136,0.06)' if m['pnl'] >= 0 else 'rgba(255,68,68,0.06)'}",
+        hovertemplate="%{x|%b %d}<br>Cum P&L: $%{y:.2f}<extra></extra>",
+    ))
+    fig_cum.add_hline(y=0, line_dash="dot", line_color="#333", line_width=1)
+    fig_cum.update_layout(
+        plot_bgcolor=BG, paper_bgcolor=PANEL,
+        font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+        margin={"l": 20, "r": 10, "t": 10, "b": 20},
+        xaxis={"gridcolor": "#1f2937", "tickformat": "%b %d"},
+        yaxis={"gridcolor": "#1f2937", "title": "Cumulative P&L ($)", "zeroline": False},
+        height=260,
+    )
+    st.plotly_chart(fig_cum, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Waterfall chart (one bar per trade) ──────────────────────────────────
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="font-size:0.88rem;font-weight:700;color:#aaa;'
+        'letter-spacing:.05em;margin-bottom:8px;">TRADE WATERFALL</div>',
+        unsafe_allow_html=True,
+    )
+    bar_colors = [GREEN if p >= 0 else RED for p in df_s["pnl_usd"]]
+    bar_labels = [
+        f"{r.get('city', '')} {r.get('bucket', '')} {r.get('target_date', '')}"
+        for _, r in df_s.iterrows()
+    ]
+    fig_wf = go.Figure()
+    fig_wf.add_trace(go.Bar(
+        x=list(range(len(df_s))),
+        y=df_s["pnl_usd"].tolist(),
+        marker_color=bar_colors,
+        text=bar_labels,
+        hovertemplate="%{text}<br>P&L: $%{y:.2f}<extra></extra>",
+    ))
+    fig_wf.add_hline(y=0, line_dash="dot", line_color="#555", line_width=1)
+    fig_wf.update_layout(
+        plot_bgcolor=BG, paper_bgcolor=PANEL,
+        font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+        margin={"l": 20, "r": 10, "t": 10, "b": 20},
+        xaxis={"showticklabels": False, "gridcolor": "#1f2937"},
+        yaxis={"gridcolor": "#1f2937", "title": "P&L per Trade ($)"},
+        height=210,
+        bargap=0.15,
+    )
+    st.plotly_chart(fig_wf, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Trade log ─────────────────────────────────────────────────────────────
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="font-size:0.88rem;font-weight:700;color:#aaa;'
+        'letter-spacing:.05em;margin-bottom:8px;">TRADE LOG</div>',
+        unsafe_allow_html=True,
+    )
+    show = df_s.sort_values("target_date_dt", ascending=False).head(200)
+    show_cols = [c for c in [
+        "target_date", "city", "bucket", "side",
+        "entry_price", "actual_temp", "outcome", "pnl_usd",
+    ] if c in show.columns]
+    rename_map = {
+        "target_date": "Date", "city": "City", "bucket": "Bucket",
+        "side": "Side", "entry_price": "Entry", "actual_temp": "Actual°",
+        "outcome": "Result", "pnl_usd": "P&L",
+    }
+    st.dataframe(
+        show[show_cols].rename(columns=rename_map),
+        use_container_width=True,
+        hide_index=True,
+    )
     st.markdown("</div>", unsafe_allow_html=True)
 
 
