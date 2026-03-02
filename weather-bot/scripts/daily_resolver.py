@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Daily resolver — scrapes Wunderground for actual temps, marks trades WIN/LOSS/MISS.
+"""Daily resolver — fetches actual temps from IEM ASOS, marks trades WIN/LOSS/MISS.
 
-This is a standalone safety net that runs independently of the main bot.
-It reads signals.csv for all 'trade' rows from previous days, fetches the
-finalized daily max from WU, and writes outcomes to logs/resolved.csv.
+IEM (Iowa Environmental Mesonet) reads from the same METAR station observations
+that Wunderground displays, so the daily max matches what Polymarket resolves to.
+Using IEM rather than WU avoids the JS-rendering problem (WU pages return no data
+to headless scrapers).
 
-Run daily at 10:00 UTC — WU typically finalises overnight data by then.
+Run daily at 10:00 UTC — IEM typically finalises overnight data by then.
 
 Cron (VM):
     0 10 * * * /home/tombaxter/weather-bot/venv/bin/python3 \
@@ -18,10 +19,10 @@ from __future__ import annotations
 import asyncio
 import csv
 import json
+import math
 import os
-import re
 import sys
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import httpx
@@ -32,12 +33,17 @@ if str(ROOT) not in sys.path:
 
 from config.cities import STATIONS
 
-SIGNALS_CSV   = ROOT / "logs" / "signals.csv"
-TRADES_CSV    = ROOT / "logs" / "trades.csv"
-RESOLVED_CSV  = ROOT / "logs" / "resolved.csv"
+SIGNALS_CSV    = ROOT / "logs" / "signals.csv"
+TRADES_CSV     = ROOT / "logs" / "trades.csv"
+RESOLVED_CSV   = ROOT / "logs" / "resolved.csv"
 POSITIONS_JSON = ROOT / "data" / "positions.json"
 
-WU_HIGH_PATTERN = re.compile(r'"temperatureMax":\{"value":(-?\d+(?:\.\d+)?)')
+IEM_DAILY_URL = "https://mesonet.agron.iastate.edu/cgi-bin/request/daily.py"
+
+
+def _round_half_up(x: float) -> int:
+    """Round to nearest integer, halves away from zero (standard weather convention)."""
+    return math.floor(x + 0.5)
 
 RESOLVED_HEADER = [
     "resolved_at",
@@ -143,16 +149,53 @@ def _compute_pnl(side: str, entry_price: float, size_usd: float, won: bool) -> f
     return round(-size_usd, 4)
 
 
-async def _fetch_wu_high(http: httpx.AsyncClient, wu_url: str, day: date) -> int | None:
-    url = f"{wu_url}/date/{day.isoformat()}"
+async def _fetch_iem_high(
+    http: httpx.AsyncClient,
+    iem_network: str,
+    iem_station: str,
+    resolution_unit: str,
+    day: date,
+) -> int | None:
+    """Fetch daily max temperature from IEM ASOS (same METAR data that WU shows).
+
+    IEM returns max_tmpf (°F) for all stations regardless of country.
+    For °F markets: round and return directly.
+    For °C markets: convert then round with round_half_up.
+    """
+    params = {
+        "network": iem_network,
+        "stations": iem_station,
+        "year1": str(day.year),
+        "month1": str(day.month),
+        "day1": str(day.day),
+        "year2": str(day.year),
+        "month2": str(day.month),
+        "day2": str(day.day),
+        "vars[]": "max_tmpf",
+        "what": "view",
+        "delim": "comma",
+        "gis": "no",
+    }
     try:
-        resp = await http.get(url, follow_redirects=True, timeout=20.0)
+        resp = await http.get(IEM_DAILY_URL, params=params, timeout=20.0)
         resp.raise_for_status()
-        match = WU_HIGH_PATTERN.search(resp.text)
-        if match:
-            return int(round(float(match.group(1))))
+        for line in resp.text.strip().splitlines():
+            if line.startswith("station") or not line.strip():
+                continue
+            parts = line.split(",")
+            if len(parts) < 3:
+                continue
+            raw = parts[2].strip()
+            if raw in ("", "None", "M", "null"):
+                print(f"  IEM: no data yet for {iem_station} on {day} (got '{raw}')")
+                return None
+            max_tmpf = float(raw)
+            if resolution_unit == "F":
+                return _round_half_up(max_tmpf)
+            else:
+                return _round_half_up((max_tmpf - 32.0) * 5.0 / 9.0)
     except Exception as exc:
-        print(f"  WU fetch error for {wu_url} {day}: {exc}")
+        print(f"  IEM fetch error for {iem_station} {day}: {exc}")
     return None
 
 
@@ -165,12 +208,12 @@ async def resolve_all() -> dict:
         print("No pending trades to resolve.")
         return {"resolved": 0, "wins": 0, "losses": 0, "pnl": 0.0}
 
-    # Group by station+date to minimise WU HTTP requests
+    # Group by station+date to minimise IEM HTTP requests
     station_date_cache: dict[tuple[str, str], int | None] = {}
 
     stats = {"resolved": 0, "wins": 0, "losses": 0, "pnl": 0.0, "rows": []}
 
-    async with httpx.AsyncClient(headers={"User-Agent": "Mozilla/5.0"}) as http:
+    async with httpx.AsyncClient() as http:
         for row in pending:
             target_date_str = row["date"]
             city = row.get("city", "")
@@ -183,10 +226,9 @@ async def resolve_all() -> dict:
             if key in already_resolved:
                 continue
 
-            # Look up WU URL for this station
+            # Look up IEM config for this station
             station_cfg = STATIONS.get(station_icao)
             if not station_cfg:
-                # Try to find station by city slug
                 for icao, cfg in STATIONS.items():
                     if cfg.get("market_label", "").lower() == city.lower():
                         station_cfg = cfg
@@ -197,19 +239,25 @@ async def resolve_all() -> dict:
                 print(f"  [{city}] No station config for ICAO '{station_icao}' — skipping.")
                 continue
 
-            wu_url = station_cfg["wu_url"]
+            iem_network = station_cfg.get("iem_network")
+            iem_station = station_cfg.get("iem_station")
+            if not iem_network or not iem_station:
+                print(f"  [{city}] No iem_network/iem_station in config — skipping.")
+                continue
+
+            resolution_unit = station_cfg.get("resolution_unit", "F")
             target_date = date.fromisoformat(target_date_str)
-            cache_key = (wu_url, target_date_str)
+            cache_key = (iem_station, target_date_str)
 
             if cache_key not in station_date_cache:
-                print(f"  [{city}] Fetching WU for {target_date_str}...")
-                actual = await _fetch_wu_high(http, wu_url, target_date)
+                print(f"  [{city}] Fetching IEM ({iem_network}/{iem_station}) for {target_date_str}...")
+                actual = await _fetch_iem_high(http, iem_network, iem_station, resolution_unit, target_date)
                 station_date_cache[cache_key] = actual
             else:
                 actual = station_date_cache[cache_key]
 
             if actual is None:
-                print(f"  [{city}] WU returned no data for {target_date_str} — will retry tomorrow.")
+                print(f"  [{city}] IEM returned no data for {target_date_str} — will retry tomorrow.")
                 continue
 
             won = _parse_bucket_win(bucket, actual)
@@ -365,12 +413,11 @@ def print_summary(stats: dict) -> None:
 
 
 def prune_expired_positions() -> int:
-    """Remove positions from positions.json whose target date is strictly before today.
+    """Remove positions from positions.json whose target date is strictly before today,
+    BUT ONLY if they are already captured in resolved.csv.
 
-    These positions have already resolved on Polymarket (their markets are closed).
-    The resolver has scored them in resolved.csv; keeping them in positions.json
-    only clutters the dashboard's OPEN POSITIONS table with stale entries that
-    return no live price from the CLOB API.
+    Positions not in resolved.csv are left in place so the dashboard can still
+    compute their live P&L until they are formally recovered/resolved.
 
     Returns number of positions removed.
     """
@@ -382,9 +429,32 @@ def prune_expired_positions() -> int:
         print(f"  [prune] Could not load positions.json: {exc}")
         return 0
 
+    # Build set of (city, date, bucket, side) already in resolved.csv
+    resolved_keys: set[tuple[str, str, str, str]] = set()
+    if RESOLVED_CSV.exists():
+        try:
+            import csv as _csv
+            with RESOLVED_CSV.open(encoding="utf-8") as f:
+                for row in _csv.DictReader(f):
+                    resolved_keys.add((
+                        row.get("city", ""),
+                        row.get("target_date", ""),
+                        row.get("bucket", ""),
+                        row.get("side", ""),
+                    ))
+        except Exception:
+            pass
+
     today_str = date.today().isoformat()
     before = len(positions)
-    active  = [p for p in positions if p.get("date", "9999") >= today_str]
+
+    def _safe_to_prune(p: dict) -> bool:
+        if p.get("date", "9999") >= today_str:
+            return False  # not expired yet
+        key = (p.get("city",""), p.get("date",""), p.get("bucket",""), p.get("side",""))
+        return key in resolved_keys  # only prune if resolved
+
+    active  = [p for p in positions if not _safe_to_prune(p)]
     removed = before - len(active)
 
     if removed:

@@ -592,7 +592,10 @@ def load_signals_df() -> pd.DataFrame:
 def load_resolved_df() -> pd.DataFrame:
     """Load from logs/resolved.csv — written by scripts/daily_resolver.py."""
     try:
-        df = pd.read_csv(RESOLVED_CSV)
+        # index_col=False prevents pandas from auto-using col 0 as row index
+        # when data rows have one more field than the header (strategy column
+        # may be absent from old headers but present in every data row).
+        df = pd.read_csv(RESOLVED_CSV, index_col=False)
     except Exception:
         return pd.DataFrame()
     for col in ("resolved_at", "target_date", "city", "bucket", "outcome"):
@@ -2838,28 +2841,37 @@ def _render_trading_tab() -> None:
     live_resolved   = []   # positions inferred as resolved from live price
     still_open      = []   # positions still genuinely live
 
+    today_str = _date.today().isoformat()
+
     for p in positions:
-        tid       = p.get("token_id")
-        live_p    = _live_prices.get(tid)
-        side      = p.get("side", "BUY_YES")
-        cost      = float(p.get("cost",      0) or 0)
-        fill_size = float(p.get("fill_size", 0) or 0)
+        tid         = p.get("token_id")
+        live_p      = _live_prices.get(tid)
+        side        = p.get("side", "BUY_YES")
+        cost        = float(p.get("cost",      0) or 0)
+        fill_size   = float(p.get("fill_size", 0) or 0)
+        target_date = p.get("date", "9999")
 
         if live_p is None:
             still_open.append(p)
             continue
 
-        yes_price = float(live_p)
+        token_price = float(live_p)
 
-        # Determine if this side has won based on YES token price
-        if side == "BUY_YES":
-            won  = yes_price >= RESOLVE_WIN_THRESHOLD
-            lost = yes_price <= RESOLVE_LOSS_THRESHOLD
-        else:  # BUY_NO — we hold NO tokens; NO wins when YES is near 0
-            won  = yes_price <= RESOLVE_LOSS_THRESHOLD
-            lost = yes_price >= RESOLVE_WIN_THRESHOLD
+        # positions.json stores the token_id of the token we actually HOLD:
+        #   BUY_YES → YES token id → token_price is the YES price
+        #   BUY_NO  → NO token id  → token_price is the NO price
+        # In BOTH cases: our token approaching $1 means WON, approaching $0 means LOST.
+        won  = token_price >= RESOLVE_WIN_THRESHOLD
+        lost = token_price <= RESOLVE_LOSS_THRESHOLD
 
-        if won or lost:
+        # Only classify as resolved if the target date has already passed.
+        # A still-open position can have extreme prices (e.g. a far-OTM bucket
+        # that trades at $0.01) — we must not mistake it for a settled market.
+        is_expired = target_date <= today_str
+
+        yes_price = token_price  # alias used by dedup code below
+
+        if is_expired and (won or lost):
             pnl = round(fill_size - cost, 4) if won else round(-cost, 4)
             live_resolved.append({**p, "live_won": won, "live_pnl": pnl, "live_price": yes_price})
         else:
@@ -3334,6 +3346,186 @@ def _render_trading_tab() -> None:
         )
 
     st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Position Waterfall (always visible when resolved history exists) ──────
+    # When has_data=False this chart is already shown as the primary P&L chart above.
+    # When has_data=True the cumulative realized line is primary; we still want the
+    # waterfall so the user can see every open position at a glance.
+    if has_data:
+        _wf_rows: list[dict] = []
+
+        for p in still_open:
+            tid = p.get("token_id")
+            if not tid or tid not in _live_prices:
+                continue
+            cur  = _live_prices[tid]
+            fill = float(p.get("fill_price", 0) or 0)
+            size = float(p.get("fill_size",  0) or 0)
+            upnl = round((cur - fill) * size, 2)
+            _wf_rows.append({
+                "label":    f"{p.get('city','?')} {p.get('date','?')} {p.get('bucket','?')}",
+                "city":     p.get("city", "?"),
+                "date":     p.get("date", "?"),
+                "bucket":   p.get("bucket", "?"),
+                "side":     p.get("side", "?"),
+                "fill":     fill,
+                "cur":      cur,
+                "upnl":     upnl,
+                "resolved": False,
+                "won":      None,
+            })
+
+        for r in net_live_resolved:
+            fill = float(r.get("fill_price", 0) or 0)
+            _wf_rows.append({
+                "label":    f"{r.get('city','?')} {r.get('date','?')} {r.get('bucket','?')} ✓",
+                "city":     r.get("city", "?"),
+                "date":     r.get("date", "?"),
+                "bucket":   r.get("bucket", "?"),
+                "side":     r.get("side", "?"),
+                "fill":     fill,
+                "cur":      r.get("live_price", fill),
+                "upnl":     r["live_pnl"],
+                "resolved": True,
+                "won":      r["live_won"],
+            })
+
+        if _wf_rows:
+            st.markdown('<div class="panel">', unsafe_allow_html=True)
+            _open_cnt = sum(1 for r in _wf_rows if not r["resolved"])
+            _res_cnt  = len(_wf_rows) - _open_cnt
+            st.subheader(f"📊 POSITION WATERFALL · {_open_cnt} open · {_res_cnt} settled today")
+
+            _wc1, _wc2, _wc3 = st.columns([1.2, 1.2, 1])
+            with _wc1:
+                _wf_view = st.radio(
+                    "View", options=["📊 Waterfall", "📈 Cumulative line"],
+                    horizontal=True, label_visibility="collapsed", key="wf_chart_toggle",
+                )
+            with _wc2:
+                _wf_filter = st.radio(
+                    "Show", options=["📊 All", "⏳ Open only", "✅ Resolved only"],
+                    index=1, horizontal=True, label_visibility="collapsed", key="wf_show_toggle",
+                )
+            with _wc3:
+                _wf_color = st.radio(
+                    "Color", options=["🟢 P&L", "🔵 YES / NO"],
+                    horizontal=True, label_visibility="collapsed", key="wf_color_toggle",
+                )
+
+            def _wf_colour(r: dict, v: float, mode: str) -> str:
+                if mode == "🔵 YES / NO":
+                    is_yes = r["side"] == "BUY_YES"
+                    if r["resolved"]:
+                        return "#1D4ED8" if is_yes else "#C2410C"
+                    return "#3B82F6" if is_yes else "#F97316"
+                if r["resolved"]:
+                    return "#F59E0B" if r["won"] else "#6B7280"
+                return "#00FF88" if v >= 0 else "#FF4444"
+
+            if _wf_color == "🔵 YES / NO":
+                st.markdown(
+                    '<span style="color:#1D4ED8;font-size:0.8rem;">■ Settled YES</span>&nbsp;&nbsp;'
+                    '<span style="color:#C2410C;font-size:0.8rem;">■ Settled NO</span>&nbsp;&nbsp;'
+                    '<span style="color:#3B82F6;font-size:0.8rem;">■ Open YES</span>&nbsp;&nbsp;'
+                    '<span style="color:#F97316;font-size:0.8rem;">■ Open NO</span>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    '<span style="color:#F59E0B;font-size:0.8rem;">■ Settled WIN</span>&nbsp;&nbsp;'
+                    '<span style="color:#6B7280;font-size:0.8rem;">■ Settled LOSS</span>&nbsp;&nbsp;'
+                    '<span style="color:#00FF88;font-size:0.8rem;">■ Open +P&L</span>&nbsp;&nbsp;'
+                    '<span style="color:#FF4444;font-size:0.8rem;">■ Open -P&L</span>',
+                    unsafe_allow_html=True,
+                )
+
+            if _wf_filter == "⏳ Open only":
+                _wf_filtered = [r for r in _wf_rows if not r["resolved"]]
+            elif _wf_filter == "✅ Resolved only":
+                _wf_filtered = [r for r in _wf_rows if r["resolved"]]
+            else:
+                _wf_filtered = _wf_rows
+
+            _wf_sorted = sorted(_wf_filtered, key=lambda r: (r["resolved"], r["upnl"]))
+            _wf_vals   = [r["upnl"] for r in _wf_sorted]
+            _wf_labels = [r["label"] for r in _wf_sorted]
+            _wf_colors = [_wf_colour(r, v, _wf_color) for r, v in zip(_wf_sorted, _wf_vals)]
+
+            if _wf_view == "📊 Waterfall":
+                wf_fig = go.Figure()
+                wf_fig.add_trace(go.Bar(
+                    x=_wf_vals,
+                    y=_wf_labels,
+                    orientation="h",
+                    marker_color=_wf_colors,
+                    text=[f"${v:+.2f}" for v in _wf_vals],
+                    textposition="outside",
+                    customdata=[[r["side"], r["fill"], r["cur"],
+                                 "✅ SETTLED" if r["resolved"] and r["won"]
+                                 else "❌ SETTLED" if r["resolved"]
+                                 else "⏳ LIVE"] for r in _wf_sorted],
+                    hovertemplate=(
+                        "%{y}<br>%{customdata[3]}<br>"
+                        "Side: %{customdata[0]}<br>"
+                        "Entry: %{customdata[1]:.3f} → Now: %{customdata[2]:.3f}<br>"
+                        "P&L: $%{x:.2f}<extra></extra>"
+                    ),
+                    showlegend=False,
+                ))
+                wf_fig.add_vline(x=0, line_color="#444", line_width=1)
+                wf_fig.update_layout(
+                    plot_bgcolor=BG, paper_bgcolor=PANEL,
+                    font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+                    margin={"l": 10, "r": 60, "t": 10, "b": 20},
+                    xaxis={"gridcolor": "#1f2937", "title": "USD"},
+                    yaxis={"gridcolor": "#1f2937", "tickfont": {"size": 10}},
+                    height=max(300, 22 * len(_wf_sorted)),
+                )
+            else:
+                _wfl = sorted(_wf_filtered, key=lambda r: (r["date"], r["city"]))
+                _cum2, _cum2_vals, _labels2, _colors2, _hovers2 = 0.0, [], [], [], []
+                for r in _wfl:
+                    _cum2 += r["upnl"]
+                    _cum2_vals.append(round(_cum2, 2))
+                    _labels2.append(r["label"])
+                    _colors2.append(_wf_colour(r, r["upnl"], _wf_color))
+                    _status = ("✅ SETTLED" if r["resolved"] and r["won"]
+                               else "❌ SETTLED" if r["resolved"] else "⏳ LIVE")
+                    _hovers2.append(
+                        f"{r['city']} · {r['date']} · {r['bucket']} · {_status}<br>"
+                        f"Side: {r['side']}  Entry: {r['fill']:.3f}  Now: {r['cur']:.3f}<br>"
+                        f"This position: ${r['upnl']:+.2f}<br>Running total: ${_cum2:.2f}"
+                    )
+                _lc2 = "#00FF88" if _cum2_vals and _cum2_vals[-1] >= 0 else "#FF4444"
+                wf_fig = go.Figure()
+                wf_fig.add_trace(go.Scatter(
+                    x=list(range(len(_cum2_vals))), y=_cum2_vals,
+                    mode="lines+markers",
+                    line={"color": _lc2, "width": 2},
+                    marker={"color": _colors2, "size": 7},
+                    text=_hovers2, hovertemplate="%{text}<extra></extra>",
+                ))
+                wf_fig.add_hline(y=0, line_dash="dot", line_color="#333", line_width=1)
+                wf_fig.update_layout(
+                    plot_bgcolor=BG, paper_bgcolor=PANEL,
+                    font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+                    margin={"l": 20, "r": 10, "t": 10, "b": 20},
+                    xaxis={
+                        "gridcolor": "#1f2937", "tickmode": "array",
+                        "tickvals": list(range(len(_labels2))),
+                        "ticktext": [lb.split(" ")[0] for lb in _labels2],
+                        "tickangle": -45, "tickfont": {"size": 9},
+                    },
+                    yaxis={"gridcolor": "#1f2937", "title": "USD", "zeroline": False},
+                    height=340,
+                )
+            st.plotly_chart(wf_fig, use_container_width=True)
+            st.caption(
+                f"Unrealized P&L · {_open_cnt} open positions with live prices · "
+                f"{_res_cnt} settled today · prices refresh every 5 min"
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Live Resolved (real-time, from price threshold detection) ────────────
     if net_live_resolved:
