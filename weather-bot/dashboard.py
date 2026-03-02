@@ -619,6 +619,150 @@ def load_resolved_df() -> pd.DataFrame:
     return df
 
 
+def _render_pnl_chart_html(
+    dates_x: list,
+    realized_y: list,
+    unreal_ext: tuple | None,
+    last_pnl: float,
+    total_pnl: float,
+    height: int = 280,
+) -> str:
+    """Return a self-contained HTML string for the premium cumulative P&L chart.
+
+    Uses Plotly.js via CDN so it can be embedded in st.components.v1.html().
+    A CSS-animated pulsing dot is pinned to the live endpoint using Plotly's
+    internal axis-to-pixel transform (xaxis.l2p / yaxis.l2p).
+    """
+    endpoint_val = total_pnl if unreal_ext else last_pnl
+    is_pos       = endpoint_val >= 0
+    line_hex     = "#00FF88" if is_pos else "#FF4444"
+    glow_rgba    = "rgba(0,255,136," if is_pos else "rgba(255,68,68,"
+    fill_color   = f"{glow_rgba}0.07)"
+
+    n = len(realized_y)
+
+    def _fmt(d: str) -> str:
+        try:
+            from datetime import datetime as _dt
+            return _dt.strptime(d[:10], "%Y-%m-%d").strftime("%b %d")
+        except Exception:
+            return str(d)
+
+    tick_labels = [_fmt(d) for d in dates_x]
+
+    traces = [
+        # Outer glow
+        {"x": list(range(n)), "y": realized_y, "type": "scatter", "mode": "lines",
+         "line": {"color": glow_rgba + "0.05)", "width": 22, "shape": "spline", "smoothing": 0.9},
+         "showlegend": False, "hoverinfo": "skip"},
+        # Mid glow
+        {"x": list(range(n)), "y": realized_y, "type": "scatter", "mode": "lines",
+         "line": {"color": glow_rgba + "0.13)", "width": 10, "shape": "spline", "smoothing": 0.9},
+         "showlegend": False, "hoverinfo": "skip"},
+        # Fill + main line (hover here)
+        {"x": list(range(n)), "y": realized_y, "type": "scatter", "mode": "lines",
+         "fill": "tozeroy", "fillcolor": fill_color,
+         "line": {"color": line_hex, "width": 2.5, "shape": "spline", "smoothing": 0.9},
+         "showlegend": False,
+         "text": [f"<b>{tick_labels[i]}</b><br>${realized_y[i]:+.2f}" for i in range(n)],
+         "hovertemplate": "%{text}<extra></extra>"},
+    ]
+
+    end_x, end_y = n - 1, realized_y[-1]
+
+    step = max(1, n // 6)
+    tv   = list(range(0, n, step))
+    tt   = [tick_labels[i] for i in tv]
+
+    if unreal_ext is not None:
+        lr, tot = unreal_ext
+        tot_hex = "#00FF88" if tot >= 0 else "#FF4444"
+        traces.append({
+            "x": [n - 1, n], "y": [lr, round(tot, 2)], "type": "scatter", "mode": "lines",
+            "line": {"color": tot_hex, "width": 1.5, "dash": "dot"},
+            "showlegend": False, "hoverinfo": "skip",
+        })
+        end_x, end_y = n, round(tot, 2)
+        tv.append(n)
+        tt.append(datetime.now(UTC).strftime("%b %d"))
+
+    layout = {
+        "plot_bgcolor":  "#080D12",
+        "paper_bgcolor": "#080D12",
+        "margin": {"l": 58, "r": 22, "t": 16, "b": 36},
+        "height": height,
+        "xaxis": {
+            "tickmode": "array", "tickvals": tv, "ticktext": tt,
+            "showgrid": False, "showline": False, "zeroline": False,
+            "tickfont": {"color": "#334155", "size": 10, "family": "JetBrains Mono, monospace"},
+        },
+        "yaxis": {
+            "gridcolor": "rgba(255,255,255,0.028)", "gridwidth": 1,
+            "showline": False,
+            "zeroline": True, "zerolinecolor": "rgba(255,255,255,0.06)", "zerolinewidth": 1,
+            "tickprefix": "$",
+            "tickfont": {"color": "#334155", "size": 10, "family": "JetBrains Mono, monospace"},
+            "title": "",
+        },
+        "hovermode": "x unified",
+        "hoverlabel": {
+            "bgcolor": "rgba(8,13,18,0.95)", "bordercolor": line_hex,
+            "font": {"color": "#E6EDF3", "size": 12, "family": "JetBrains Mono, monospace"},
+            "align": "left",
+        },
+        "dragmode": "zoom",
+    }
+
+    pulse_hex = "#00FF88" if endpoint_val >= 0 else "#FF4444"
+
+    fig_json = json.dumps({"data": traces, "layout": layout})
+
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
+html,body{{background:#080D12;overflow:hidden;width:100%;height:{height+4}px}}
+.wrap{{position:relative;width:100%;height:{height}px}}
+#pulse{{position:absolute;pointer-events:none;z-index:99;display:none;transform:translate(-50%,-50%)}}
+.p-core{{position:absolute;width:8px;height:8px;border-radius:50%;
+  background:{pulse_hex};top:0;left:0;transform:translate(-50%,-50%);
+  box-shadow:0 0 7px {pulse_hex},0 0 18px {pulse_hex}55}}
+.p-ring{{position:absolute;border-radius:50%;border:1.5px solid {pulse_hex};
+  opacity:0;top:0;left:0;transform:translate(-50%,-50%);
+  animation:pOut 2.6s cubic-bezier(0.25,0.46,0.45,0.94) infinite}}
+.p-ring:nth-of-type(2){{animation-delay:.87s}}
+.p-ring:nth-of-type(3){{animation-delay:1.73s}}
+@keyframes pOut{{
+  0%  {{width:8px;height:8px;opacity:.9}}
+  100%{{width:46px;height:46px;opacity:0}}
+}}
+</style></head>
+<body><div class="wrap">
+  <div id="chart"></div>
+  <div id="pulse">
+    <div class="p-ring"></div><div class="p-ring"></div><div class="p-ring"></div>
+    <div class="p-core"></div>
+  </div>
+</div>
+<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+<script>
+(function(){{
+  var F={fig_json},endX={end_x},endY={end_y};
+  Plotly.newPlot('chart',F.data,F.layout,{{displayModeBar:false,responsive:true}})
+    .then(pin);
+  window.addEventListener('resize',pin);
+  function pin(){{
+    var gd=document.getElementById('chart');
+    if(!gd||!gd._fullLayout)return;
+    var ml=gd._fullLayout.margin.l,mt=gd._fullLayout.margin.t;
+    var xp=gd._fullLayout.xaxis.l2p(endX)+ml;
+    var yp=gd._fullLayout.yaxis.l2p(endY)+mt;
+    var d=document.getElementById('pulse');
+    d.style.left=xp+'px';d.style.top=yp+'px';d.style.display='block';
+  }}
+}})();
+</script></body></html>"""
+
+
 def load_positions() -> list[dict]:
     try:
         payload = json.loads(POSITIONS_JSON.read_text(encoding="utf-8"))
@@ -3257,13 +3401,43 @@ def _render_trading_tab() -> None:
             st.info("Fetching live prices… refresh in a moment.")
 
     else:
+        import streamlit.components.v1 as _components
+
         n_total = len(pnl_df)
         n_w = int((pnl_df["outcome"] == "WIN").sum()) if "outcome" in pnl_df.columns else res_wins
         n_l = int((pnl_df["outcome"] == "LOSS").sum()) if "outcome" in pnl_df.columns else res_losses
         acc = n_w / (n_w + n_l) * 100 if (n_w + n_l) else 0
+
+        # Aggregate P&L by resolution date → one tidy point per day
+        if "target_date" in pnl_df.columns and "pnl" in pnl_df.columns:
+            _daily = (
+                pnl_df.groupby("target_date", sort=True)["pnl"]
+                .sum()
+                .reset_index()
+                .rename(columns={"pnl": "daily_pnl"})
+            )
+            _daily["cum_pnl"] = _daily["daily_pnl"].cumsum()
+            dates_x    = _daily["target_date"].tolist()
+            realized_y = _daily["cum_pnl"].round(2).tolist()
+        else:
+            dates_x    = [str(i) for i in range(n_total)]
+            realized_y = pnl_df["cum_pnl"].round(2).tolist()
+
+        unreal_ext = (last_pnl, total_pnl) if unreal_pnl != 0.0 else None
+
+        _chart_html = _render_pnl_chart_html(
+            dates_x=dates_x,
+            realized_y=realized_y,
+            unreal_ext=unreal_ext,
+            last_pnl=last_pnl,
+            total_pnl=total_pnl,
+            height=280,
+        )
+        _components.html(_chart_html, height=284, scrolling=False)
+
         st.caption(
             f"**{n_w}W / {n_l}L · {acc:.0f}% accuracy · {n_total} resolved trades**  "
-            f"· live prices fetched for {n_live}/{len(still_open)} open positions · prices refresh every 5 min"
+            f"· live prices fetched for {n_live}/{len(still_open)} open positions · refreshes every 5 min"
         )
 
     st.markdown("</div>", unsafe_allow_html=True)
