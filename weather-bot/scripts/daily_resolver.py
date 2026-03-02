@@ -74,44 +74,101 @@ def _ensure_resolved_csv() -> None:
 
 
 def _load_resolved_keys() -> set[tuple[str, str, str, str]]:
-    """Return set of (target_date, city, bucket, strategy) already in resolved.csv."""
+    """Return set of (target_date, city, bucket, side) already in resolved.csv."""
     keys: set[tuple[str, str, str, str]] = set()
     if not RESOLVED_CSV.exists():
         return keys
     with RESOLVED_CSV.open(encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            keys.add((row["target_date"], row["city"], row["bucket"],
-                       row.get("strategy", "LADDER")))
+            keys.add((
+                row.get("target_date", ""),
+                row.get("city", ""),
+                row.get("bucket", ""),
+                row.get("side", "BUY_YES"),
+            ))
     return keys
 
 
 def _load_pending_trades() -> list[dict]:
-    """Read signals.csv for rows to resolve:
-    - action_taken='trade'             → LADDER / SINGLE actual bets
-    - action_taken='conviction_signal' → CONVICTION shadow picks (never executed)
-    Both are scored against actuals for A/B comparison.
-    """
-    if not SIGNALS_CSV.exists():
-        print("signals.csv not found — nothing to resolve.")
-        return []
+    """Collect all paper trades that need resolving.
 
+    Two sources:
+    1. positions.json  — canonical source for ALL executed paper trades from all
+       three strategies (Strategy 1 paper_trader, Strategy 2 METAR scanner,
+       Strategy 3 WS price monitor).  Field names differ from signals.csv so we
+       normalise them here.
+    2. signals.csv     — used only for CONVICTION shadow picks (action_taken=
+       'conviction_signal'), which are never in positions.json.
+
+    De-duplication key: (target_date, city, bucket, side) — ensures that if
+    the same trade appears in both files we don't double-count it.
+    """
     today = date.today().isoformat()
-    # Key = (date, city, bucket, strategy) → keep earliest signal
     pending: dict[tuple[str, str, str, str], dict] = {}
 
-    with SIGNALS_CSV.open(encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            action = row.get("action_taken", "")
-            if action not in ("trade", "conviction_signal"):
-                continue
-            target_date = row.get("date", "")
+    # ── 1. positions.json — actual executed paper trades ──────────────────────
+    if POSITIONS_JSON.exists():
+        try:
+            raw_positions = json.loads(POSITIONS_JSON.read_text(encoding="utf-8"))
+        except Exception as exc:
+            print(f"  [resolver] Could not load positions.json: {exc}")
+            raw_positions = []
+
+        for p in raw_positions:
+            target_date = p.get("date", "")
             if not target_date or target_date >= today:
                 continue
-            strategy = row.get("strategy", "LADDER" if action == "trade" else "CONVICTION")
-            key = (target_date, row.get("city", ""), row.get("bucket", ""), strategy)
+
+            strategy = p.get("strategy", "PAPER")
+            # Normalise strategy tag → one of LADDER | METAR | WS_PRICE | PAPER
+            if strategy in ("LADDER", "CONVICTION", "SINGLE"):
+                pass
+            elif strategy == "WS_PRICE_MONITOR":
+                strategy = "WS_PRICE"
+            elif strategy in ("METAR_SCANNER", "METAR"):
+                strategy = "METAR"
+            else:
+                strategy = "PAPER"
+
+            city   = p.get("city", "")
+            bucket = p.get("bucket", "")
+            side   = p.get("side", "BUY_YES")
+            key    = (target_date, city, bucket, side)
+
             if key not in pending:
-                pending[key] = {**row, "strategy": strategy}
+                pending[key] = {
+                    "date":               target_date,
+                    "city":               city,
+                    "station_icao":       p.get("station_icao", ""),
+                    "bucket":             bucket,
+                    "side":               side,
+                    # Normalise field names
+                    "market_prob":        p.get("fill_price", p.get("entry_price", 0.0)),
+                    "size_usd":           p.get("cost",       p.get("size_usd",    0.0)),
+                    "ev_per_bet":         p.get("ev_at_entry", p.get("ev_per_bet", 0.0)),
+                    "spread_colour":      p.get("spread_colour", ""),
+                    "det_spread":         p.get("det_spread", ""),
+                    "model_values_json":  p.get("model_values_json", "{}"),
+                    "timestamp":          p.get("timestamp", ""),
+                    "strategy":           strategy,
+                }
+    else:
+        print("positions.json not found — will fall back to signals.csv only.")
+
+    # ── 2. signals.csv — CONVICTION shadow picks only ─────────────────────────
+    if SIGNALS_CSV.exists():
+        with SIGNALS_CSV.open(encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row.get("action_taken", "") != "conviction_signal":
+                    continue
+                target_date = row.get("date", "")
+                if not target_date or target_date >= today:
+                    continue
+                side = row.get("side", "BUY_YES")
+                key  = (target_date, row.get("city", ""), row.get("bucket", ""), side)
+                if key not in pending:
+                    pending[key] = {**row, "strategy": "CONVICTION"}
 
     return list(pending.values())
 
@@ -221,8 +278,7 @@ async def resolve_all() -> dict:
             station_icao = row.get("station_icao", "")
             side = row.get("side", "BUY_YES")
 
-            strategy = row.get("strategy", "LADDER")
-            key = (target_date_str, city, bucket, strategy)
+            key = (target_date_str, city, bucket, side)
             if key in already_resolved:
                 continue
 
@@ -429,7 +485,7 @@ def prune_expired_positions() -> int:
         print(f"  [prune] Could not load positions.json: {exc}")
         return 0
 
-    # Build set of (city, date, bucket, side) already in resolved.csv
+    # Build set of (target_date, city, bucket, side) already in resolved.csv
     resolved_keys: set[tuple[str, str, str, str]] = set()
     if RESOLVED_CSV.exists():
         try:
@@ -437,10 +493,10 @@ def prune_expired_positions() -> int:
             with RESOLVED_CSV.open(encoding="utf-8") as f:
                 for row in _csv.DictReader(f):
                     resolved_keys.add((
-                        row.get("city", ""),
                         row.get("target_date", ""),
+                        row.get("city", ""),
                         row.get("bucket", ""),
-                        row.get("side", ""),
+                        row.get("side", "BUY_YES"),
                     ))
         except Exception:
             pass
@@ -451,7 +507,7 @@ def prune_expired_positions() -> int:
     def _safe_to_prune(p: dict) -> bool:
         if p.get("date", "9999") >= today_str:
             return False  # not expired yet
-        key = (p.get("city",""), p.get("date",""), p.get("bucket",""), p.get("side",""))
+        key = (p.get("date", ""), p.get("city", ""), p.get("bucket", ""), p.get("side", "BUY_YES"))
         return key in resolved_keys  # only prune if resolved
 
     active  = [p for p in positions if not _safe_to_prune(p)]
