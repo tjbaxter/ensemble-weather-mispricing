@@ -16,6 +16,7 @@ from data.forecast import StationForecaster
 from data.polymarket import PolymarketDataClient
 from execution.order_manager import OrderManager
 from strategy.signals import generate_signals
+from scripts.metar_scanner import run_metar_scanner
 
 
 async def startup_checks() -> None:
@@ -155,7 +156,12 @@ async def main() -> None:
         raise RuntimeError("No execution mode selected. Enable PAPER_TRADING=true or LIVE_TRADING=true in .env.")
 
     trader = PaperTrader()
-    await trader.run_forever()
+    # Run forecast bot + METAR scanner concurrently.
+    # Either task crashing will propagate and restart the whole service via systemd.
+    await asyncio.gather(
+        trader.run_forever(),
+        run_metar_scanner(),
+    )
 
 
 if __name__ == "__main__":
