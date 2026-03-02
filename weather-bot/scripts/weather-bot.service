@@ -1,0 +1,44 @@
+[Unit]
+Description=Weather Bot — Polymarket ensemble mispricing trader
+Documentation=https://github.com/tjbaxter/ensemble-weather-mispricing
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tombaxter
+
+# ── Paths — adjust if your repo is in a different location ──────────────────
+# Find your repo root with: cd ~/repo && pwd
+WorkingDirectory=/home/tombaxter/repo/weather-bot
+
+# Python from the venv inside the repo (adjust if venv is elsewhere)
+# Find it with: which python3  (after activating venv)
+ExecStart=/home/tombaxter/repo/weather-bot/venv/bin/python3 main.py
+
+# .env file with secrets (POLYMARKET_PK, ACCUWEATHER_API_KEY, etc.)
+EnvironmentFile=/home/tombaxter/repo/weather-bot/.env
+
+# ── Process behaviour ────────────────────────────────────────────────────────
+# Restart unconditionally on any exit (crash, OOM, SIGTERM from OS, etc.)
+Restart=always
+# Wait 10s before restarting — avoids tight crash loops hammering the API
+RestartSec=10
+
+# Give the process 30s to shut down cleanly on systemctl stop
+TimeoutStopSec=30
+
+# Log to journald (read with: journalctl -u weather-bot -f)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=weather-bot
+
+# ── Resource limits (optional but recommended for long-running daemons) ──────
+# Prevent runaway memory in case of a leak
+MemoryMax=512M
+# Restart if memory exceeds limit
+MemoryAccounting=yes
+
+[Install]
+# Start automatically on boot (multi-user = normal server mode)
+WantedBy=multi-user.target
