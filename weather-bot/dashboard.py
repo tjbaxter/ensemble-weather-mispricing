@@ -605,8 +605,16 @@ def load_resolved_df() -> pd.DataFrame:
         if col not in df.columns:
             df[col] = 0.0
     df["resolved_at"] = pd.to_datetime(df["resolved_at"], errors="coerce", utc=True)
+    df["target_date_dt"] = pd.to_datetime(df["target_date"], errors="coerce", utc=True)
+    if "signal_timestamp" in df.columns:
+        df["signal_timestamp"] = pd.to_datetime(df["signal_timestamp"], errors="coerce", utc=True)
     df["pnl_usd"] = pd.to_numeric(df["pnl_usd"], errors="coerce").fillna(0.0)
-    df = df.sort_values("resolved_at", ascending=True)
+    # Sort by target_date (the market resolution date), not resolved_at (when the
+    # resolver script ran — all trades get the same timestamp in batch runs).
+    sort_cols = ["target_date_dt"]
+    if "signal_timestamp" in df.columns:
+        sort_cols.append("signal_timestamp")
+    df = df.sort_values(sort_cols, ascending=True)
     df["cum_pnl"] = df["pnl_usd"].cumsum()
     return df
 
@@ -2945,7 +2953,13 @@ def _render_trading_tab() -> None:
     st.markdown('<div class="panel">', unsafe_allow_html=True)
 
     # Choose best data source: resolved_df > trades_df
-    pnl_df = resolved_df.rename(columns={"resolved_at": "ts", "pnl_usd": "pnl"}) if not resolved_df.empty else pd.DataFrame()
+    if not resolved_df.empty:
+        pnl_df = resolved_df.rename(columns={"pnl_usd": "pnl"}).copy()
+        # Use target_date as x-axis so trades spread across their resolution days
+        # (resolved_at is when the resolver script ran — all trades batch to same timestamp)
+        pnl_df["ts"] = pnl_df["target_date_dt"].fillna(pnl_df["resolved_at"])
+    else:
+        pnl_df = pd.DataFrame()
     if pnl_df.empty:
         # Fallback: trades.csv resolved trades
         fallback = realized_trades(trades_df)
@@ -2956,7 +2970,7 @@ def _render_trading_tab() -> None:
 
     # Header row with live indicator
     last_pnl   = float(pnl_df["cum_pnl"].iloc[-1]) if has_data else 0.0
-    last_ts    = pnl_df["ts"].iloc[-1].strftime("%H:%M UTC") if has_data else "—"
+    last_ts    = pnl_df["ts"].iloc[-1].strftime("%b %d") if has_data else "—"
     total_color = "#00FF88" if total_pnl >= 0 else "#FF4444"
     pnl_color   = "#00FF88" if last_pnl  >= 0 else "#FF4444"
     pnl_sign    = "+" if last_pnl >= 0 else ""
