@@ -46,6 +46,15 @@ HOURS_BEFORE_RESOLUTION_CUTOFF = 3
 D2_P_WIN_DISCOUNT: float = float(os.getenv("D2_P_WIN_DISCOUNT", "0.88"))
 D3_P_WIN_DISCOUNT: float = float(os.getenv("D3_P_WIN_DISCOUNT", "0.80"))
 
+# D+2 / D+3 maximum YES entry price.
+# At 2+ days out the forecast is uncertain enough that we only want exposure
+# when the market is drastically underpricing something — i.e. the bucket is
+# very cheap. If the market already prices it at 20¢+, the crowd has priced
+# the uncertainty in and there's no exploitable mispricing worth the D+2 risk.
+# Only enter D+2 markets where YES price ≤ 15¢. D+3 tightened further to 10¢.
+D2_MAX_YES_ENTRY_PRICE: float = float(os.getenv("D2_MAX_YES_ENTRY_PRICE", "0.15"))
+D3_MAX_YES_ENTRY_PRICE: float = float(os.getenv("D3_MAX_YES_ENTRY_PRICE", "0.10"))
+
 # Event-driven model run scheduler
 # Each tuple is (hour_utc, minute_utc, label).
 # Times chosen so Open-Meteo has ingested the upstream data:

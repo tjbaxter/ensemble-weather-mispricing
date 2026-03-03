@@ -9,7 +9,9 @@ from datetime import UTC, date as _date, datetime
 from config.cities import STATIONS
 from config.settings import (
     ALPHA_THRESHOLD,
+    D2_MAX_YES_ENTRY_PRICE,
     D2_P_WIN_DISCOUNT,
+    D3_MAX_YES_ENTRY_PRICE,
     D3_P_WIN_DISCOUNT,
     ENABLE_LADDER_STRATEGY,
     ENSEMBLE_DISABLE_CLASSIC_CONFIDENCE_GATE,
@@ -148,6 +150,18 @@ def generate_signals(
 
         if ensemble_skip:
             continue
+
+        # --- D+2 / D+3 price cap ---
+        # At 2+ days out the forecast uncertainty is high enough that we only
+        # enter when the market is dramatically underpricing a bucket (very cheap).
+        # If the crowd already has a bucket at 20¢+ it has priced in the uncertainty;
+        # there's no exploitable edge worth the extra forecast risk.
+        if days_ahead >= 3:
+            _d_max = D3_MAX_YES_ENTRY_PRICE
+        elif days_ahead >= 2:
+            _d_max = D2_MAX_YES_ENTRY_PRICE
+        else:
+            _d_max = None  # D+1 — use normal HARD_MAX_YES_ENTRY_PRICE
 
         # --- Overround filter ---
         # If the crowd has collectively bid all YES bucket prices above 115%,
@@ -318,6 +332,9 @@ def generate_signals(
 
             if action == "BUY_YES":
                 if market_prob < HARD_MIN_YES_ENTRY_PRICE:
+                    continue
+                # D+2/D+3: only enter if price is absurdly cheap
+                if _d_max is not None and market_prob > _d_max:
                     continue
                 if market_prob > HARD_MAX_YES_ENTRY_PRICE:
                     continue
@@ -667,10 +684,13 @@ def generate_top2_shadow_signals(
 
         if days_ahead >= 3:
             temporal_discount = D3_P_WIN_DISCOUNT
+            _d_max = D3_MAX_YES_ENTRY_PRICE
         elif days_ahead >= 2:
             temporal_discount = D2_P_WIN_DISCOUNT
+            _d_max = D2_MAX_YES_ENTRY_PRICE
         else:
             temporal_discount = 1.0
+            _d_max = HARD_MAX_YES_ENTRY_PRICE
 
         # Collect BUY_YES candidates: positive edge, price guards, minimum model prob
         candidates: list[dict] = []
@@ -681,7 +701,7 @@ def generate_top2_shadow_signals(
                 continue
             if model_prob <= market_prob:               # no positive edge
                 continue
-            if market_prob < HARD_MIN_YES_ENTRY_PRICE or market_prob > HARD_MAX_YES_ENTRY_PRICE:
+            if market_prob < HARD_MIN_YES_ENTRY_PRICE or market_prob > _d_max:
                 continue
             candidates.append({
                 "bucket":      bucket,
