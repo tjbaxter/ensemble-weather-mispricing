@@ -319,7 +319,7 @@
     "fill_size": 40.0,
     "cost": 5.0,
     "timestamp": "2026-03-03T16:05:29.761307+00:00",
-    "strategy": "SINGLE"
+    "strategy": ""
   },
   {
     "market_id": "0x1c6dbe1f6b6acb5bbd619fd4197251ddc2f6237dc5a2867eb11308a90e16207c",
@@ -333,6 +333,20 @@
     "fill_size": 19.23076923076923,
     "cost": 5.0,
     "timestamp": "2026-03-03T16:05:29.764688+00:00",
+    "strategy": ""
+  },
+  {
+    "market_id": "0x6832f021a2780e6c16d238c4ce145ec9c64ab818823d51f7d8beea03399d21e7",
+    "token_id": "12199155060337728207927307475225375884060622446137245069947463858306479161951",
+    "side": "BUY_YES",
+    "city": "Chicago",
+    "station_icao": "KORD",
+    "date": "2026-03-04",
+    "bucket": "44-45",
+    "fill_price": 0.1,
+    "fill_size": 50.0,
+    "cost": 5.0,
+    "timestamp": "2026-03-03T16:30:30.889644+00:00",
     "strategy": "SINGLE"
   }
 ]
