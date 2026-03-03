@@ -249,7 +249,7 @@
     "fill_size": 55.55555555555556,
     "cost": 5.0,
     "timestamp": "2026-03-03T14:10:27.991727+00:00",
-    "strategy": "SINGLE"
+    "strategy": ""
   },
   {
     "market_id": "0x6745acbcb8f9f57fc9bdb7e70c5e0c24b52b35b5d47552573cc4dd55b6c6aed6",
@@ -263,7 +263,7 @@
     "fill_size": 14.496,
     "cost": 9.06,
     "timestamp": "2026-03-03T14:10:27.994410+00:00",
-    "strategy": "SINGLE"
+    "strategy": ""
   },
   {
     "market_id": "0x8f2e38d4154ce08117e43465ce145e81510ac997189a32143bc19eb778f3dc20",
@@ -277,6 +277,34 @@
     "fill_size": 22.22222222222222,
     "cost": 5.0,
     "timestamp": "2026-03-03T14:10:27.996615+00:00",
+    "strategy": ""
+  },
+  {
+    "market_id": "0x3c1201c3e7f795dd99545d6e01040c1d00e14ef433135649c638f13f59b9b1fb",
+    "token_id": "45988354796082969439551757840850995532735338626377256715527719450859079507698",
+    "side": "BUY_YES",
+    "city": "Paris",
+    "station_icao": "LFPG",
+    "date": "2026-03-05",
+    "bucket": "21+",
+    "fill_price": 0.07,
+    "fill_size": 137.85714285714286,
+    "cost": 9.65,
+    "timestamp": "2026-03-03T15:20:29.749518+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0x77686f7c4d47de1ee8464c2d5eb980dc14fd99ae70fdfdc3f754a58b58e97da6",
+    "token_id": "30402728450420908000493491550661651395695731402751231658621979826702046769618",
+    "side": "BUY_YES",
+    "city": "Toronto",
+    "station_icao": "CYYZ",
+    "date": "2026-03-05",
+    "bucket": "5+",
+    "fill_price": 0.05500000000000001,
+    "fill_size": 90.90909090909089,
+    "cost": 5.0,
+    "timestamp": "2026-03-03T15:20:29.752423+00:00",
     "strategy": "SINGLE"
   }
 ]
