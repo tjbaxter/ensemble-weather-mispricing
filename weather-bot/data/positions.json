@@ -81,7 +81,7 @@
     "fill_size": 300.3636363636364,
     "cost": 16.52,
     "timestamp": "2026-03-03T12:44:11.691142+00:00",
-    "strategy": "SINGLE"
+    "strategy": ""
   },
   {
     "market_id": "0x1a56b7f926420148fd38ac665944757a6b35537fcb9996716397fe68ca804465",
@@ -95,7 +95,7 @@
     "fill_size": 19.672131147540984,
     "cost": 6.0,
     "timestamp": "2026-03-03T12:44:11.692626+00:00",
-    "strategy": "SINGLE"
+    "strategy": ""
   },
   {
     "market_id": "0x26da1bf09f97af81a4c423b50e6f75e5ee5a45bbe00e2e0e94887b95992ebb22",
@@ -109,7 +109,7 @@
     "fill_size": 86.95652173913042,
     "cost": 5.0,
     "timestamp": "2026-03-03T12:44:11.694054+00:00",
-    "strategy": "SINGLE"
+    "strategy": ""
   },
   {
     "market_id": "0x565d705598305c7852fd1147ae96db4476179252a0e8824b9cf6148af1ff1c02",
@@ -123,6 +123,48 @@
     "fill_size": 62.893081761006286,
     "cost": 5.0,
     "timestamp": "2026-03-03T12:44:11.697889+00:00",
+    "strategy": ""
+  },
+  {
+    "market_id": "0x350fc3d1e85f9355610899a61b8893a93f25579f1b0a4e0807a9f2f7b761795c",
+    "token_id": "99648026643445384623072845635668108308517541123763302655691673555106820143692",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-04",
+    "bucket": "82-83",
+    "fill_price": 0.28500000000000003,
+    "fill_size": 17.649122807017545,
+    "cost": 5.030000000000001,
+    "timestamp": "2026-03-03T13:00:14.220302+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0x7a73c8400cfc36409481974506ac07775c025c8e1136d5a58bbcf56a1c478e50",
+    "token_id": "86733642186173496395982151687892635546277463894249395816801879299927286577454",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-04",
+    "bucket": "84-85",
+    "fill_price": 0.11499999999999999,
+    "fill_size": 43.47826086956522,
+    "cost": 5.0,
+    "timestamp": "2026-03-03T13:00:14.222746+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0xbac74db1adf0471ebaa6c000b4839bb5ba2bd3647b17a0dd2b16afc834c65a55",
+    "token_id": "85111029389734610075353678274979877878759710760236416472526271000073103361906",
+    "side": "BUY_NO",
+    "city": "Seattle",
+    "station_icao": "KSEA",
+    "date": "2026-03-05",
+    "bucket": "50-51",
+    "fill_price": 0.645,
+    "fill_size": 38.75968992248062,
+    "cost": 25.0,
+    "timestamp": "2026-03-03T13:29:06.890705+00:00",
     "strategy": "SINGLE"
   }
 ]
