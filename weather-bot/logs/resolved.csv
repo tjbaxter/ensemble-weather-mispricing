@@ -1,1 +1,1 @@
-resolved_at,target_date,city,station_icao,bucket,side,entry_price,size_usd,ev_per_bet,spread_colour,det_spread,model_values_json,actual_temp,outcome,pnl_usd,miss_distance,signal_timestamp,strategy
+strategy,city,bucket,side,date,fill_price,fill_size,cost,pnl,won,market_id,token_id,resolved_at,timestamp
