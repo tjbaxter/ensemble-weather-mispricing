@@ -4151,24 +4151,39 @@ def _render_overview_tab() -> None:
     """Comparison scoreboard: all strategies side-by-side, plus live open-book."""
     resolved_df = load_resolved_df()
     positions   = load_positions()
+    shadow_2a   = load_shadow_positions("shadow_2a")
+    shadow_2b   = load_shadow_positions("shadow_2b")
+    shadow_2c   = load_shadow_positions("shadow_2c")
 
     has_strat = not resolved_df.empty and "strategy" in resolved_df.columns
 
     def _strat_slice(s: str) -> pd.DataFrame:
         return resolved_df[resolved_df["strategy"] == s].copy() if has_strat else pd.DataFrame()
 
-    MODELS: list[tuple[str, str, pd.DataFrame, bool]] = [
-        ("⚡ SINGLE",     "SINGLE",     _strat_slice("SINGLE"),              False),
-        ("🪜 LADDER",     "LADDER",     _strat_slice("LADDER"),              False),
-        ("🎯 CONVICTION", "CONVICTION", _strat_slice("CONVICTION"),          True),
-        ("2A Equal",      "TOP2_EQUAL",  _strat_slice("TOP2_EQUAL"),  True),
-        ("2B Cond",       "TOP2_COND",   _strat_slice("TOP2_COND"),   True),
-        ("2C Prop",       "TOP2_PROP",   _strat_slice("TOP2_PROP"),   True),
+    # Fetch all live prices in one batch
+    _all_pos = positions + shadow_2a + shadow_2b + shadow_2c
+    _all_tids = tuple({p["token_id"] for p in _all_pos if p.get("token_id")})
+    _live_prices = fetch_live_position_prices(_all_tids) if _all_tids else {}
+    _live_ts = datetime.now(UTC).strftime("%H:%M UTC")
+
+    MODELS: list[tuple[str, str, pd.DataFrame, bool, list[dict]]] = [
+        ("⚡ SINGLE",     "SINGLE",     _strat_slice("SINGLE"),     False, positions),
+        ("🪜 LADDER",     "LADDER",     _strat_slice("LADDER"),     False, positions),
+        ("🎯 CONVICTION", "CONVICTION", _strat_slice("CONVICTION"), True,  positions),
+        ("2A Equal",      "TOP2_EQUAL", _strat_slice("TOP2_EQUAL"), True,  shadow_2a),
+        ("2B Cond",       "TOP2_COND",  _strat_slice("TOP2_COND"),  True,  shadow_2b),
+        ("2C Prop",       "TOP2_PROP",  _strat_slice("TOP2_PROP"),  True,  shadow_2c),
     ]
 
-    all_stats = [(label, key, _strat_stats(df), is_shadow, df)
-                 for label, key, df, is_shadow in MODELS]
-    ranked    = sorted(all_stats, key=lambda x: x[2]["pnl"], reverse=True)
+    all_stats = [
+        (label, key, _strat_stats(df), is_shadow, df, pos)
+        for label, key, df, is_shadow, pos in MODELS
+    ]
+    # Rank by unrealized P&L when no resolved trades yet, else by settled P&L
+    def _rank_key(x):
+        ls = _compute_live_stats(x[5], _live_prices)
+        return ls["unrealized_pnl"] + x[2]["pnl"]
+    ranked = sorted(all_stats, key=_rank_key, reverse=True)
 
     # ── Comparison cards ──────────────────────────────────────────────────────
     st.markdown(
@@ -4184,26 +4199,35 @@ def _render_overview_tab() -> None:
             idx = row_start + i
             if idx >= len(ranked):
                 break
-            label, key, m, is_shadow, _ = ranked[idx]
+            label, key, m, is_shadow, _, pos = ranked[idx]
+            ls     = _compute_live_stats(pos, _live_prices)
+            upnl_c = GREEN if ls["unrealized_pnl"] >= 0 else RED
             pnl_c  = GREEN if m["pnl"] >= 0 else RED
-            glow   = "#1a4d2e" if m["pnl"] >= 0 else "#4d1a1a"
             badge  = " · shadow" if is_shadow else " · live"
             accent = _MODEL_COLORS.get(key, BLUE)
+            border_color = "#1a4d2e" if ls["unrealized_pnl"] >= 0 else "#4d1a1a"
             with col:
+                settled_line = (
+                    f'<div style="color:{pnl_c};font-size:0.8rem;font-weight:600;">'
+                    f'${m["pnl"]:+.2f} settled · {m["wins"]}W/{m["losses"]}L · {m["wr"]*100:.0f}% WR</div>'
+                    if m["n"] > 0 else
+                    '<div style="color:#555;font-size:0.75rem;">No settled trades yet</div>'
+                )
                 st.markdown(
                     f"""
-<div style="background:#141A22;border:1px solid {glow};border-left:4px solid {accent};
-     border-radius:10px;padding:16px 14px;margin-bottom:12px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+<div style="background:#141A22;border:1px solid {border_color};border-left:4px solid {accent};
+     border-radius:10px;padding:14px;margin-bottom:12px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
     <span style="font-weight:700;color:#E6EDF3;font-size:0.92rem;">{label}</span>
     <span style="font-size:0.72rem;color:#666;">{rank_emojis[idx]}{badge}</span>
   </div>
-  <div style="font-size:2rem;font-weight:800;color:{pnl_c};line-height:1.1;">${m['pnl']:+.2f}</div>
-  <div style="color:#aaa;font-size:0.8rem;margin-top:6px;">
-    {m['wins']}W&nbsp;/&nbsp;{m['losses']}L&nbsp;·&nbsp;{m['wr']*100:.0f}% WR
-    &nbsp;·&nbsp;ROI {m['roi']:+.1f}%
+  <div style="font-size:1.9rem;font-weight:800;color:{upnl_c};line-height:1.1;">${ls['unrealized_pnl']:+.2f}</div>
+  <div style="color:#aaa;font-size:0.75rem;margin-top:2px;">
+    unrealized · {ls['open_count']} open · {ls['roi']:+.1f}% ROI
   </div>
-  <div style="color:#555;font-size:0.73rem;margin-top:3px;">{m['n']} resolved trades</div>
+  <div style="margin-top:8px;padding-top:8px;border-top:1px solid #1f2937;">
+    {settled_line}
+  </div>
 </div>""",
                     unsafe_allow_html=True,
                 )
@@ -4217,23 +4241,50 @@ def _render_overview_tab() -> None:
     )
     fig_all = go.Figure()
     any_data = False
-    for label, key, m, is_shadow, df in all_stats:
-        if df.empty:
-            continue
-        df_s = df.sort_values("target_date_dt")
-        df_s["_cum"] = df_s["pnl_usd"].cumsum()
+    now_dt = datetime.now(UTC)
+
+    for label, key, m, is_shadow, df, pos in all_stats:
         color = _MODEL_COLORS.get(key, BLUE)
         dash  = "dash" if is_shadow else "solid"
-        fig_all.add_trace(go.Scatter(
-            x=df_s["target_date_dt"],
-            y=df_s["_cum"],
-            mode="lines+markers",
-            name=label,
-            line={"color": color, "width": 2, "dash": dash},
-            marker={"size": 5},
-            hovertemplate=f"{label}<br>%{{x|%b %d}}<br>Cum: $%{{y:.2f}}<extra></extra>",
-        ))
-        any_data = True
+        ls    = _compute_live_stats(pos, _live_prices)
+
+        if not df.empty:
+            df_s = df.sort_values("target_date_dt")
+            df_s["_cum"] = df_s["pnl_usd"].cumsum()
+            fig_all.add_trace(go.Scatter(
+                x=df_s["target_date_dt"],
+                y=df_s["_cum"],
+                mode="lines+markers",
+                name=label,
+                line={"color": color, "width": 2, "dash": dash},
+                marker={"size": 5},
+                hovertemplate=f"{label}<br>%{{x|%b %d}}<br>Settled cum: $%{{y:.2f}}<extra></extra>",
+            ))
+            last_cum = float(df_s["_cum"].iloc[-1])
+            any_data = True
+        else:
+            last_cum = 0.0
+
+        # Add unrealized dot at today so strategies with no settled history appear
+        if ls["open_count"] > 0:
+            total_now = last_cum + ls["unrealized_pnl"]
+            dot_c = GREEN if total_now >= 0 else RED
+            fig_all.add_trace(go.Scatter(
+                x=[now_dt],
+                y=[total_now],
+                mode="markers",
+                name=f"{label} (live)",
+                marker={"size": 12, "color": dot_c, "symbol": "circle",
+                        "line": {"color": color, "width": 2}},
+                hovertemplate=(
+                    f"{label} NOW<br>Settled: ${last_cum:+.2f}<br>"
+                    f"Unrealized: ${ls['unrealized_pnl']:+.2f}<br>"
+                    f"Total: ${total_now:+.2f}<extra></extra>"
+                ),
+                showlegend=df.empty,  # only show in legend if not already there
+            ))
+            any_data = True
+
     if any_data:
         fig_all.add_hline(y=0, line_dash="dot", line_color="#333", line_width=1)
         fig_all.update_layout(
@@ -4247,8 +4298,9 @@ def _render_overview_tab() -> None:
             height=320,
         )
         st.plotly_chart(fig_all, use_container_width=True)
+        st.caption(f"Lines = settled trades · Dots = current unrealized P&L as of {_live_ts}")
     else:
-        st.info("No resolved trades yet across any strategy.")
+        st.info("No positions yet across any strategy.")
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Live open-book positions ───────────────────────────────────────────────
@@ -4306,6 +4358,45 @@ def _render_overview_tab() -> None:
     st.code(restart_cmd, language="bash")
     st.caption("Manual restart required after mode change.")
     st.markdown("</div>", unsafe_allow_html=True)
+
+
+def _compute_live_stats(positions: list[dict], live_prices: dict[str, float]) -> dict:
+    """Compute live unrealized P&L stats for a set of open positions."""
+    today_str = _date.today().isoformat()
+    total_staked = unrealized_pnl = 0.0
+    open_count = n_priced = 0
+    best_pos = worst_pos = None
+    best_pnl, worst_pnl = float("-inf"), float("inf")
+
+    for p in positions:
+        tid  = p.get("token_id")
+        cur  = live_prices.get(tid) if tid else None
+        fill = float(p.get("fill_price", 0) or 0)
+        size = float(p.get("fill_size",  0) or 0)
+        cost = float(p.get("cost",       0) or 0)
+        if p.get("date", "9999") < today_str and cur is None:
+            continue
+        open_count    += 1
+        total_staked  += cost
+        if cur is not None:
+            upnl           = round((cur - fill) * size, 2)
+            unrealized_pnl += upnl
+            n_priced       += 1
+            lbl = f"{p.get('city','?')} {p.get('bucket','?')}"
+            if upnl > best_pnl:
+                best_pnl, best_pos = upnl, (lbl, upnl)
+            if upnl < worst_pnl:
+                worst_pnl, worst_pos = upnl, (lbl, upnl)
+
+    return {
+        "unrealized_pnl": round(unrealized_pnl, 2),
+        "open_count":     open_count,
+        "n_priced":       n_priced,
+        "total_staked":   round(total_staked, 2),
+        "roi":            round(unrealized_pnl / total_staked * 100, 1) if total_staked else 0.0,
+        "best_pos":       best_pos,
+        "worst_pos":      worst_pos,
+    }
 
 
 def _render_live_positions_section(
@@ -4531,30 +4622,51 @@ def _render_model_detail_tab(
     if note:
         st.caption(f"ℹ️ {note}")
 
-    # ── KPI strip ─────────────────────────────────────────────────────────────
-    pnl_c = GREEN if m["pnl"] >= 0 else RED
-    wr_c  = GREEN if m["wr"] >= 0.5 else RED
-    cols  = st.columns(6)
-    kpi_items = [
-        ("Total P&L",  f"${m['pnl']:+.2f}",          pnl_c),
-        ("Win Rate",   f"{m['wr']*100:.1f}%",          wr_c),
-        ("Trades",     str(m["n"]),                    BLUE),
-        ("W / L",      f"{m['wins']} / {m['losses']}", BLUE),
-        ("Avg Win",    f"${m['avg_win']:+.2f}",        GREEN),
-        ("Avg Loss",   f"${m['avg_loss']:+.2f}",       RED),
-    ]
-    for col, (lbl, val, c) in zip(cols, kpi_items):
-        with col:
-            st.markdown(
-                f"""<div class="kpi-card">
-  <div class="kpi-value" style="color:{c};">{val}</div>
-  <div class="kpi-label">{lbl}</div>
-</div>""",
-                unsafe_allow_html=True,
-            )
-
-    # ── Live Open Positions ───────────────────────────────────────────────────
+    # ── SECTION 1: Live Unrealized KPIs (always first, always visible) ────────
     if positions is not None and live_prices is not None:
+        ls = _compute_live_stats(positions, live_prices)
+        upnl_c = GREEN if ls["unrealized_pnl"] >= 0 else RED
+        roi_c  = GREEN if ls["roi"] >= 0 else RED
+
+        st.markdown(
+            f"""
+<div style="background:#0a1628;border:1px solid {'#1a4d2e' if ls['unrealized_pnl']>=0 else '#4d1a1a'};
+     border-left:4px solid {upnl_c};border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <span style="display:inline-block;width:9px;height:9px;border-radius:50%;
+      background:{upnl_c};animation:pulse 1.8s infinite;flex-shrink:0;"></span>
+    <span style="color:#aaa;font-size:0.8rem;font-weight:700;letter-spacing:.07em;">
+      LIVE UNREALIZED · {ls['n_priced']}/{ls['open_count']} priced · {live_ts}</span>
+  </div>
+  <div style="display:flex;gap:0;flex-wrap:wrap;">
+    <div style="flex:1;min-width:120px;padding-right:16px;border-right:1px solid #1f2937;">
+      <div style="font-size:2rem;font-weight:800;color:{upnl_c};line-height:1;">${ls['unrealized_pnl']:+.2f}</div>
+      <div style="color:#666;font-size:0.72rem;margin-top:2px;">Unrealized P&L</div>
+    </div>
+    <div style="flex:1;min-width:100px;padding:0 16px;border-right:1px solid #1f2937;">
+      <div style="font-size:1.3rem;font-weight:700;color:{roi_c};">{ls['roi']:+.1f}%</div>
+      <div style="color:#666;font-size:0.72rem;margin-top:2px;">Unreal. ROI</div>
+    </div>
+    <div style="flex:1;min-width:80px;padding:0 16px;border-right:1px solid #1f2937;">
+      <div style="font-size:1.3rem;font-weight:700;color:{BLUE};">{ls['open_count']}</div>
+      <div style="color:#666;font-size:0.72rem;margin-top:2px;">Open Positions</div>
+    </div>
+    <div style="flex:1;min-width:80px;padding:0 16px;border-right:1px solid #1f2937;">
+      <div style="font-size:1.3rem;font-weight:700;color:{TEXT};">${ls['total_staked']:.2f}</div>
+      <div style="color:#666;font-size:0.72rem;margin-top:2px;">Total Staked</div>
+    </div>
+    <div style="flex:2;min-width:160px;padding-left:16px;">
+      <div style="font-size:0.78rem;color:#aaa;line-height:1.8;">
+        {'<span style="color:#00FF88;">▲ Best: ' + ls['best_pos'][0] + f' ${ls["best_pos"][1]:+.2f}</span>' if ls['best_pos'] else '—'}<br>
+        {'<span style="color:#FF4444;">▼ Worst: ' + ls['worst_pos'][0] + f' ${ls["worst_pos"][1]:+.2f}</span>' if ls['worst_pos'] else '—'}
+      </div>
+    </div>
+  </div>
+</div>""",
+            unsafe_allow_html=True,
+        )
+
+        # ── Waterfall of open positions ───────────────────────────────────────
         st.markdown('<div class="panel">', unsafe_allow_html=True)
         _render_live_positions_section(
             positions=positions,
@@ -4564,8 +4676,35 @@ def _render_model_detail_tab(
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
+    # ── SECTION 2: Settled Trades KPIs ───────────────────────────────────────
+    pnl_c = GREEN if m["pnl"] >= 0 else RED
+    wr_c  = GREEN if m["wr"] >= 0.5 else RED
+    st.markdown(
+        '<div style="font-size:0.75rem;font-weight:700;color:#555;'
+        'letter-spacing:.08em;margin:12px 0 6px;">SETTLED TRADES</div>',
+        unsafe_allow_html=True,
+    )
+    cols = st.columns(6)
+    kpi_items = [
+        ("Settled P&L", f"${m['pnl']:+.2f}",          pnl_c),
+        ("Win Rate",    f"{m['wr']*100:.1f}%",          wr_c),
+        ("Trades",      str(m["n"]),                    BLUE),
+        ("W / L",       f"{m['wins']} / {m['losses']}", BLUE),
+        ("Avg Win",     f"${m['avg_win']:+.2f}",        GREEN),
+        ("Avg Loss",    f"${m['avg_loss']:+.2f}",       RED),
+    ]
+    for col, (lbl, val, c) in zip(cols, kpi_items):
+        with col:
+            st.markdown(
+                f"""<div class="kpi-card">
+  <div class="kpi-value" style="color:{c};font-size:1.2rem;">{val}</div>
+  <div class="kpi-label">{lbl}</div>
+</div>""",
+                unsafe_allow_html=True,
+            )
+
     if df.empty:
-        st.info(f"No resolved trades yet for **{label}**.")
+        st.caption("No settled trades yet — results appear here after markets resolve.")
         return
 
     df_s = df.sort_values("target_date_dt").copy()
