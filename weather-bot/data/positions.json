@@ -136,8 +136,8 @@
     "fill_price": 0.28500000000000003,
     "fill_size": 17.649122807017545,
     "cost": 5.030000000000001,
-    "timestamp": "2026-03-03T13:00:14.220302+00:00",
-    "strategy": ""
+    "timestamp": "2026-03-03T13:00:14.217638+00:00",
+    "strategy": "SINGLE"
   },
   {
     "market_id": "0x7a73c8400cfc36409481974506ac07775c025c8e1136d5a58bbcf56a1c478e50",
@@ -150,8 +150,8 @@
     "fill_price": 0.11499999999999999,
     "fill_size": 43.47826086956522,
     "cost": 5.0,
-    "timestamp": "2026-03-03T13:00:14.222746+00:00",
-    "strategy": ""
+    "timestamp": "2026-03-03T13:00:14.219394+00:00",
+    "strategy": "SINGLE"
   },
   {
     "market_id": "0xbac74db1adf0471ebaa6c000b4839bb5ba2bd3647b17a0dd2b16afc834c65a55",
@@ -164,8 +164,8 @@
     "fill_price": 0.645,
     "fill_size": 38.75968992248062,
     "cost": 25.0,
-    "timestamp": "2026-03-03T13:29:06.890705+00:00",
-    "strategy": ""
+    "timestamp": "2026-03-03T13:29:06.867651+00:00",
+    "strategy": "SINGLE"
   },
   {
     "market_id": "0xe7047fadfe0c7d9f87cb5fae8ce15eb29e6de312107ecd0e5b210b903345fae1",
@@ -178,8 +178,8 @@
     "fill_price": 0.06,
     "fill_size": 181.50000000000003,
     "cost": 10.89,
-    "timestamp": "2026-03-03T13:31:01.743118+00:00",
-    "strategy": ""
+    "timestamp": "2026-03-03T13:31:01.500711+00:00",
+    "strategy": "SINGLE"
   },
   {
     "market_id": "0xe8f111fa04e80dce8c43d8375d16fd633c105ff5a33796545abccd3e0834a08e",
@@ -192,8 +192,8 @@
     "fill_price": 0.07,
     "fill_size": 97.42857142857142,
     "cost": 6.819999999999999,
-    "timestamp": "2026-03-03T13:31:01.744715+00:00",
-    "strategy": ""
+    "timestamp": "2026-03-03T13:31:01.502353+00:00",
+    "strategy": "SINGLE"
   },
   {
     "market_id": "0x2e7a943d5ce1c806effe6469fd89101624abbdadd4b2af2adbf046fe52f70e68",
@@ -206,8 +206,8 @@
     "fill_price": 0.095,
     "fill_size": 52.63157894736842,
     "cost": 5.0,
-    "timestamp": "2026-03-03T13:31:01.746671+00:00",
-    "strategy": ""
+    "timestamp": "2026-03-03T13:31:01.504318+00:00",
+    "strategy": "SINGLE"
   },
   {
     "market_id": "0x306b4cfd65aefb96f8433eb26ff892a06250a05b6621f0b898f83457bb7e5f4d",
@@ -220,64 +220,8 @@
     "fill_price": 0.08499999999999999,
     "fill_size": 58.82352941176471,
     "cost": 5.0,
-    "timestamp": "2026-03-03T13:31:01.748250+00:00",
-    "strategy": ""
-  },
-  {
-    "market_id": "0x684dd5786354391534007325f79e4ee05639a60421b13c8ab877bd0a98a6423c",
-    "token_id": "70081937215828098781710748707817246286036310361925083729186686256244868924757",
-    "side": "BUY_YES",
-    "city": "Dallas",
-    "station_icao": "KDFW",
-    "date": "2026-03-05",
-    "bucket": "86-87",
-    "fill_price": 0.05500000000000001,
-    "fill_size": 90.90909090909089,
-    "cost": 5.0,
-    "timestamp": "2026-03-03T13:45:29.428464+00:00",
-    "strategy": ""
-  },
-  {
-    "market_id": "0xc2b4e352e34c1b058618137038ba8934f22bfcc48da43f6d652943ebaae47e56",
-    "token_id": "82984827850590559370867492426779101520749914313133002215134312763468122543799",
-    "side": "BUY_YES",
-    "city": "Chicago",
-    "station_icao": "KORD",
-    "date": "2026-03-04",
-    "bucket": "50+",
-    "fill_price": 0.09,
-    "fill_size": 55.55555555555556,
-    "cost": 5.0,
-    "timestamp": "2026-03-03T14:10:27.991727+00:00",
-    "strategy": ""
-  },
-  {
-    "market_id": "0x6745acbcb8f9f57fc9bdb7e70c5e0c24b52b35b5d47552573cc4dd55b6c6aed6",
-    "token_id": "77278093320469625923245179938813026152148741723909798542123713272198556407311",
-    "side": "BUY_NO",
-    "city": "Miami",
-    "station_icao": "KMIA",
-    "date": "2026-03-05",
-    "bucket": "82-83",
-    "fill_price": 0.625,
-    "fill_size": 14.496,
-    "cost": 9.06,
-    "timestamp": "2026-03-03T14:10:27.994410+00:00",
-    "strategy": ""
-  },
-  {
-    "market_id": "0x8f2e38d4154ce08117e43465ce145e81510ac997189a32143bc19eb778f3dc20",
-    "token_id": "24105326810148227750191230822139336780214780508755258192568453088699270950330",
-    "side": "BUY_YES",
-    "city": "Chicago",
-    "station_icao": "KORD",
-    "date": "2026-03-04",
-    "bucket": "42-43",
-    "fill_price": 0.225,
-    "fill_size": 22.22222222222222,
-    "cost": 5.0,
-    "timestamp": "2026-03-03T14:10:27.996615+00:00",
-    "strategy": ""
+    "timestamp": "2026-03-03T13:31:01.505902+00:00",
+    "strategy": "SINGLE"
   },
   {
     "market_id": "0x3c1201c3e7f795dd99545d6e01040c1d00e14ef433135649c638f13f59b9b1fb",
@@ -287,67 +231,11 @@
     "station_icao": "LFPG",
     "date": "2026-03-05",
     "bucket": "21+",
-    "fill_price": 0.07,
-    "fill_size": 137.85714285714286,
-    "cost": 9.65,
-    "timestamp": "2026-03-03T15:20:29.749518+00:00",
-    "strategy": ""
-  },
-  {
-    "market_id": "0x77686f7c4d47de1ee8464c2d5eb980dc14fd99ae70fdfdc3f754a58b58e97da6",
-    "token_id": "30402728450420908000493491550661651395695731402751231658621979826702046769618",
-    "side": "BUY_YES",
-    "city": "Toronto",
-    "station_icao": "CYYZ",
-    "date": "2026-03-05",
-    "bucket": "5+",
-    "fill_price": 0.05500000000000001,
-    "fill_size": 90.90909090909089,
-    "cost": 5.0,
-    "timestamp": "2026-03-03T15:20:29.752423+00:00",
-    "strategy": ""
-  },
-  {
-    "market_id": "0xac5817dc6a6aaa50b87e8cdb82fa5a8847cd2a3240719b6288677afc92a61a0b",
-    "token_id": "74010778034702780855967144505349180826972664952046961267003620529498462755313",
-    "side": "BUY_YES",
-    "city": "Ankara",
-    "station_icao": "LTAC",
-    "date": "2026-03-04",
-    "bucket": "10+",
-    "fill_price": 0.125,
-    "fill_size": 40.0,
-    "cost": 5.0,
-    "timestamp": "2026-03-03T16:05:29.761307+00:00",
-    "strategy": ""
-  },
-  {
-    "market_id": "0x1c6dbe1f6b6acb5bbd619fd4197251ddc2f6237dc5a2867eb11308a90e16207c",
-    "token_id": "37032288692120902211686078828947585643558174232336858960975264889130846020761",
-    "side": "BUY_YES",
-    "city": "Chicago",
-    "station_icao": "KORD",
-    "date": "2026-03-04",
-    "bucket": "48-49",
-    "fill_price": 0.26,
-    "fill_size": 19.23076923076923,
-    "cost": 5.0,
-    "timestamp": "2026-03-03T16:05:29.764688+00:00",
-    "strategy": ""
-  },
-  {
-    "market_id": "0x6832f021a2780e6c16d238c4ce145ec9c64ab818823d51f7d8beea03399d21e7",
-    "token_id": "12199155060337728207927307475225375884060622446137245069947463858306479161951",
-    "side": "BUY_YES",
-    "city": "Chicago",
-    "station_icao": "KORD",
-    "date": "2026-03-04",
-    "bucket": "44-45",
-    "fill_price": 0.1,
-    "fill_size": 50.0,
-    "cost": 5.0,
-    "timestamp": "2026-03-03T16:30:30.889644+00:00",
-    "strategy": ""
+    "fill_price": 0.060000000000000005,
+    "fill_size": 135.66666666666666,
+    "cost": 8.14,
+    "timestamp": "2026-03-03T18:30:18.408701+00:00",
+    "strategy": "SINGLE"
   },
   {
     "market_id": "0x38ddbaa17778f1c409d01180d7427fe5d076bd2cfa93c73da4831eaa57a7e735",
@@ -357,11 +245,39 @@
     "station_icao": "KMIA",
     "date": "2026-03-04",
     "bucket": "78-79",
-    "fill_price": 0.135,
-    "fill_size": 37.03703703703704,
-    "cost": 5.000000000000001,
-    "timestamp": "2026-03-03T17:20:30.572509+00:00",
-    "strategy": ""
+    "fill_price": 0.15500000000000003,
+    "fill_size": 97.03225806451611,
+    "cost": 15.040000000000001,
+    "timestamp": "2026-03-03T18:30:18.410733+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0x77686f7c4d47de1ee8464c2d5eb980dc14fd99ae70fdfdc3f754a58b58e97da6",
+    "token_id": "30402728450420908000493491550661651395695731402751231658621979826702046769618",
+    "side": "BUY_YES",
+    "city": "Toronto",
+    "station_icao": "CYYZ",
+    "date": "2026-03-05",
+    "bucket": "5+",
+    "fill_price": 0.08,
+    "fill_size": 62.5,
+    "cost": 5.0,
+    "timestamp": "2026-03-03T18:30:18.412055+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0xc2b4e352e34c1b058618137038ba8934f22bfcc48da43f6d652943ebaae47e56",
+    "token_id": "82984827850590559370867492426779101520749914313133002215134312763468122543799",
+    "side": "BUY_YES",
+    "city": "Chicago",
+    "station_icao": "KORD",
+    "date": "2026-03-04",
+    "bucket": "50+",
+    "fill_price": 0.20500000000000002,
+    "fill_size": 24.39024390243902,
+    "cost": 5.0,
+    "timestamp": "2026-03-03T18:30:18.413654+00:00",
+    "strategy": "SINGLE"
   },
   {
     "market_id": "0x3645c70212e73850366645928b0b6bae431673fe53a3339d7fa89cffbc728ff0",
@@ -374,7 +290,77 @@
     "fill_price": 0.4050000000000001,
     "fill_size": 12.345679012345677,
     "cost": 5.0,
-    "timestamp": "2026-03-03T18:30:22.565335+00:00",
+    "timestamp": "2026-03-03T18:30:18.415323+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0x360be1074889876d43369354f540b2edbcf56d5a6a278c0b7c61b0174c658904",
+    "token_id": "83287491784424488161149443135981426734213481785251227646353983012979979144458",
+    "side": "BUY_YES",
+    "city": "Ankara",
+    "station_icao": "LTAC",
+    "date": "2026-03-05",
+    "bucket": "13+",
+    "fill_price": 0.11000000000000001,
+    "fill_size": 45.454545454545446,
+    "cost": 5.0,
+    "timestamp": "2026-03-03T19:01:07.205791+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0xac5817dc6a6aaa50b87e8cdb82fa5a8847cd2a3240719b6288677afc92a61a0b",
+    "token_id": "74010778034702780855967144505349180826972664952046961267003620529498462755313",
+    "side": "BUY_YES",
+    "city": "Ankara",
+    "station_icao": "LTAC",
+    "date": "2026-03-04",
+    "bucket": "10+",
+    "fill_price": 0.05500000000000001,
+    "fill_size": 90.90909090909089,
+    "cost": 5.0,
+    "timestamp": "2026-03-03T19:01:07.207372+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0xcef9be41f2bf8d9dd10fbbe31cbc7b713a776173340c6c49069b5a4654fd9009",
+    "token_id": "99352792031857216223257762710194806988840233443261311426322040628798166476409",
+    "side": "BUY_YES",
+    "city": "Chicago",
+    "station_icao": "KORD",
+    "date": "2026-03-04",
+    "bucket": "46-47",
+    "fill_price": 0.22000000000000003,
+    "fill_size": 22.727272727272723,
+    "cost": 5.0,
+    "timestamp": "2026-03-03T19:01:07.209958+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0xa43211b02a18e39379f2d9414e75ecb5692592ced7c133c97e470dcb0d1f2633",
+    "token_id": "20300491257209035034325897401209509228028626484393492228981665626661428901351",
+    "side": "BUY_YES",
+    "city": "NYC",
+    "station_icao": "KLGA",
+    "date": "2026-03-04",
+    "bucket": "46-47",
+    "fill_price": 0.215,
+    "fill_size": 23.25581395348837,
+    "cost": 5.0,
+    "timestamp": "2026-03-03T19:01:07.211588+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0x6832f021a2780e6c16d238c4ce145ec9c64ab818823d51f7d8beea03399d21e7",
+    "token_id": "12199155060337728207927307475225375884060622446137245069947463858306479161951",
+    "side": "BUY_YES",
+    "city": "Chicago",
+    "station_icao": "KORD",
+    "date": "2026-03-04",
+    "bucket": "44-45",
+    "fill_price": 0.11000000000000001,
+    "fill_size": 45.454545454545446,
+    "cost": 5.0,
+    "timestamp": "2026-03-03T19:01:07.213409+00:00",
     "strategy": "SINGLE"
   }
 ]

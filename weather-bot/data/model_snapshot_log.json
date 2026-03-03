@@ -53,6 +53,16 @@
         "ncep_nbm_conus": 66.6
       },
       "spread": null
+    },
+    "2026-03-04": {
+      "logged_at": "2026-03-03T19:10:02.128452+00:00",
+      "preds": {
+        "ecmwf_ifs025": 77.0,
+        "gfs_seamless": 75.0,
+        "icon_seamless": 76.0,
+        "ncep_nbm_conus": 75.8
+      },
+      "spread": null
     }
   },
   "Buenos Aires": {
@@ -93,6 +103,16 @@
         "gfs_seamless": 29.6,
         "icon_seamless": 26.6,
         "meteofrance_seamless": 30.2
+      },
+      "spread": null
+    },
+    "2026-03-04": {
+      "logged_at": "2026-03-03T19:10:02.128452+00:00",
+      "preds": {
+        "ecmwf_ifs025": 34.0,
+        "gfs_seamless": 36.5,
+        "icon_seamless": 33.6,
+        "meteofrance_seamless": 32.7
       },
       "spread": null
     }
@@ -147,6 +167,16 @@
         "ncep_nbm_conus": 43.4
       },
       "spread": null
+    },
+    "2026-03-04": {
+      "logged_at": "2026-03-03T19:10:02.128452+00:00",
+      "preds": {
+        "ecmwf_ifs025": 47.9,
+        "gfs_seamless": 51.7,
+        "icon_seamless": 47.1,
+        "ncep_nbm_conus": 48.9
+      },
+      "spread": null
     }
   },
   "Dallas": {
@@ -177,6 +207,16 @@
         "gfs_seamless": 81.1,
         "icon_seamless": 85.6,
         "ncep_nbm_conus": 83.9
+      },
+      "spread": null
+    },
+    "2026-03-04": {
+      "logged_at": "2026-03-03T19:10:02.128452+00:00",
+      "preds": {
+        "ecmwf_ifs025": 81.5,
+        "gfs_seamless": 78.9,
+        "icon_seamless": 84.2,
+        "ncep_nbm_conus": 79.0
       },
       "spread": null
     }
@@ -240,20 +280,21 @@
       }
     },
     "2026-03-04": {
+      "logged_at": "2026-03-03T19:10:02.128452+00:00",
       "preds": {
-        "meteofrance_arome_france": 11.9,
-        "meteofrance_seamless": 12.0,
-        "meteofrance_arome_france_hd": 12.0,
-        "icon_seamless": 14.1,
         "dmi_seamless": 15.9,
         "ecmwf_ifs025": 16.0,
+        "icon_seamless": 14.1,
         "kma_seamless": 13.3,
-        "ukmo_uk_deterministic_2km": 14.7,
-        "ukmo_seamless": 14.7,
+        "meteofrance_arome_france": 11.9,
+        "meteofrance_arome_france_hd": 12.0,
+        "meteofrance_seamless": 12.0,
+        "ncep_aigfs025": 13.5,
         "ukmo_global_deterministic_10km": 14.8,
-        "ncep_aigfs025": 13.5
+        "ukmo_seamless": 14.7,
+        "ukmo_uk_deterministic_2km": 14.7
       },
-      "logged_at": "2026-03-03T18:58:48.035348+00:00"
+      "spread": 4.0
     }
   },
   "Miami": {
@@ -288,14 +329,14 @@
       "spread": null
     },
     "2026-03-04": {
+      "logged_at": "2026-03-03T19:10:02.128452+00:00",
       "preds": {
-        "gem_global": 80.7,
-        "ncep_aigfs025": 81.6,
-        "gem_seamless": 82.3,
-        "gem_regional": 82.3,
-        "gfs_graphcast025": 80.2
+        "ecmwf_ifs025": 78.3,
+        "gfs_seamless": 79.1,
+        "icon_seamless": 81.3,
+        "ncep_nbm_conus": 79.9
       },
-      "logged_at": "2026-03-03T12:07:44.962126+00:00"
+      "spread": null
     }
   },
   "New York": {
@@ -355,17 +396,17 @@
       "spread": null
     },
     "2026-03-04": {
+      "logged_at": "2026-03-03T19:01:58.628610+00:00",
       "preds": {
-        "ncep_nbm_conus": 48.3,
+        "gem_hrdps_continental": 46.5,
+        "gem_seamless": 46.5,
         "gfs_graphcast025": 47.1,
         "icon_seamless": 49.6,
-        "kma_seamless": 54.7,
-        "gem_seamless": 46.5,
         "kma_gdps": 54.7,
-        "gem_hrdps_continental": 46.5,
-        "ncep_aigfs025": 53.9
-      },
-      "logged_at": "2026-03-03T18:30:53.445909+00:00"
+        "kma_seamless": 54.7,
+        "ncep_aigfs025": 53.9,
+        "ncep_nbm_conus": 48.2
+      }
     }
   },
   "Paris": {
@@ -413,6 +454,17 @@
         "meteofrance_seamless": 16.8
       },
       "spread": null
+    },
+    "2026-03-04": {
+      "logged_at": "2026-03-03T19:10:02.128452+00:00",
+      "preds": {
+        "dmi_seamless": 19.2,
+        "ecmwf_ifs025": 16.8,
+        "icon_seamless": 17.9,
+        "meteofrance_arome_france": 16.8,
+        "meteofrance_seamless": 17.0
+      },
+      "spread": null
     }
   },
   "Seattle": {
@@ -455,6 +507,20 @@
         "icon_seamless": 53.4,
         "knmi_seamless": 53.2,
         "ncep_nbm_conus": 52.0
+      },
+      "spread": null
+    },
+    "2026-03-04": {
+      "logged_at": "2026-03-03T19:10:02.128452+00:00",
+      "preds": {
+        "dmi_seamless": 52.2,
+        "ecmwf_ifs025": 53.3,
+        "gem_hrdps_continental": 56.4,
+        "gem_seamless": 56.4,
+        "gfs_seamless": 50.3,
+        "icon_seamless": 51.1,
+        "knmi_seamless": 52.2,
+        "ncep_nbm_conus": 51.6
       },
       "spread": null
     }
@@ -507,6 +573,16 @@
         "icon_seamless": 8.9,
         "kma_seamless": 10.7,
         "meteofrance_seamless": 8.1
+      },
+      "spread": null
+    },
+    "2026-03-04": {
+      "logged_at": "2026-03-03T19:10:02.128452+00:00",
+      "preds": {
+        "ecmwf_ifs025": 6.6,
+        "icon_seamless": 6.7,
+        "kma_seamless": 7.1,
+        "meteofrance_seamless": 5.2
       },
       "spread": null
     }
@@ -564,6 +640,20 @@
         "meteofrance_arpege_world": 1.2,
         "ncep_aigfs025": 4.3,
         "ncep_nbm_conus": 2.1
+      },
+      "spread": null
+    },
+    "2026-03-04": {
+      "logged_at": "2026-03-03T19:10:02.128452+00:00",
+      "preds": {
+        "ecmwf_ifs025": 2.7,
+        "gem_global": 6.0,
+        "gem_regional": 5.3,
+        "gfs_seamless": 7.0,
+        "kma_gdps": 7.0,
+        "meteofrance_arpege_world": 5.0,
+        "ncep_aigfs025": 8.2,
+        "ncep_nbm_conus": 5.1
       },
       "spread": null
     }
