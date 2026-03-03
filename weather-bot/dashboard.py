@@ -1028,13 +1028,16 @@ def next_model_run_trigger(now_utc: datetime) -> tuple[datetime, str]:
 
 def sync_from_vm() -> tuple[bool, str]:
     files = [
-        ("logs/resolved.csv",              f"{VM_WORKDIR}/logs/resolved.csv"),
-        ("logs/trades.csv",                f"{VM_WORKDIR}/logs/trades.csv"),
-        ("logs/signals.csv",               f"{VM_WORKDIR}/logs/signals.csv"),
-        ("data/positions.json",            f"{VM_WORKDIR}/data/positions.json"),
-        ("logs/calibration.json",          f"{VM_WORKDIR}/logs/calibration.json"),
-        ("data/commercial_forecast_log.json", f"{VM_WORKDIR}/data/commercial_forecast_log.json"),
-        ("data/model_snapshot_log.json",   f"{VM_WORKDIR}/data/model_snapshot_log.json"),
+        ("logs/resolved.csv",                  f"{VM_WORKDIR}/logs/resolved.csv"),
+        ("logs/trades.csv",                    f"{VM_WORKDIR}/logs/trades.csv"),
+        ("logs/signals.csv",                   f"{VM_WORKDIR}/logs/signals.csv"),
+        ("data/positions.json",                f"{VM_WORKDIR}/data/positions.json"),
+        ("data/positions_shadow_2a.json",      f"{VM_WORKDIR}/data/positions_shadow_2a.json"),
+        ("data/positions_shadow_2b.json",      f"{VM_WORKDIR}/data/positions_shadow_2b.json"),
+        ("data/positions_shadow_2c.json",      f"{VM_WORKDIR}/data/positions_shadow_2c.json"),
+        ("logs/calibration.json",              f"{VM_WORKDIR}/logs/calibration.json"),
+        ("data/commercial_forecast_log.json",  f"{VM_WORKDIR}/data/commercial_forecast_log.json"),
+        ("data/model_snapshot_log.json",       f"{VM_WORKDIR}/data/model_snapshot_log.json"),
     ]
     messages: list[str] = []
     for local_rel, remote_path in files:
@@ -3082,11 +3085,20 @@ def main() -> None:
     def _strat_df(s: str) -> pd.DataFrame:
         return resolved_df[resolved_df["strategy"] == s].copy() if has_strat else pd.DataFrame()
 
-    # Fetch live positions + prices once — shared across all strategy tabs
-    _all_positions  = load_positions()
-    _token_ids_main = tuple(p["token_id"] for p in _all_positions if p.get("token_id"))
-    _live_prices_main = fetch_live_position_prices(_token_ids_main) if _token_ids_main else {}
-    _live_ts_main   = datetime.now(UTC).strftime("%H:%M UTC")
+    # Fetch live positions + prices — main bot positions (SINGLE / LADDER)
+    _all_positions    = load_positions()
+    _shadow_2a        = load_shadow_positions("shadow_2a")
+    _shadow_2b        = load_shadow_positions("shadow_2b")
+    _shadow_2c        = load_shadow_positions("shadow_2c")
+
+    # Gather ALL unique token ids across every portfolio for one batched price fetch
+    _all_token_ids = tuple({
+        p["token_id"]
+        for p in (_all_positions + _shadow_2a + _shadow_2b + _shadow_2c)
+        if p.get("token_id")
+    })
+    _live_prices_main = fetch_live_position_prices(_all_token_ids) if _all_token_ids else {}
+    _live_ts_main     = datetime.now(UTC).strftime("%H:%M UTC")
 
     with tab_ov:
         _render_overview_tab()
@@ -3117,7 +3129,7 @@ def main() -> None:
         _render_model_detail_tab(
             "2A Equal", _strat_df("TOP2_EQUAL"),
             note="Shadow — always top-2 YES buckets, equal (MEDIUM) Kelly on both",
-            positions=_all_positions, live_prices=_live_prices_main,
+            positions=_shadow_2a, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="2a",
         )
 
@@ -3125,7 +3137,7 @@ def main() -> None:
         _render_model_detail_tab(
             "2B Cond", _strat_df("TOP2_COND"),
             note="Shadow — dual only when the model is genuinely split between two buckets",
-            positions=_all_positions, live_prices=_live_prices_main,
+            positions=_shadow_2b, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="2b",
         )
 
@@ -3133,7 +3145,7 @@ def main() -> None:
         _render_model_detail_tab(
             "2C Prop", _strat_df("TOP2_PROP"),
             note="Shadow — always top-2 but proportional sizing (MEDIUM top1, LOW top2)",
-            positions=_all_positions, live_prices=_live_prices_main,
+            positions=_shadow_2c, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="2c",
         )
 
