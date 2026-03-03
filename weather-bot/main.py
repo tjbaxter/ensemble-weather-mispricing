@@ -118,10 +118,18 @@ async def run_live(bankroll: float) -> None:
         await market_client.close()
 
 
+async def run_paper_once(bankroll: float) -> None:
+    """Single-pass paper trading scan across all 6 strategies. Safe to call on demand."""
+    trader = PaperTrader()
+    await trader.run_once()
+    print("Paper scan complete.")
+
+
 async def main() -> None:
     parser = argparse.ArgumentParser(description="Weather bot runtime")
     parser.add_argument("--diagnostic", action="store_true", help="Run startup and discovery diagnostics then exit.")
     parser.add_argument("--live-once", action="store_true", help="Run one live trading pass and exit (for cron).")
+    parser.add_argument("--paper-once", action="store_true", help="Run one paper trading scan across all strategies and exit.")
     args = parser.parse_args()
 
     load_dotenv()
@@ -147,6 +155,11 @@ async def main() -> None:
 
     if live and paper:
         raise RuntimeError("Set either LIVE_TRADING=true or PAPER_TRADING=true, not both.")
+
+    if args.paper_once:
+        print(f"Running single paper scan. Bankroll: ${bankroll}")
+        await run_paper_once(bankroll)
+        return
 
     if live or args.live_once:
         print(f"Starting live trading run. Bankroll: ${bankroll}")
