@@ -245,15 +245,15 @@
         "meteofrance_seamless": 11.2,
         "meteofrance_arome_france_hd": 11.2,
         "icon_seamless": 14.2,
-        "dmi_seamless": 15.4,
+        "dmi_seamless": 16.6,
         "ecmwf_ifs025": 15.7,
-        "kma_seamless": 12.0,
+        "kma_seamless": 13.3,
         "ukmo_uk_deterministic_2km": 15.2,
         "ukmo_seamless": 15.2,
         "ukmo_global_deterministic_10km": 13.1,
         "ncep_aigfs025": 12.8
       },
-      "logged_at": "2026-03-03T12:07:39.948727+00:00"
+      "logged_at": "2026-03-03T12:51:30.807864+00:00"
     }
   },
   "Miami": {
@@ -365,7 +365,7 @@
         "gem_hrdps_continental": 43.7,
         "ncep_aigfs025": 53.5
       },
-      "logged_at": "2026-03-03T12:17:07.134966+00:00"
+      "logged_at": "2026-03-03T12:51:40.162036+00:00"
     }
   },
   "Paris": {
