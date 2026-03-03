@@ -3091,6 +3091,19 @@ def main() -> None:
     _shadow_2b        = load_shadow_positions("shadow_2b")
     _shadow_2c        = load_shadow_positions("shadow_2c")
 
+    # Filter main positions by strategy tag for per-tab views.
+    # Positions without a strategy tag default to LADDER (legacy format before tagging was added).
+    def _pos_for_strategy(strat: str) -> list[dict]:
+        tagged = [p for p in _all_positions if p.get("strategy") == strat]
+        if tagged:
+            return tagged
+        # Fall back: if none are tagged, show all (gradual migration as bot logs new trades)
+        return _all_positions
+
+    _single_positions     = _pos_for_strategy("SINGLE")
+    _ladder_positions     = _pos_for_strategy("LADDER")
+    _conviction_positions = _pos_for_strategy("CONVICTION")
+
     # Gather ALL unique token ids across every portfolio for one batched price fetch
     _all_token_ids = tuple({
         p["token_id"]
@@ -3106,14 +3119,14 @@ def main() -> None:
     with tab_single:
         _render_model_detail_tab(
             "SINGLE", _strat_df("SINGLE"),
-            positions=_all_positions, live_prices=_live_prices_main,
+            positions=_single_positions, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="single",
         )
 
     with tab_ladder:
         _render_model_detail_tab(
             "LADDER", _strat_df("LADDER"),
-            positions=_all_positions, live_prices=_live_prices_main,
+            positions=_ladder_positions, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="ladder",
         )
 
@@ -3121,7 +3134,7 @@ def main() -> None:
         _render_model_detail_tab(
             "CONVICTION", _strat_df("CONVICTION"),
             note="Shadow only — signals scored and logged but not executed",
-            positions=_all_positions, live_prices=_live_prices_main,
+            positions=_conviction_positions, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="conv",
         )
 
@@ -4160,6 +4173,16 @@ def _render_overview_tab() -> None:
     def _strat_slice(s: str) -> pd.DataFrame:
         return resolved_df[resolved_df["strategy"] == s].copy() if has_strat else pd.DataFrame()
 
+    # Filter main positions by strategy tag for each live tab.
+    # Fall back to all positions if none are tagged yet (pre-tagging legacy data).
+    def _pos_tagged(strat: str) -> list[dict]:
+        tagged = [p for p in positions if p.get("strategy") == strat]
+        return tagged if tagged else positions
+
+    single_pos     = _pos_tagged("SINGLE")
+    ladder_pos     = _pos_tagged("LADDER")
+    conviction_pos = _pos_tagged("CONVICTION")
+
     # Fetch all live prices in one batch
     _all_pos = positions + shadow_2a + shadow_2b + shadow_2c
     _all_tids = tuple({p["token_id"] for p in _all_pos if p.get("token_id")})
@@ -4167,9 +4190,9 @@ def _render_overview_tab() -> None:
     _live_ts = datetime.now(UTC).strftime("%H:%M UTC")
 
     MODELS: list[tuple[str, str, pd.DataFrame, bool, list[dict]]] = [
-        ("⚡ SINGLE",     "SINGLE",     _strat_slice("SINGLE"),     False, positions),
-        ("🪜 LADDER",     "LADDER",     _strat_slice("LADDER"),     False, positions),
-        ("🎯 CONVICTION", "CONVICTION", _strat_slice("CONVICTION"), True,  positions),
+        ("⚡ SINGLE",     "SINGLE",     _strat_slice("SINGLE"),     False, single_pos),
+        ("🪜 LADDER",     "LADDER",     _strat_slice("LADDER"),     False, ladder_pos),
+        ("🎯 CONVICTION", "CONVICTION", _strat_slice("CONVICTION"), True,  conviction_pos),
         ("2A Equal",      "TOP2_EQUAL", _strat_slice("TOP2_EQUAL"), True,  shadow_2a),
         ("2B Cond",       "TOP2_COND",  _strat_slice("TOP2_COND"),  True,  shadow_2b),
         ("2C Prop",       "TOP2_PROP",  _strat_slice("TOP2_PROP"),  True,  shadow_2c),

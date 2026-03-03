@@ -22,6 +22,7 @@ class Position:
     fill_size: float
     cost: float
     timestamp: datetime
+    strategy: str = ""
 
 
 @dataclass
@@ -60,6 +61,7 @@ class Portfolio:
             fill_size=shares,
             cost=cost,
             timestamp=datetime.now(UTC),
+            strategy=signal.get("strategy", ""),
         )
         self.positions.append(pos)
         self._save_positions()
@@ -183,6 +185,7 @@ class Portfolio:
                     "fill_size": p.fill_size,
                     "cost": p.cost,
                     "timestamp": p.timestamp.isoformat(),
+                    "strategy": p.strategy,
                 }
                 for p in self.positions
             ]
