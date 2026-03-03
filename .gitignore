@@ -21,6 +21,12 @@ weather-bot/logs/*
 !weather-bot/logs/signals.csv
 !weather-bot/logs/trades.csv
 
+# Track position files so Streamlit Cloud shows live prices for all strategies
+!weather-bot/data/positions.json
+!weather-bot/data/positions_shadow_2a.json
+!weather-bot/data/positions_shadow_2b.json
+!weather-bot/data/positions_shadow_2c.json
+
 
 http://localhost:8502
 
