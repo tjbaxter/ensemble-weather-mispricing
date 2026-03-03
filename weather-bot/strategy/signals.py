@@ -700,17 +700,22 @@ def generate_top2_shadow_signals(
 
         mv_json = json.dumps({k: round(v, 2) for k, v in det_model_values.items()}, separators=(",", ":"))
 
-        def _make(cand: dict, strategy: str, confidence: str) -> Signal:
-            sz = kelly_size(
-                market_price=cand["market_prob"],
-                win_prob=cand["model_prob"],
-                bankroll=bankroll,
-                edge=cand["edge"],
-                kelly_fraction=city_kelly,
-                max_position=KELLY_MAX_BET_USD,
-                rounding_confidence=confidence,
-            )
-            sz = max(sz, KELLY_MIN_BET_USD) if sz > 0 else KELLY_MIN_BET_USD
+        # Compute ONE total budget for this city using top1 as the representative bucket.
+        # All three shadow strategies share this budget and split it differently —
+        # that's what makes them genuinely different from each other.
+        _base_sz = kelly_size(
+            market_price=top1["market_prob"],
+            win_prob=top1["model_prob"],
+            bankroll=bankroll,
+            edge=top1["edge"],
+            kelly_fraction=city_kelly,
+            max_position=KELLY_MAX_BET_USD,
+            rounding_confidence="MEDIUM",
+        )
+        _base_sz = max(_base_sz, KELLY_MIN_BET_USD) if _base_sz > 0 else KELLY_MIN_BET_USD
+
+        def _make(cand: dict, strategy: str, size_usd: float) -> Signal:
+            sz = round(max(size_usd, KELLY_MIN_BET_USD), 2)
             ev = (
                 cand["model_prob"] * (sz / cand["market_prob"]) * (1.0 - cand["market_prob"])
                 - (1.0 - cand["model_prob"]) * sz
@@ -722,7 +727,7 @@ def generate_top2_shadow_signals(
                 edge=cand["edge"],
                 forecast_prob=cand["model_prob"],
                 market_prob=cand["market_prob"],
-                size_usd=round(sz, 2),
+                size_usd=sz,
                 city=city,
                 station_icao=station_icao,
                 date=date,
@@ -740,24 +745,35 @@ def generate_top2_shadow_signals(
                 strategy=strategy,
             )
 
-        # ── 2A — TOP2_EQUAL: always top-2, equal (MEDIUM) Kelly on both ────────
-        shadows.append(_make(top1, "TOP2_EQUAL", "MEDIUM"))
+        # ── 2A — TOP2_EQUAL: total budget split exactly 50/50 ───────────────────
+        # Both legs get half the budget. Identical capital on favourite and runner-up.
+        half = _base_sz / 2.0
+        shadows.append(_make(top1, "TOP2_EQUAL", half))
         if top2:
-            shadows.append(_make(top2, "TOP2_EQUAL", "MEDIUM"))
+            shadows.append(_make(top2, "TOP2_EQUAL", half))
 
-        # ── 2B — TOP2_COND: dual only when model is genuinely split ───────────
+        # ── 2B — TOP2_COND: total budget split 65/35, or all-in on top1 if tight ─
+        # Only goes dual when the model is genuinely split (runner-up ≥ threshold × top).
+        # When not split the full budget rides on the favourite — a stronger single bet.
         is_split = (
             top2 is not None
             and (top2["model_prob"] / top1["model_prob"]) >= TOP2_SHADOW_SPLIT_THRESHOLD
         )
-        shadows.append(_make(top1, "TOP2_COND", "MEDIUM"))
         if is_split and top2:
-            shadows.append(_make(top2, "TOP2_COND", "MEDIUM"))
+            shadows.append(_make(top1, "TOP2_COND", _base_sz * 0.65))
+            shadows.append(_make(top2, "TOP2_COND", _base_sz * 0.35))
+        else:
+            shadows.append(_make(top1, "TOP2_COND", _base_sz))
 
-        # ── 2C — TOP2_PROP: always top-2, proportional sizing ─────────────────
-        shadows.append(_make(top1, "TOP2_PROP", "MEDIUM"))
+        # ── 2C — TOP2_PROP: total budget split proportional to model probability ──
+        # If model says 41% vs 19%, sizes are ~68% vs ~32% of the budget.
         if top2:
-            shadows.append(_make(top2, "TOP2_PROP", "LOW"))
+            p1, p2 = top1["model_prob"], top2["model_prob"]
+            total_p = p1 + p2
+            shadows.append(_make(top1, "TOP2_PROP", _base_sz * (p1 / total_p)))
+            shadows.append(_make(top2, "TOP2_PROP", _base_sz * (p2 / total_p)))
+        else:
+            shadows.append(_make(top1, "TOP2_PROP", _base_sz))
 
     return shadows
 
