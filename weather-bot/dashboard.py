@@ -625,6 +625,12 @@ def load_resolved_df() -> pd.DataFrame:
     if "signal_timestamp" in df.columns:
         df["signal_timestamp"] = pd.to_datetime(df["signal_timestamp"], errors="coerce", utc=True)
     df["pnl_usd"] = pd.to_numeric(df["pnl_usd"], errors="coerce").fillna(0.0)
+    # Trades logged before the strategy column was added default to LADDER
+    # (it was the only live strategy running at that time)
+    if "strategy" not in df.columns:
+        df["strategy"] = "LADDER"
+    else:
+        df["strategy"] = df["strategy"].fillna("LADDER")
     sort_cols = ["target_date_dt"]
     if "signal_timestamp" in df.columns:
         sort_cols.append("signal_timestamp")
