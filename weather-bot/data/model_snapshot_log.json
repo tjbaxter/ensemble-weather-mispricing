@@ -253,7 +253,7 @@
         "ukmo_global_deterministic_10km": 13.7,
         "ncep_aigfs025": 12.4
       },
-      "logged_at": "2026-03-03T03:24:45.428447+00:00"
+      "logged_at": "2026-03-03T03:55:44.958110+00:00"
     }
   },
   "Miami": {
@@ -293,9 +293,9 @@
         "ncep_aigfs025": 81.6,
         "gem_seamless": 81.4,
         "gem_regional": 81.4,
-        "gfs_graphcast025": 80.4
+        "gfs_graphcast025": 80.2
       },
-      "logged_at": "2026-03-03T03:24:48.098474+00:00"
+      "logged_at": "2026-03-03T03:55:47.946896+00:00"
     }
   },
   "New York": {
