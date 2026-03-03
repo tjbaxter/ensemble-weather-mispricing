@@ -590,14 +590,30 @@ def load_signals_df() -> pd.DataFrame:
 
 @st.cache_data(ttl=15)
 def load_resolved_df() -> pd.DataFrame:
-    """Load from logs/resolved.csv — written by scripts/daily_resolver.py."""
-    try:
-        # index_col=False prevents pandas from auto-using col 0 as row index
-        # when data rows have one more field than the header (strategy column
-        # may be absent from old headers but present in every data row).
-        df = pd.read_csv(RESOLVED_CSV, index_col=False)
-    except Exception:
+    """Load resolved trades from logs/resolved.csv + all resolved_archive_*.csv files.
+
+    The daily resolver archives the previous day's file to resolved_archive_YYYYMMDD.csv
+    and resets resolved.csv to an empty header — so we must merge all files to get the
+    full historical record.
+    """
+    logs_dir = ROOT / "logs"
+    # current file + any archives, sorted so data is roughly chronological
+    csv_paths = sorted(logs_dir.glob("resolved*.csv"))
+    frames: list[pd.DataFrame] = []
+    for path in csv_paths:
+        try:
+            df_part = pd.read_csv(path, index_col=False)
+            if not df_part.empty:
+                frames.append(df_part)
+        except Exception:
+            pass
+    if not frames:
         return pd.DataFrame()
+    df = pd.concat(frames, ignore_index=True)
+    # Drop duplicates in case the same trade appears in both current and an archive
+    dedup_cols = [c for c in ("resolved_at", "city", "target_date", "bucket", "side") if c in df.columns]
+    if dedup_cols:
+        df = df.drop_duplicates(subset=dedup_cols, keep="last")
     for col in ("resolved_at", "target_date", "city", "bucket", "outcome"):
         if col not in df.columns:
             df[col] = ""
@@ -609,8 +625,6 @@ def load_resolved_df() -> pd.DataFrame:
     if "signal_timestamp" in df.columns:
         df["signal_timestamp"] = pd.to_datetime(df["signal_timestamp"], errors="coerce", utc=True)
     df["pnl_usd"] = pd.to_numeric(df["pnl_usd"], errors="coerce").fillna(0.0)
-    # Sort by target_date (the market resolution date), not resolved_at (when the
-    # resolver script ran — all trades get the same timestamp in batch runs).
     sort_cols = ["target_date_dt"]
     if "signal_timestamp" in df.columns:
         sort_cols.append("signal_timestamp")
@@ -1008,6 +1022,7 @@ def next_model_run_trigger(now_utc: datetime) -> tuple[datetime, str]:
 
 def sync_from_vm() -> tuple[bool, str]:
     files = [
+        ("logs/resolved.csv",              f"{VM_WORKDIR}/logs/resolved.csv"),
         ("logs/trades.csv",                f"{VM_WORKDIR}/logs/trades.csv"),
         ("logs/signals.csv",               f"{VM_WORKDIR}/logs/signals.csv"),
         ("data/positions.json",            f"{VM_WORKDIR}/data/positions.json"),
@@ -1033,6 +1048,34 @@ def sync_from_vm() -> tuple[bool, str]:
             messages.append(f"✓ {local_rel}")
         else:
             messages.append(f"— {local_rel} (not found or error)")
+
+    # Pull all resolved archive files (resolved_archive_YYYYMMDD.csv)
+    list_result = subprocess.run(
+        [
+            "gcloud", "compute", "ssh", VM_NAME,
+            "--zone", VM_ZONE, "--project", VM_PROJECT,
+            "--command", f"ls {VM_WORKDIR}/logs/resolved_archive_*.csv 2>/dev/null || true",
+        ],
+        capture_output=True, text=True, timeout=30,
+    )
+    if list_result.returncode == 0:
+        archive_paths = [p.strip() for p in list_result.stdout.strip().splitlines() if p.strip()]
+        for remote_path in archive_paths:
+            fname = remote_path.split("/")[-1]
+            local_abs = ROOT / "logs" / fname
+            src = f"{VM_NAME}:{remote_path}"
+            res = subprocess.run(
+                [
+                    "gcloud", "compute", "scp", src, str(local_abs),
+                    "--zone", VM_ZONE, "--project", VM_PROJECT,
+                ],
+                capture_output=True, text=True, timeout=60,
+            )
+            if res.returncode == 0:
+                messages.append(f"✓ logs/{fname}")
+            else:
+                messages.append(f"— logs/{fname} (error)")
+
     return True, "\n".join(messages)
 
 
@@ -3033,37 +3076,59 @@ def main() -> None:
     def _strat_df(s: str) -> pd.DataFrame:
         return resolved_df[resolved_df["strategy"] == s].copy() if has_strat else pd.DataFrame()
 
+    # Fetch live positions + prices once — shared across all strategy tabs
+    _all_positions  = load_positions()
+    _token_ids_main = tuple(p["token_id"] for p in _all_positions if p.get("token_id"))
+    _live_prices_main = fetch_live_position_prices(_token_ids_main) if _token_ids_main else {}
+    _live_ts_main   = datetime.now(UTC).strftime("%H:%M UTC")
+
     with tab_ov:
         _render_overview_tab()
 
     with tab_single:
-        _render_model_detail_tab("SINGLE", _strat_df("SINGLE"))
+        _render_model_detail_tab(
+            "SINGLE", _strat_df("SINGLE"),
+            positions=_all_positions, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="single",
+        )
 
     with tab_ladder:
-        _render_model_detail_tab("LADDER", _strat_df("LADDER"))
+        _render_model_detail_tab(
+            "LADDER", _strat_df("LADDER"),
+            positions=_all_positions, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="ladder",
+        )
 
     with tab_conv:
         _render_model_detail_tab(
             "CONVICTION", _strat_df("CONVICTION"),
             note="Shadow only — signals scored and logged but not executed",
+            positions=_all_positions, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="conv",
         )
 
     with tab_2a:
         _render_model_detail_tab(
             "2A Equal", _strat_df("TOP2_EQUAL"),
             note="Shadow — always top-2 YES buckets, equal (MEDIUM) Kelly on both",
+            positions=_all_positions, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="2a",
         )
 
     with tab_2b:
         _render_model_detail_tab(
             "2B Cond", _strat_df("TOP2_COND"),
             note="Shadow — dual only when the model is genuinely split between two buckets",
+            positions=_all_positions, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="2b",
         )
 
     with tab_2c:
         _render_model_detail_tab(
             "2C Prop", _strat_df("TOP2_PROP"),
             note="Shadow — always top-2 but proportional sizing (MEDIUM top1, LOW top2)",
+            positions=_all_positions, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="2c",
         )
 
     with tab_acc:
@@ -4225,10 +4290,215 @@ def _render_overview_tab() -> None:
     st.markdown("</div>", unsafe_allow_html=True)
 
 
+def _render_live_positions_section(
+    positions: list[dict],
+    live_prices: dict[str, float],
+    live_ts: str,
+    key_prefix: str = "strat",
+) -> None:
+    """Render live open positions waterfall + table for a strategy tab."""
+    today_str = _date.today().isoformat()
+
+    RESOLVE_WIN_THRESHOLD  = 0.95
+    RESOLVE_LOSS_THRESHOLD = 0.05
+
+    live_resolved: list[dict] = []
+    still_open: list[dict] = []
+
+    for p in positions:
+        tid         = p.get("token_id")
+        live_p      = live_prices.get(tid) if tid else None
+        cost        = float(p.get("cost",      0) or 0)
+        fill_size   = float(p.get("fill_size", 0) or 0)
+        target_date = p.get("date", "9999")
+
+        if live_p is None:
+            still_open.append(p)
+            continue
+
+        token_price = float(live_p)
+        won  = token_price >= RESOLVE_WIN_THRESHOLD
+        lost = token_price <= RESOLVE_LOSS_THRESHOLD
+        is_expired = target_date <= today_str
+
+        if is_expired and (won or lost):
+            pnl = round(fill_size - cost, 4) if won else round(-cost, 4)
+            live_resolved.append({**p, "live_won": won, "live_pnl": pnl, "live_price": token_price})
+        else:
+            still_open.append(p)
+
+    # Build waterfall rows
+    _bar_rows: list[dict] = []
+    for p in still_open:
+        tid = p.get("token_id")
+        if not tid or tid not in live_prices:
+            continue
+        cur  = live_prices[tid]
+        fill = float(p.get("fill_price", 0) or 0)
+        size = float(p.get("fill_size",  0) or 0)
+        upnl = round((cur - fill) * size, 2)
+        _bar_rows.append({
+            "label":    f"{p.get('city','?')} {p.get('date','?')} {p.get('bucket','?')}",
+            "city":     p.get("city", "?"),
+            "date":     p.get("date", "?"),
+            "bucket":   p.get("bucket", "?"),
+            "side":     p.get("side", "?"),
+            "fill":     fill,
+            "cur":      cur,
+            "upnl":     upnl,
+            "resolved": False,
+            "won":      None,
+        })
+    for r in live_resolved:
+        fill = float(r.get("fill_price", 0) or 0)
+        _bar_rows.append({
+            "label":    f"{r.get('city','?')} {r.get('date','?')} {r.get('bucket','?')} ✓",
+            "city":     r.get("city", "?"),
+            "date":     r.get("date", "?"),
+            "bucket":   r.get("bucket", "?"),
+            "side":     r.get("side", "?"),
+            "fill":     fill,
+            "cur":      r.get("live_price", fill),
+            "upnl":     r["live_pnl"],
+            "resolved": True,
+            "won":      r["live_won"],
+        })
+
+    _open_cnt = sum(1 for r in _bar_rows if not r["resolved"])
+    _res_cnt  = len(_bar_rows) - _open_cnt
+    total_unreal = sum(r["upnl"] for r in _bar_rows if not r["resolved"])
+    unreal_color = GREEN if total_unreal >= 0 else RED
+
+    # ── Header ──────────────────────────────────────────────────────────────
+    st.markdown(
+        f"""
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap;">
+  <span style="display:inline-block;width:9px;height:9px;border-radius:50%;
+    background:{unreal_color};animation:pulse 1.8s infinite;"></span>
+  <span style="color:{TEXT};font-size:1rem;font-weight:700;letter-spacing:.05em;">
+    LIVE OPEN POSITIONS</span>
+  <span style="color:{unreal_color};font-size:1.1rem;font-weight:700;">${total_unreal:+.2f}</span>
+  <span style="color:{GRAY};font-size:0.82rem;">{_open_cnt} open · {_res_cnt} settled today · {live_ts}</span>
+</div>""",
+        unsafe_allow_html=True,
+    )
+
+    if not _bar_rows:
+        if not positions:
+            st.info("No positions loaded — sync from VM to pull latest data.")
+        else:
+            st.info("No live prices yet — prices update every 5 min.")
+    else:
+        def _bar_colour_fn(r: dict, v: float) -> str:
+            if r["resolved"]:
+                return "#F59E0B" if r["won"] else "#6B7280"
+            return GREEN if v >= 0 else RED
+
+        _sorted = sorted(_bar_rows, key=lambda r: (r["resolved"], r["upnl"]))
+        _vals   = [r["upnl"]  for r in _sorted]
+        _labels = [r["label"] for r in _sorted]
+        _colors = [_bar_colour_fn(r, v) for r, v in zip(_sorted, _vals)]
+
+        wf_fig = go.Figure()
+        wf_fig.add_trace(go.Bar(
+            x=_vals,
+            y=_labels,
+            orientation="h",
+            marker_color=_colors,
+            text=[f"${v:+.2f}" for v in _vals],
+            textposition="outside",
+            customdata=[[
+                r["side"], r["fill"], r["cur"],
+                "✅ SETTLED" if r["resolved"] and r["won"]
+                else "❌ SETTLED" if r["resolved"]
+                else "⏳ LIVE",
+            ] for r in _sorted],
+            hovertemplate=(
+                "%{y}<br>%{customdata[3]}<br>"
+                "Side: %{customdata[0]}<br>"
+                "Entry: %{customdata[1]:.3f} → Now: %{customdata[2]:.3f}<br>"
+                "P&L: $%{x:.2f}<extra></extra>"
+            ),
+            showlegend=False,
+        ))
+        wf_fig.add_vline(x=0, line_color="#444", line_width=1)
+        wf_fig.update_layout(
+            plot_bgcolor=BG, paper_bgcolor=PANEL,
+            font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+            margin={"l": 10, "r": 70, "t": 10, "b": 20},
+            xaxis={"gridcolor": "#1f2937", "title": "Unrealized P&L (USD)"},
+            yaxis={"gridcolor": "#1f2937", "tickfont": {"size": 10}},
+            height=max(280, 28 * len(_sorted)),
+        )
+        st.plotly_chart(wf_fig, use_container_width=True, key=f"{key_prefix}_live_wf")
+        st.markdown(
+            '<span style="color:#F59E0B;font-size:0.78rem;">■ Settled WIN</span>&nbsp;&nbsp;'
+            '<span style="color:#6B7280;font-size:0.78rem;">■ Settled LOSS</span>&nbsp;&nbsp;'
+            '<span style="color:#00FF88;font-size:0.78rem;">■ Open +P&L</span>&nbsp;&nbsp;'
+            '<span style="color:#FF4444;font-size:0.78rem;">■ Open -P&L</span>',
+            unsafe_allow_html=True,
+        )
+
+    # ── Positions Table ──────────────────────────────────────────────────────
+    pos_df = pd.DataFrame(still_open)
+    if not pos_df.empty:
+        for col in ["city", "station_icao", "date", "bucket", "side",
+                    "fill_price", "cost", "fill_size", "token_id"]:
+            if col not in pos_df.columns:
+                pos_df[col] = ""
+        pos_df["fill_price"] = pd.to_numeric(pos_df["fill_price"], errors="coerce").fillna(0.0)
+        pos_df["cost"]       = pd.to_numeric(pos_df["cost"],       errors="coerce").fillna(0.0)
+        pos_df["fill_size"]  = pd.to_numeric(pos_df["fill_size"],  errors="coerce").fillna(0.0)
+        pos_df["live_price"] = pos_df["token_id"].map(lambda t: live_prices.get(t))
+        pos_df["unreal_pnl"] = (
+            (pos_df["live_price"].fillna(pos_df["fill_price"]) - pos_df["fill_price"])
+            * pos_df["fill_size"]
+        ).round(2)
+        pos_df["_expired"] = (pos_df["date"] < today_str) & pos_df["live_price"].isna()
+        active_df  = pos_df[~pos_df["_expired"]].copy()
+
+        if not active_df.empty:
+            active_df["live_price_fmt"] = active_df["live_price"].apply(
+                lambda x: f"{x:.3f}" if pd.notna(x) else "—"
+            )
+            active_df["unreal_pnl_fmt"] = active_df["unreal_pnl"].apply(lambda x: f"${x:+.2f}")
+            active_df["to_win"] = (active_df["fill_size"] - active_df["cost"]).round(2)
+            active_df = active_df.sort_values(["date", "city", "bucket"], ascending=True)
+
+            show_cols = ["city", "date", "bucket", "side",
+                         "fill_price", "live_price_fmt", "unreal_pnl_fmt", "cost", "to_win"]
+            display_df = active_df[show_cols].rename(columns={
+                "city": "City", "date": "Date", "bucket": "Bucket", "side": "Side",
+                "fill_price": "Entry", "live_price_fmt": "Live Price",
+                "unreal_pnl_fmt": "Unreal. P&L", "cost": "Cost ($)", "to_win": "To Win ($)",
+            })
+
+            def _colour_unreal(val: str):
+                if str(val).startswith("$+"):
+                    return "color: #00FF88; font-weight:600"
+                elif str(val).startswith("$-"):
+                    return "color: #FF4444; font-weight:600"
+                return ""
+
+            styled = display_df.style.applymap(_colour_unreal, subset=["Unreal. P&L"])
+            st.dataframe(styled, use_container_width=True, hide_index=True)
+            n_priced = int(active_df["live_price"].notna().sum())
+            total_unreal_tbl = active_df["unreal_pnl"].sum()
+            st.caption(
+                f"Exposure: **${active_df['cost'].sum():.2f}** · "
+                f"Unrealized: **${total_unreal_tbl:+.2f}** ({n_priced}/{len(active_df)} priced) · "
+                f"To win if all ✅: **${active_df['to_win'].sum():.2f}** · prices {live_ts}"
+            )
+
+
 def _render_model_detail_tab(
     label: str,
     df: pd.DataFrame,
     note: str = "",
+    positions: list[dict] | None = None,
+    live_prices: dict[str, float] | None = None,
+    live_ts: str = "",
+    key_prefix: str = "strat",
 ) -> None:
     """Per-model detail view: KPI strip, cumulative P&L, waterfall, trade log."""
     m     = _strat_stats(df)
@@ -4264,6 +4534,17 @@ def _render_model_detail_tab(
 </div>""",
                 unsafe_allow_html=True,
             )
+
+    # ── Live Open Positions ───────────────────────────────────────────────────
+    if positions is not None and live_prices is not None:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        _render_live_positions_section(
+            positions=positions,
+            live_prices=live_prices,
+            live_ts=live_ts,
+            key_prefix=key_prefix,
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
 
     if df.empty:
         st.info(f"No resolved trades yet for **{label}**.")
