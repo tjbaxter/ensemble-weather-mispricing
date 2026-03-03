@@ -253,7 +253,7 @@
         "ukmo_global_deterministic_10km": 14.8,
         "ncep_aigfs025": 12.8
       },
-      "logged_at": "2026-03-03T15:23:46.863679+00:00"
+      "logged_at": "2026-03-03T15:54:47.062119+00:00"
     }
   },
   "Miami": {
@@ -358,14 +358,14 @@
       "preds": {
         "ncep_nbm_conus": 47.6,
         "gfs_graphcast025": 47.1,
-        "icon_seamless": 50.1,
+        "icon_seamless": 49.6,
         "kma_seamless": 54.7,
         "gem_seamless": 43.7,
         "kma_gdps": 54.7,
         "gem_hrdps_continental": 43.7,
         "ncep_aigfs025": 53.5
       },
-      "logged_at": "2026-03-03T15:24:53.976695+00:00"
+      "logged_at": "2026-03-03T15:55:54.029181+00:00"
     }
   },
   "Paris": {
