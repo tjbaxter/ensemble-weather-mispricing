@@ -3133,7 +3133,6 @@ def main() -> None:
     with tab_conv:
         _render_model_detail_tab(
             "CONVICTION", _strat_df("CONVICTION"),
-            note="Shadow only — signals scored and logged but not executed",
             positions=_conviction_positions, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="conv",
         )
@@ -3141,7 +3140,6 @@ def main() -> None:
     with tab_2a:
         _render_model_detail_tab(
             "2A Equal", _strat_df("TOP2_EQUAL"),
-            note="Shadow — always top-2 YES buckets, equal (MEDIUM) Kelly on both",
             positions=_shadow_2a, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="2a",
         )
@@ -3149,7 +3147,6 @@ def main() -> None:
     with tab_2b:
         _render_model_detail_tab(
             "2B Cond", _strat_df("TOP2_COND"),
-            note="Shadow — dual only when the model is genuinely split between two buckets",
             positions=_shadow_2b, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="2b",
         )
@@ -3157,7 +3154,6 @@ def main() -> None:
     with tab_2c:
         _render_model_detail_tab(
             "2C Prop", _strat_df("TOP2_PROP"),
-            note="Shadow — always top-2 but proportional sizing (MEDIUM top1, LOW top2)",
             positions=_shadow_2c, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="2c",
         )
@@ -4189,22 +4185,22 @@ def _render_overview_tab() -> None:
     _live_prices = fetch_live_position_prices(_all_tids) if _all_tids else {}
     _live_ts = datetime.now(UTC).strftime("%H:%M UTC")
 
-    MODELS: list[tuple[str, str, pd.DataFrame, bool, list[dict]]] = [
-        ("⚡ SINGLE",     "SINGLE",     _strat_slice("SINGLE"),     False, single_pos),
-        ("🪜 LADDER",     "LADDER",     _strat_slice("LADDER"),     False, ladder_pos),
-        ("🎯 CONVICTION", "CONVICTION", _strat_slice("CONVICTION"), True,  conviction_pos),
-        ("2A Equal",      "TOP2_EQUAL", _strat_slice("TOP2_EQUAL"), True,  shadow_2a),
-        ("2B Cond",       "TOP2_COND",  _strat_slice("TOP2_COND"),  True,  shadow_2b),
-        ("2C Prop",       "TOP2_PROP",  _strat_slice("TOP2_PROP"),  True,  shadow_2c),
+    MODELS: list[tuple[str, str, pd.DataFrame, list[dict]]] = [
+        ("⚡ SINGLE",     "SINGLE",     _strat_slice("SINGLE"),     single_pos),
+        ("🪜 LADDER",     "LADDER",     _strat_slice("LADDER"),     ladder_pos),
+        ("🎯 CONVICTION", "CONVICTION", _strat_slice("CONVICTION"), conviction_pos),
+        ("2A Equal",      "TOP2_EQUAL", _strat_slice("TOP2_EQUAL"), shadow_2a),
+        ("2B Cond",       "TOP2_COND",  _strat_slice("TOP2_COND"),  shadow_2b),
+        ("2C Prop",       "TOP2_PROP",  _strat_slice("TOP2_PROP"),  shadow_2c),
     ]
 
     all_stats = [
-        (label, key, _strat_stats(df), is_shadow, df, pos)
-        for label, key, df, is_shadow, pos in MODELS
+        (label, key, _strat_stats(df), df, pos)
+        for label, key, df, pos in MODELS
     ]
     # Rank by unrealized P&L when no resolved trades yet, else by settled P&L
     def _rank_key(x):
-        ls = _compute_live_stats(x[5], _live_prices)
+        ls = _compute_live_stats(x[4], _live_prices)
         return ls["unrealized_pnl"] + x[2]["pnl"]
     ranked = sorted(all_stats, key=_rank_key, reverse=True)
 
@@ -4222,11 +4218,10 @@ def _render_overview_tab() -> None:
             idx = row_start + i
             if idx >= len(ranked):
                 break
-            label, key, m, is_shadow, _, pos = ranked[idx]
+            label, key, m, _, pos = ranked[idx]
             ls     = _compute_live_stats(pos, _live_prices)
             upnl_c = GREEN if ls["unrealized_pnl"] >= 0 else RED
             pnl_c  = GREEN if m["pnl"] >= 0 else RED
-            badge  = " · shadow" if is_shadow else " · live"
             accent = _MODEL_COLORS.get(key, BLUE)
             border_color = "#1a4d2e" if ls["unrealized_pnl"] >= 0 else "#4d1a1a"
             with col:
@@ -4242,7 +4237,7 @@ def _render_overview_tab() -> None:
      border-radius:10px;padding:14px;margin-bottom:12px;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
     <span style="font-weight:700;color:#E6EDF3;font-size:0.92rem;">{label}</span>
-    <span style="font-size:0.72rem;color:#666;">{rank_emojis[idx]}{badge}</span>
+    <span style="font-size:0.72rem;color:#666;">{rank_emojis[idx]}</span>
   </div>
   <div style="font-size:1.9rem;font-weight:800;color:{upnl_c};line-height:1.1;">${ls['unrealized_pnl']:+.2f}</div>
   <div style="color:#aaa;font-size:0.75rem;margin-top:2px;">
@@ -4266,9 +4261,8 @@ def _render_overview_tab() -> None:
     any_data = False
     now_dt = datetime.now(UTC)
 
-    for label, key, m, is_shadow, df, pos in all_stats:
+    for label, key, m, df, pos in all_stats:
         color = _MODEL_COLORS.get(key, BLUE)
-        dash  = "dash" if is_shadow else "solid"
         ls    = _compute_live_stats(pos, _live_prices)
 
         if not df.empty:
@@ -4279,7 +4273,7 @@ def _render_overview_tab() -> None:
                 y=df_s["_cum"],
                 mode="lines+markers",
                 name=label,
-                line={"color": color, "width": 2, "dash": dash},
+                line={"color": color, "width": 2, "dash": "solid"},
                 marker={"size": 5},
                 hovertemplate=f"{label}<br>%{{x|%b %d}}<br>Settled cum: $%{{y:.2f}}<extra></extra>",
             ))
