@@ -305,12 +305,12 @@
         "dmi_seamless": 18.0,
         "ecmwf_ifs025": 16.2,
         "kma_seamless": 16.2,
-        "ukmo_uk_deterministic_2km": 16.7,
-        "ukmo_seamless": 16.7,
+        "ukmo_uk_deterministic_2km": 16.6,
+        "ukmo_seamless": 16.6,
         "ukmo_global_deterministic_10km": 15.4,
         "ncep_aigfs025": 16.0
       },
-      "logged_at": "2026-03-04T01:20:02.359916+00:00"
+      "logged_at": "2026-03-04T02:09:01.091007+00:00"
     }
   },
   "Miami": {
