@@ -161,6 +161,7 @@ class Portfolio:
                             fill_size=float(item["fill_size"]),
                             cost=float(item["cost"]),
                             timestamp=datetime.fromisoformat(str(item["timestamp"])),
+                            strategy=str(item.get("strategy", "")),
                         )
                     )
                 except (KeyError, TypeError, ValueError):
