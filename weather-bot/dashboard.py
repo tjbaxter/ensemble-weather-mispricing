@@ -3091,14 +3091,15 @@ def main() -> None:
     _shadow_2b        = load_shadow_positions("shadow_2b")
     _shadow_2c        = load_shadow_positions("shadow_2c")
 
-    # Filter main positions by strategy tag for per-tab views.
-    # Positions without a strategy tag default to LADDER (legacy format before tagging was added).
+    # Filter main positions by strategy tag.
+    # Legacy positions written before tagging was added have strategy="" or strategy="LADDER".
+    # They are attributed to LADDER (the original single strategy before 6-way split).
+    # SINGLE and CONVICTION only show positions explicitly tagged as such.
     def _pos_for_strategy(strat: str) -> list[dict]:
-        tagged = [p for p in _all_positions if p.get("strategy") == strat]
-        if tagged:
-            return tagged
-        # Fall back: if none are tagged, show all (gradual migration as bot logs new trades)
-        return _all_positions
+        if strat == "LADDER":
+            # Include explicitly tagged LADDER + legacy untagged positions (strategy="" or missing)
+            return [p for p in _all_positions if p.get("strategy", "") in ("LADDER", "")]
+        return [p for p in _all_positions if p.get("strategy") == strat]
 
     _single_positions     = _pos_for_strategy("SINGLE")
     _ladder_positions     = _pos_for_strategy("LADDER")
