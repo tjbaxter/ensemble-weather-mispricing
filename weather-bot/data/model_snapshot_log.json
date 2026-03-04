@@ -310,7 +310,7 @@
         "ukmo_global_deterministic_10km": 15.4,
         "ncep_aigfs025": 15.8
       },
-      "logged_at": "2026-03-04T06:32:05.852589+00:00"
+      "logged_at": "2026-03-04T07:03:04.781808+00:00"
     }
   },
   "Miami": {
@@ -435,7 +435,7 @@
         "gem_hrdps_continental": 40.8,
         "ncep_aigfs025": 44.5
       },
-      "logged_at": "2026-03-04T06:40:15.584828+00:00"
+      "logged_at": "2026-03-04T07:11:12.661325+00:00"
     }
   },
   "Paris": {
