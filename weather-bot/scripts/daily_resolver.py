@@ -68,9 +68,26 @@ RESOLVED_HEADER = [
 
 
 def _ensure_resolved_csv() -> None:
-    if not RESOLVED_CSV.exists():
-        with RESOLVED_CSV.open("w", newline="", encoding="utf-8") as f:
-            csv.writer(f).writerow(RESOLVED_HEADER)
+    """Create resolved.csv with the correct header if missing or header is stale.
+
+    Guards against old-format headers (written by a previous version of this
+    script) that would cause column misalignment and make the dashboard show 0
+    for all settled trades.
+    """
+    correct_header = ",".join(RESOLVED_HEADER)
+    if RESOLVED_CSV.exists():
+        with RESOLVED_CSV.open(encoding="utf-8") as f:
+            existing_header = f.readline().strip()
+        if existing_header == correct_header:
+            return  # file is fine, nothing to do
+        # Header is stale — rewrite it in-place, preserving data rows
+        print(f"  [resolver] Updating stale CSV header in {RESOLVED_CSV.name}")
+        lines = RESOLVED_CSV.read_text(encoding="utf-8").splitlines(keepends=True)
+        lines[0] = correct_header + "\n"
+        RESOLVED_CSV.write_text("".join(lines), encoding="utf-8")
+        return
+    with RESOLVED_CSV.open("w", newline="", encoding="utf-8") as f:
+        csv.writer(f).writerow(RESOLVED_HEADER)
 
 
 _SHADOW_STRATEGIES = {"CONVICTION", "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP"}
