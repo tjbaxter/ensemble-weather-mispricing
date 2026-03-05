@@ -17,6 +17,9 @@ git pull --rebase --autostash origin main 2>&1 | tail -3
 # Stage all data files that change during bot/cron runs
 git add \
   weather-bot/data/positions.json \
+  weather-bot/data/positions_shadow_2a.json \
+  weather-bot/data/positions_shadow_2b.json \
+  weather-bot/data/positions_shadow_2c.json \
   weather-bot/data/polymarket_cache.json \
   weather-bot/data/commercial_forecast_log.json \
   weather-bot/data/model_snapshot_log.json \
@@ -31,6 +34,9 @@ git add -f \
   weather-bot/logs/resolved.csv \
   weather-bot/logs/signals.csv \
   weather-bot/logs/trades.csv \
+  weather-bot/logs/shadow_2a/resolved.csv \
+  weather-bot/logs/shadow_2b/resolved.csv \
+  weather-bot/logs/shadow_2c/resolved.csv \
   2>/dev/null || true
 
 # Only commit if there are actual changes
