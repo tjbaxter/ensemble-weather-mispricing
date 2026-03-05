@@ -4755,7 +4755,7 @@ def _render_model_detail_tab(
         yaxis={"gridcolor": "#1f2937", "title": "Cumulative P&L ($)", "zeroline": False},
         height=260,
     )
-    st.plotly_chart(fig_cum, use_container_width=True)
+    st.plotly_chart(fig_cum, use_container_width=True, key=f"{key_prefix}_cum")
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Waterfall chart (one bar per trade) ──────────────────────────────────
@@ -4788,7 +4788,7 @@ def _render_model_detail_tab(
         height=210,
         bargap=0.15,
     )
-    st.plotly_chart(fig_wf, use_container_width=True)
+    st.plotly_chart(fig_wf, use_container_width=True, key=f"{key_prefix}_wf")
     st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Trade log ─────────────────────────────────────────────────────────────
