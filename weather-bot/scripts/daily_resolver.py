@@ -134,14 +134,19 @@ def _load_pending_trades() -> list[dict]:
             if not target_date or target_date >= today:
                 continue
 
-            strategy = p.get("strategy", "PAPER")
-            # Normalise strategy tag → one of LADDER | METAR | WS_PRICE | PAPER
+            strategy = p.get("strategy", "") or ""
+            # Normalise strategy tag → one of LADDER | SINGLE | METAR | WS_PRICE | PAPER
             if strategy in ("LADDER", "CONVICTION", "SINGLE"):
                 pass
             elif strategy == "WS_PRICE_MONITOR":
                 strategy = "WS_PRICE"
             elif strategy in ("METAR_SCANNER", "METAR"):
                 strategy = "METAR"
+            elif strategy == "":
+                # Positions written before strategy tagging was added belong to
+                # the live strategy that was running at the time. SINGLE has been
+                # the only live strategy since ENABLE_LADDER_STRATEGY=False was set.
+                strategy = "SINGLE"
             else:
                 strategy = "PAPER"
 
