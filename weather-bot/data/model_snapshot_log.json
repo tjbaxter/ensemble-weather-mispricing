@@ -359,7 +359,7 @@
         "meteofrance_seamless": 12.1,
         "meteofrance_arome_france_hd": 12.1,
         "icon_seamless": 16.2,
-        "dmi_seamless": 13.5,
+        "dmi_seamless": 12.8,
         "ecmwf_ifs025": 14.6,
         "kma_seamless": 12.0,
         "ukmo_uk_deterministic_2km": 14.7,
@@ -367,7 +367,7 @@
         "ukmo_global_deterministic_10km": 12.1,
         "ncep_aigfs025": 12.2
       },
-      "logged_at": "2026-03-05T03:04:55.714037+00:00"
+      "logged_at": "2026-03-05T03:35:46.579531+00:00"
     }
   },
   "Miami": {
