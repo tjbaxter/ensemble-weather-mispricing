@@ -2689,39 +2689,54 @@ def fetch_live_position_prices(token_ids: tuple) -> dict[str, float]:
         except Exception:
             pass
 
-    # ── Step 2: Gamma API fallback for tokens still missing ──────────────────
+    # ── Step 2: Gamma API fallback — one token at a time (batch causes 422) ──
     missing = [tid for tid in token_ids if tid not in prices]
-    if missing:
-        gamma_batch = 50   # gamma API is less strict but keep batches small
-        for i in range(0, len(missing), gamma_batch):
-            batch = missing[i : i + gamma_batch]
-            try:
-                r = requests.get(
-                    "https://gamma-api.polymarket.com/markets",
-                    params={"clob_token_ids": ",".join(batch)},
-                    timeout=15,
-                )
-                if not r.ok:
-                    continue
-                markets = r.json()
-                if not isinstance(markets, list):
-                    continue
-                for mkt in markets:
-                    # outcomePrices is ["yes_price", "no_price"] as strings
-                    outcome_prices = mkt.get("outcomePrices")
-                    clob_ids = mkt.get("clobTokenIds")
-                    if not outcome_prices or not clob_ids:
-                        continue
-                    try:
-                        clob_list = json.loads(clob_ids) if isinstance(clob_ids, str) else clob_ids
-                        price_list = json.loads(outcome_prices) if isinstance(outcome_prices, str) else outcome_prices
-                        for tid, p in zip(clob_list, price_list):
-                            if tid in missing and tid not in prices:
-                                prices[tid] = float(p)
-                    except (ValueError, TypeError, json.JSONDecodeError):
-                        pass
-            except Exception:
-                pass
+    for tid in missing:
+        try:
+            r = requests.get(
+                "https://gamma-api.polymarket.com/markets",
+                params={"clob_token_ids": tid},
+                timeout=10,
+            )
+            if not r.ok:
+                continue
+            markets = r.json()
+            if not isinstance(markets, list) or not markets:
+                continue
+            mkt = markets[0]
+            outcome_prices = mkt.get("outcomePrices")
+            clob_ids = mkt.get("clobTokenIds")
+            if not outcome_prices or not clob_ids:
+                continue
+            clob_list  = json.loads(clob_ids)  if isinstance(clob_ids,  str) else clob_ids
+            price_list = json.loads(outcome_prices) if isinstance(outcome_prices, str) else outcome_prices
+            for ctid, p in zip(clob_list, price_list):
+                if ctid == tid:
+                    prices[tid] = float(p)
+                    break
+        except Exception:
+            pass
+
+    # ── Step 3: last-trade-price fallback for tokens still missing ────────────
+    # Works even when there is no active orderbook (e.g. near-resolved markets).
+    still_missing = [tid for tid in token_ids if tid not in prices]
+    for tid in still_missing:
+        try:
+            r = requests.get(
+                "https://clob.polymarket.com/last-trade-price",
+                params={"token_id": tid},
+                timeout=10,
+            )
+            if r.ok:
+                data = r.json()
+                p = data.get("price")
+                if p is not None:
+                    val = float(p)
+                    # 0.5 with no side means "no trades ever" — skip as uninformative
+                    if not (val == 0.5 and data.get("side", "") == ""):
+                        prices[tid] = val
+        except Exception:
+            pass
 
     return prices
 
