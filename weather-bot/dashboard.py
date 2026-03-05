@@ -3140,21 +3140,21 @@ def main() -> None:
 
     with tab_2a:
         _render_model_detail_tab(
-            "2A Equal", load_shadow_resolved_df("shadow_2a"),
+            "2A Equal", _strat_df("TOP2_EQUAL"),
             positions=_shadow_2a, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="2a",
         )
 
     with tab_2b:
         _render_model_detail_tab(
-            "2B Cond", load_shadow_resolved_df("shadow_2b"),
+            "2B Cond", _strat_df("TOP2_COND"),
             positions=_shadow_2b, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="2b",
         )
 
     with tab_2c:
         _render_model_detail_tab(
-            "2C Prop", load_shadow_resolved_df("shadow_2c"),
+            "2C Prop", _strat_df("TOP2_PROP"),
             positions=_shadow_2c, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="2c",
         )
@@ -4190,9 +4190,9 @@ def _render_overview_tab() -> None:
         ("⚡ SINGLE",     "SINGLE",     _strat_slice("SINGLE"),            single_pos),
         ("🪜 LADDER",     "LADDER",     _strat_slice("LADDER"),            ladder_pos),
         ("🎯 CONVICTION", "CONVICTION", _strat_slice("CONVICTION"),        conviction_pos),
-        ("2A Equal",      "TOP2_EQUAL", load_shadow_resolved_df("shadow_2a"), shadow_2a),
-        ("2B Cond",       "TOP2_COND",  load_shadow_resolved_df("shadow_2b"), shadow_2b),
-        ("2C Prop",       "TOP2_PROP",  load_shadow_resolved_df("shadow_2c"), shadow_2c),
+        ("2A Equal",      "TOP2_EQUAL", _strat_slice("TOP2_EQUAL"), shadow_2a),
+        ("2B Cond",       "TOP2_COND",  _strat_slice("TOP2_COND"),  shadow_2b),
+        ("2C Prop",       "TOP2_PROP",  _strat_slice("TOP2_PROP"),  shadow_2c),
     ]
 
     all_stats = [
