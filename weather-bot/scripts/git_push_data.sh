@@ -20,6 +20,8 @@ git add \
   weather-bot/data/positions_shadow_2a.json \
   weather-bot/data/positions_shadow_2b.json \
   weather-bot/data/positions_shadow_2c.json \
+  weather-bot/data/positions_shadow_purdey.json \
+  weather-bot/data/positions_shadow_cavendish.json \
   weather-bot/data/polymarket_cache.json \
   weather-bot/data/commercial_forecast_log.json \
   weather-bot/data/model_snapshot_log.json \
@@ -37,6 +39,8 @@ git add -f \
   weather-bot/logs/shadow_2a/resolved.csv \
   weather-bot/logs/shadow_2b/resolved.csv \
   weather-bot/logs/shadow_2c/resolved.csv \
+  weather-bot/logs/shadow_purdey/resolved.csv \
+  weather-bot/logs/shadow_cavendish/resolved.csv \
   2>/dev/null || true
 
 # Only commit if there are actual changes

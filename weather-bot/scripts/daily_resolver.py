@@ -90,7 +90,7 @@ def _ensure_resolved_csv() -> None:
         csv.writer(f).writerow(RESOLVED_HEADER)
 
 
-_SHADOW_STRATEGIES = {"CONVICTION", "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP"}
+_SHADOW_STRATEGIES = {"CONVICTION", "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP", "PURDEY_MK1", "CAVENDISH_MK1"}
 
 
 def _load_resolved_keys() -> set[tuple[str, str, str, str, str]]:
@@ -225,9 +225,11 @@ def _load_pending_trades() -> list[dict]:
     # These are independent portfolios; each gets its own strategy tag in resolved.csv
     # so the dashboard can track them separately.
     _SHADOW_FILES: list[tuple[Path, str]] = [
-        (ROOT / "data" / "positions_shadow_2a.json", "TOP2_EQUAL"),
-        (ROOT / "data" / "positions_shadow_2b.json", "TOP2_COND"),
-        (ROOT / "data" / "positions_shadow_2c.json", "TOP2_PROP"),
+        (ROOT / "data" / "positions_shadow_2a.json",        "TOP2_EQUAL"),
+        (ROOT / "data" / "positions_shadow_2b.json",        "TOP2_COND"),
+        (ROOT / "data" / "positions_shadow_2c.json",        "TOP2_PROP"),
+        (ROOT / "data" / "positions_shadow_purdey.json",    "PURDEY_MK1"),
+        (ROOT / "data" / "positions_shadow_cavendish.json", "CAVENDISH_MK1"),
     ]
     for shadow_path, shadow_strategy in _SHADOW_FILES:
         if not shadow_path.exists():
@@ -508,10 +510,12 @@ def print_summary(stats: dict) -> None:
 
         # ── Shadow model comparison ────────────────────────────────────────────
         shadow_labels = {
-            "CONVICTION": "CONVICTION (single best)",
-            "TOP2_EQUAL": "TOP2_EQUAL  (2A always-2 equal)",
-            "TOP2_COND":  "TOP2_COND   (2B split-only)",
-            "TOP2_PROP":  "TOP2_PROP   (2C proportional)",
+            "CONVICTION":    "CONVICTION   (single best)",
+            "TOP2_EQUAL":    "TOP2_EQUAL   (2A always-2 equal)",
+            "TOP2_COND":     "TOP2_COND    (2B split-only)",
+            "TOP2_PROP":     "TOP2_PROP    (2C proportional)",
+            "PURDEY_MK1":    "PURDEY_MK1   (top-2, cap 2, 60/40)",
+            "CAVENDISH_MK1": "CAVENDISH_MK1 (flank-3, cap 3, 50/25/25)",
         }
 
         def _strat_summary(rows: list[dict], label: str) -> None:

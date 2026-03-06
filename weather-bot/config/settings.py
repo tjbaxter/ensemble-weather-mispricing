@@ -180,6 +180,14 @@ ENABLE_TOP2_SHADOWS = True
 TOP2_SHADOW_MIN_PROB = 0.10         # second bucket must have ≥ 10% model probability to qualify
 TOP2_SHADOW_SPLIT_THRESHOLD = 0.65  # 2B: second/first ratio must be ≥ this to count as "split"
 
+# ── PURDEY_MK1 / CAVENDISH_MK1 shadow models ───────────────────────────────
+# Two new hard-capped shadow strategies.
+#   PURDEY_MK1    — strict top-2 by model probability, 60/40 split, NEVER 3+
+#   CAVENDISH_MK1 — peak bucket + temperature flanks (one below, one above),
+#                   50/25/25 split, NEVER 4+
+# Both reuse ENABLE_TOP2_SHADOWS as their on/off toggle.
+ENABLE_PURDEY_CAVENDISH = True
+
 # Price scanner (Strategy 3) — continuous price monitoring between model runs
 PRICE_SCAN_ENABLED        = True
 PRICE_SCAN_INTERVAL       = 300      # seconds between price polls (5 min)

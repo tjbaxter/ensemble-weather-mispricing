@@ -34,6 +34,7 @@ from monitoring.dashboard import render_dashboard
 from monitoring.logger import BotLogger
 from strategy.signals import (
     generate_signals,
+    generate_purdey_cavendish_signals,
     generate_top2_shadow_signals,
     summarize_top_missed_edges,
 )
@@ -49,9 +50,11 @@ class ShadowTrader:
     """
 
     _SLUGS: dict[str, str] = {
-        "TOP2_EQUAL": "shadow_2a",
-        "TOP2_COND":  "shadow_2b",
-        "TOP2_PROP":  "shadow_2c",
+        "TOP2_EQUAL":    "shadow_2a",
+        "TOP2_COND":     "shadow_2b",
+        "TOP2_PROP":     "shadow_2c",
+        "PURDEY_MK1":    "shadow_purdey",
+        "CAVENDISH_MK1": "shadow_cavendish",
     }
 
     def __init__(self, variant: str) -> None:
@@ -67,9 +70,14 @@ class ShadowTrader:
         self.order_manager = OrderManager(live_trading=False)
         self._log = logging.getLogger(f"weather-bot.{slug}")
 
+    _PURDEY_CAVENDISH_VARIANTS = {"PURDEY_MK1", "CAVENDISH_MK1"}
+
     def run_once(self, markets: list[dict], forecasts: dict, bankroll: float) -> None:
         """Execute one scan using shared market + forecast data."""
-        all_shadows = generate_top2_shadow_signals(markets, forecasts, bankroll)
+        if self.variant in self._PURDEY_CAVENDISH_VARIANTS:
+            all_shadows = generate_purdey_cavendish_signals(markets, forecasts, bankroll)
+        else:
+            all_shadows = generate_top2_shadow_signals(markets, forecasts, bankroll)
         signals = [s for s in all_shadows if s.strategy == self.variant]
 
         deployed = 0.0
@@ -151,6 +159,8 @@ class PaperTrader:
             ShadowTrader("TOP2_EQUAL"),
             ShadowTrader("TOP2_COND"),
             ShadowTrader("TOP2_PROP"),
+            ShadowTrader("PURDEY_MK1"),
+            ShadowTrader("CAVENDISH_MK1"),
         ]
 
     async def close(self) -> None:
