@@ -116,5 +116,23 @@
     "ev_at_entry": 0.3956,
     "spread_colour": "RED",
     "model_values_json": "{\"ncep_nbm_conus\":61.2,\"icon_seamless\":65.4,\"gfs_graphcast025\":65.0,\"kma_seamless\":67.7,\"gem_seamless\":63.1}"
+  },
+  {
+    "market_id": "0x7ebf23b6153ac0058be991a8a81247f6c50a0b0ad64856cb41b3f62eb46afb17",
+    "token_id": "48218719866344333828176922080851153700950345473624072561022557083727998770936",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-08",
+    "bucket": "78-79",
+    "fill_price": 0.09,
+    "fill_size": 77.2222,
+    "cost": 6.95,
+    "timestamp": "2026-03-06T16:07:53.508256+00:00",
+    "strategy": "WS_PRICE_MONITOR",
+    "model_prob": 0.1912,
+    "ev_at_entry": 0.1012,
+    "spread_colour": "GREEN",
+    "model_values_json": "{\"ncep_nbm_conus\":80.7,\"gfs_seamless\":82.0,\"ecmwf_ifs025\":80.1,\"icon_seamless\":82.8}"
   }
 ]
