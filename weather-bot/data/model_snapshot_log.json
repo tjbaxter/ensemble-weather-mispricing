@@ -405,11 +405,11 @@
     },
     "2026-03-07": {
       "preds": {
-        "meteofrance_arome_france": 9.4,
-        "meteofrance_seamless": 9.5,
-        "meteofrance_arome_france_hd": 9.5,
+        "meteofrance_arome_france": 9.1,
+        "meteofrance_seamless": 9.2,
+        "meteofrance_arome_france_hd": 9.2,
         "icon_seamless": 10.9,
-        "dmi_seamless": 10.2,
+        "dmi_seamless": 10.1,
         "ecmwf_ifs025": 11.4,
         "kma_seamless": 10.2,
         "ukmo_uk_deterministic_2km": 12.2,
@@ -417,7 +417,7 @@
         "ukmo_global_deterministic_10km": 10.5,
         "ncep_aigfs025": 9.1
       },
-      "logged_at": "2026-03-06T05:38:02.436968+00:00"
+      "logged_at": "2026-03-06T06:23:39.680987+00:00"
     }
   },
   "Miami": {
