@@ -415,9 +415,9 @@
         "ukmo_uk_deterministic_2km": 11.1,
         "ukmo_seamless": 11.1,
         "ukmo_global_deterministic_10km": 9.5,
-        "ncep_aigfs025": 9.1
+        "ncep_aigfs025": 9.5
       },
-      "logged_at": "2026-03-06T09:53:49.696177+00:00"
+      "logged_at": "2026-03-06T10:24:45.949782+00:00"
     }
   },
   "Miami": {
