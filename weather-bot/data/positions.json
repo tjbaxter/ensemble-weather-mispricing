@@ -1,1 +1,66 @@
-[]
+[
+  {
+    "market_id": "0x777daa6448f458a3b43b8957ce8efa1c0dad45a5c8e78a62941fbe12fa3d48f2",
+    "token_id": "40671442509449854238746225632851989017494502743615899853214845393121239932421",
+    "side": "BUY_YES",
+    "city": "Wellington",
+    "station_icao": "NZWN",
+    "date": "2026-03-07",
+    "bucket": "23+",
+    "fill_price": 0.06000000000000001,
+    "fill_size": 416.6666666666666,
+    "cost": 25.0,
+    "timestamp": "2026-03-06T13:25:08.742808+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0x0bfa3e26dcc4c25862d0a31fb7a36f4b3d1d2391d63279cfb7a4bc6b69ffaae4",
+    "token_id": "114031985864105624150849798849383775608867249155678806490694377069688612671959",
+    "side": "BUY_YES",
+    "city": "Seoul",
+    "station_icao": "RKSI",
+    "date": "2026-03-08",
+    "bucket": "8+",
+    "fill_price": 0.09,
+    "fill_size": 277.77777777777777,
+    "cost": 25.0,
+    "timestamp": "2026-03-06T13:25:08.943670+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0xcaf3eba70a1e1d63e27e13e456c3b0e5f8708e60baa654bd92c01f091a8f9ab9",
+    "token_id": "102580367421462470387011151336036810842228194916564698990241850430904194501859",
+    "side": "BUY_YES",
+    "city": "Ankara",
+    "station_icao": "LTAC",
+    "date": "2026-03-07",
+    "bucket": "9+",
+    "fill_price": 0.15,
+    "fill_size": 166.6667,
+    "cost": 25.0,
+    "timestamp": "2026-03-06T13:26:20.465175+00:00",
+    "strategy": "WS_PRICE_MONITOR",
+    "model_prob": 0.55,
+    "ev_at_entry": 0.4,
+    "spread_colour": "RED",
+    "model_values_json": "{\"icon_global\":6.6,\"meteofrance_arpege_world\":6.7,\"jma_seamless\":4.6,\"icon_seamless\":6.7,\"ecmwf_ifs025\":6.4,\"gfs_graphcast025\":5.8}"
+  },
+  {
+    "market_id": "0x53916f32f68820defa9dd2f88e6bc0caeb7cdb0e300e7ad4dac7576a1c9166a2",
+    "token_id": "59811765301803067284116160147859558861411665594683024059289994131994139142743",
+    "side": "BUY_YES",
+    "city": "Sao Paulo",
+    "station_icao": "SBGR",
+    "date": "2026-03-08",
+    "bucket": "32+",
+    "fill_price": 0.08,
+    "fill_size": 312.5,
+    "cost": 25.0,
+    "timestamp": "2026-03-06T13:27:54.199946+00:00",
+    "strategy": "WS_PRICE_MONITOR",
+    "model_prob": 0.4576,
+    "ev_at_entry": 0.3776,
+    "spread_colour": "RED",
+    "model_values_json": "{\"ecmwf_ifs025\":28.2,\"gem_global\":28.5,\"icon_seamless\":29.0,\"gfs_seamless\":30.3}"
+  }
+]
