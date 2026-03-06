@@ -39,11 +39,7 @@
     "fill_size": 166.6667,
     "cost": 25.0,
     "timestamp": "2026-03-06T13:26:20.465175+00:00",
-    "strategy": "WS_PRICE_MONITOR",
-    "model_prob": 0.55,
-    "ev_at_entry": 0.4,
-    "spread_colour": "RED",
-    "model_values_json": "{\"icon_global\":6.6,\"meteofrance_arpege_world\":6.7,\"jma_seamless\":4.6,\"icon_seamless\":6.7,\"ecmwf_ifs025\":6.4,\"gfs_graphcast025\":5.8}"
+    "strategy": "WS_PRICE_MONITOR"
   },
   {
     "market_id": "0x53916f32f68820defa9dd2f88e6bc0caeb7cdb0e300e7ad4dac7576a1c9166a2",
@@ -57,11 +53,7 @@
     "fill_size": 312.5,
     "cost": 25.0,
     "timestamp": "2026-03-06T13:27:54.199946+00:00",
-    "strategy": "WS_PRICE_MONITOR",
-    "model_prob": 0.4576,
-    "ev_at_entry": 0.3776,
-    "spread_colour": "RED",
-    "model_values_json": "{\"ecmwf_ifs025\":28.2,\"gem_global\":28.5,\"icon_seamless\":29.0,\"gfs_seamless\":30.3}"
+    "strategy": "WS_PRICE_MONITOR"
   },
   {
     "market_id": "0x45472372fbbeb40bf4d467f20ccce68d626d6a2939d7c5ed5356901d86e66c9b",
@@ -75,11 +67,7 @@
     "fill_size": 69.4444,
     "cost": 25.0,
     "timestamp": "2026-03-06T13:42:51.959487+00:00",
-    "strategy": "WS_PRICE_MONITOR",
-    "model_prob": 0.62,
-    "ev_at_entry": 0.26,
-    "spread_colour": "GREEN",
-    "model_values_json": "{\"icon_seamless\":51.8,\"gem_seamless\":51.0,\"ncep_nbm_conus\":53.4}"
+    "strategy": "WS_PRICE_MONITOR"
   },
   {
     "market_id": "0xb49975ffb20c52b4f2ffb5f90eab20968e70d3708061b1aca790938f2c30e693",
@@ -93,11 +81,7 @@
     "fill_size": 83.3333,
     "cost": 5.0,
     "timestamp": "2026-03-06T15:19:53.197641+00:00",
-    "strategy": "WS_PRICE_MONITOR",
-    "model_prob": 0.1148,
-    "ev_at_entry": 0.0548,
-    "spread_colour": "RED",
-    "model_values_json": "{\"ncep_nbm_conus\":80.4,\"gfs_seamless\":81.3,\"ecmwf_ifs025\":79.5,\"icon_seamless\":83.1}"
+    "strategy": "WS_PRICE_MONITOR"
   },
   {
     "market_id": "0xb1af91177a5519f3caeacd84146a0e7c7b17b01330866a138d868f1b92e7ac6a",
@@ -111,11 +95,7 @@
     "fill_size": 403.2258,
     "cost": 25.0,
     "timestamp": "2026-03-06T15:44:53.257134+00:00",
-    "strategy": "WS_PRICE_MONITOR",
-    "model_prob": 0.4576,
-    "ev_at_entry": 0.3956,
-    "spread_colour": "RED",
-    "model_values_json": "{\"ncep_nbm_conus\":61.2,\"icon_seamless\":65.4,\"gfs_graphcast025\":65.0,\"kma_seamless\":67.7,\"gem_seamless\":63.1}"
+    "strategy": "WS_PRICE_MONITOR"
   },
   {
     "market_id": "0x7ebf23b6153ac0058be991a8a81247f6c50a0b0ad64856cb41b3f62eb46afb17",
@@ -129,11 +109,7 @@
     "fill_size": 77.2222,
     "cost": 6.95,
     "timestamp": "2026-03-06T16:07:53.508256+00:00",
-    "strategy": "WS_PRICE_MONITOR",
-    "model_prob": 0.1912,
-    "ev_at_entry": 0.1012,
-    "spread_colour": "GREEN",
-    "model_values_json": "{\"ncep_nbm_conus\":80.7,\"gfs_seamless\":82.0,\"ecmwf_ifs025\":80.1,\"icon_seamless\":82.8}"
+    "strategy": "WS_PRICE_MONITOR"
   },
   {
     "market_id": "0x7acead89f7c24ff70b103b8a77be259aea3c6438deea3c56411db338cf1e762d",
@@ -147,10 +123,48 @@
     "fill_size": 92.5926,
     "cost": 25.0,
     "timestamp": "2026-03-06T17:23:47.738865+00:00",
-    "strategy": "WS_PRICE_MONITOR",
-    "model_prob": 0.58,
-    "ev_at_entry": 0.31,
-    "spread_colour": "GREEN",
-    "model_values_json": "{\"ncep_nbm_conus\":79.6,\"gfs_seamless\":80.6,\"ecmwf_ifs025\":79.3,\"icon_seamless\":77.8}"
+    "strategy": "WS_PRICE_MONITOR"
+  },
+  {
+    "market_id": "0x1eb1e5611546d16dfd707f218da18c1d4d60d99172577ee32353553647890f19",
+    "token_id": "109308489161206211237769706957405159189224703637868461657111501664417617879405",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-07",
+    "bucket": "80-81",
+    "fill_price": 0.245,
+    "fill_size": 57.102040816326536,
+    "cost": 13.99,
+    "timestamp": "2026-03-06T19:01:34.763114+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0x27b37525fb81d2d0e7fc5b19a2b53ab91b5cfa35aff6b66b9791c996d7c744b0",
+    "token_id": "8454240863113324612983873691069917807416907844330165524351329815658474864595",
+    "side": "BUY_NO",
+    "city": "Atlanta",
+    "station_icao": "KATL",
+    "date": "2026-03-08",
+    "bucket": "74+",
+    "fill_price": 0.635,
+    "fill_size": 19.5748031496063,
+    "cost": 12.430000000000001,
+    "timestamp": "2026-03-06T19:01:34.765252+00:00",
+    "strategy": "SINGLE"
+  },
+  {
+    "market_id": "0xc894843caff2d64243a5eb3fd84cd6fd6b0c188e330af913a7766f5dffed910d",
+    "token_id": "63090292825464328255623188435665427618303195602423025409748515942230320388244",
+    "side": "BUY_NO",
+    "city": "Seattle",
+    "station_icao": "KSEA",
+    "date": "2026-03-07",
+    "bucket": "54-55",
+    "fill_price": 0.64,
+    "fill_size": 32.96875,
+    "cost": 21.1,
+    "timestamp": "2026-03-06T19:01:34.767635+00:00",
+    "strategy": "SINGLE"
   }
 ]
