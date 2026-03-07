@@ -462,19 +462,19 @@
     },
     "2026-03-08": {
       "preds": {
-        "meteofrance_arome_france": 10.3,
-        "meteofrance_seamless": 10.3,
-        "meteofrance_arome_france_hd": 10.3,
-        "icon_seamless": 11.1,
-        "dmi_seamless": 11.8,
-        "ecmwf_ifs025": 10.8,
-        "kma_seamless": 10.5,
-        "ukmo_uk_deterministic_2km": 12.6,
-        "ukmo_seamless": 12.6,
-        "ukmo_global_deterministic_10km": 9.7,
-        "ncep_aigfs025": 11.0
+        "meteofrance_arome_france": 10.4,
+        "meteofrance_seamless": 10.5,
+        "meteofrance_arome_france_hd": 10.5,
+        "icon_seamless": 10.5,
+        "dmi_seamless": 11.1,
+        "ecmwf_ifs025": 12.1,
+        "kma_seamless": 10.9,
+        "ukmo_uk_deterministic_2km": 12.7,
+        "ukmo_seamless": 12.7,
+        "ukmo_global_deterministic_10km": 10.6,
+        "ncep_aigfs025": 11.5
       },
-      "logged_at": "2026-03-07T08:23:00.532462+00:00"
+      "logged_at": "2026-03-07T14:57:48.337498+00:00"
     }
   },
   "Miami": {
