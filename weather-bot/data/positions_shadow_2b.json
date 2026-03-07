@@ -1482,5 +1482,19 @@
     "cost": 5.0,
     "timestamp": "2026-03-07T18:06:56.354082+00:00",
     "strategy": "TOP2_COND"
+  },
+  {
+    "market_id": "0x2e01cfa7fb7f8a4655b2495cf40f7274af04020a436157490790fdec26eeceb4",
+    "token_id": "102325908551772610796158370734637376597175782932037109665896429596081615434539",
+    "side": "BUY_YES",
+    "city": "Seattle",
+    "station_icao": "KSEA",
+    "date": "2026-03-09",
+    "bucket": "42-43",
+    "fill_price": 0.08,
+    "fill_size": 62.5,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T19:27:31.858083+00:00",
+    "strategy": "TOP2_COND"
   }
 ]
