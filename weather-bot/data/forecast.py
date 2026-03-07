@@ -85,7 +85,7 @@ def sigma_for_station(station: dict[str, Any], lead_hours: float) -> float:
 class StationForecaster:
     def __init__(self, met_office_api_key: str | None = None) -> None:
         self.met_office_api_key = met_office_api_key
-        self.http = httpx.AsyncClient(timeout=20.0, headers={"User-Agent": "WeatherBot/1.0 (contact@example.com)"})
+        self.http = httpx.AsyncClient(timeout=10.0, headers={"User-Agent": "WeatherBot/1.0 (contact@example.com)"})
         self._nws_cache: dict[tuple[str, int, int], tuple[float, list[dict[str, Any]]]] = {}
         self.ensemble = EnsembleForecastClient()
 

@@ -130,6 +130,7 @@ async def main() -> None:
     parser.add_argument("--diagnostic", action="store_true", help="Run startup and discovery diagnostics then exit.")
     parser.add_argument("--live-once", action="store_true", help="Run one live trading pass and exit (for cron).")
     parser.add_argument("--paper-once", action="store_true", help="Run one paper trading scan across all strategies and exit.")
+    parser.add_argument("--force-shadows", action="store_true", help="Immediately execute shadow strategies using cached data and exit.")
     args = parser.parse_args()
 
     load_dotenv()
@@ -159,6 +160,22 @@ async def main() -> None:
     if args.paper_once:
         print(f"Running single paper scan. Bankroll: ${bankroll}")
         await run_paper_once(bankroll)
+        return
+
+    if args.force_shadows:
+        print(f"Force-executing shadow strategies using cached data. Bankroll: ${bankroll}")
+        trader = PaperTrader()
+        try:
+            markets = await trader.market_client.discover_weather_markets()
+            markets = await trader.market_client.hydrate_prices(markets)
+            trader._cached_markets = markets
+            print(f"  Discovered {len(markets)} markets.")
+            await trader._refresh_forecasts(markets)
+            print(f"  Forecasts loaded for {sum(len(v) for v in trader.forecasts.values())} station-dates.")
+            trader.run_shadows_now()
+            print("Force shadow run complete.")
+        finally:
+            await trader.close()
         return
 
     if live or args.live_once:

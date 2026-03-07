@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass, asdict
 from datetime import UTC, date as _date, datetime
 
@@ -1009,6 +1010,10 @@ def generate_purdey_cavendish_signals(
                         "CAVENDISH_MK1", _base_sz * 0.25,
                     ))
 
+    _log = logging.getLogger("weather-bot.signals")
+    n_purdey = sum(1 for s in signals if s.strategy == "PURDEY_MK1")
+    n_cavendish = sum(1 for s in signals if s.strategy == "CAVENDISH_MK1")
+    _log.info(f"PURDEY_MK1 generated {n_purdey} signals | CAVENDISH_MK1 generated {n_cavendish} signals")
     return signals
 
 

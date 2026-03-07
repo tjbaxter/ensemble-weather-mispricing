@@ -155,6 +155,9 @@ class PaperTrader:
         self.forecasts: dict[str, dict[str, dict]] = {}
         self.intraday_observed_highs: dict[str, dict[str, float]] = {}
         self.last_forecast_refresh = 0.0
+        # Latest hydrated markets — updated after every successful discovery run.
+        # Shared with _run_shadows_from_cache so shadows can execute independently.
+        self._cached_markets: list[dict] = []
         self.shadows = [
             ShadowTrader("TOP2_EQUAL"),
             ShadowTrader("TOP2_COND"),
@@ -201,6 +204,9 @@ class PaperTrader:
             )
             return
 
+        # Store latest markets so the decoupled shadow loop can use them.
+        self._cached_markets = markets
+
         await self._log_accuweather_snapshots(markets)
 
         now_ts = datetime.now(UTC).timestamp()
@@ -215,14 +221,7 @@ class PaperTrader:
         missed_summary = summarize_top_missed_edges(markets, self.forecasts, self.portfolio.current_cash)
 
         # Cache signals so the price scanner can re-check prices between model runs.
-        # Writes ALL signals (including ones not executed due to position limits/exposure)
-        # so the price scanner catches dips on any bucket the model likes.
         _write_signal_cache(signals, markets)
-
-        # Shadow books 2A / 2B / 2C — fully independent paper portfolios.
-        # Each runs its own execution loop against the same market + forecast data.
-        for shadow in self.shadows:
-            shadow.run_once(markets, self.forecasts, self.portfolio.current_cash)
 
         deployed = 0.0
         trades_executed = 0
@@ -406,6 +405,38 @@ class PaperTrader:
             forecast_bundle["observed_high_display"] = observed_high
             forecast_bundle["intraday_adjusted"] = True
 
+    def run_shadows_now(self) -> None:
+        """Execute all shadow traders synchronously using currently cached data.
+        Safe to call at any time — skips silently if no market data cached yet."""
+        if not self._cached_markets or not self.forecasts:
+            self.logger.info("SHADOW_SKIP no cached markets or forecasts yet")
+            return
+        bankroll = self.portfolio.current_cash
+        for shadow in self.shadows:
+            try:
+                shadow.run_once(self._cached_markets, self.forecasts, bankroll)
+            except Exception as exc:
+                self.logger.warning(f"Shadow {shadow.variant} failed: {exc}")
+
+    async def _run_shadows_from_cache(self) -> None:
+        """Independent shadow execution loop — runs every 5 min using cached data.
+
+        Decoupled from the main forecast scan so shadows execute even when the
+        scan is in the middle of a slow forecast refresh.  On first startup,
+        waits up to 10 min for the initial discovery to populate the cache.
+        """
+        # Wait for initial discovery (max 10 min, check every 15s)
+        for _ in range(40):
+            if self._cached_markets and self.forecasts:
+                break
+            await asyncio.sleep(15)
+        else:
+            self.logger.warning("SHADOW_LOOP no data after 10 min — will keep retrying")
+
+        while True:
+            self.run_shadows_now()
+            await asyncio.sleep(300)  # re-run every 5 min
+
     async def _trigger_run(self, label: str) -> None:
         """Force a forecast refresh and full scan at a model-run boundary."""
         self.last_forecast_refresh = 0.0  # bypass cache — always pull fresh model data
@@ -422,6 +453,7 @@ class PaperTrader:
         Between windows the bot sleeps entirely — no wasted API quota.
         """
         self.logger.info("Starting paper trader — event-driven scheduler active.")
+        asyncio.get_event_loop().create_task(self._run_shadows_from_cache())
         try:
             # Immediate startup scan so the bot is live right away
             await self._trigger_run("STARTUP")

@@ -32,7 +32,7 @@ WEATHER_KEYWORDS = ("highest temperature", "temperature in", "temperature on", "
 
 class PolymarketDataClient:
     def __init__(self, diagnostic: bool = False) -> None:
-        self.http = httpx.AsyncClient(timeout=20.0)
+        self.http = httpx.AsyncClient(timeout=10.0)
         self.diagnostic = diagnostic
         self.priority_filter = load_station_priority_filter()
         self.clob_prefilter_priority = load_clob_prefilter_priority()
@@ -411,12 +411,21 @@ class PolymarketDataClient:
             for info in market["buckets"].values():
                 candidate_token_ids.append(info["yes_token_id"])
 
-        # Batch request orderbooks to reduce API load.
+        # Fetch all orderbook batches concurrently (was sequential — up to 70s, now ~10s).
+        import asyncio as _asyncio
         unique_token_ids = list(dict.fromkeys(candidate_token_ids))
-        for chunk_start in range(0, len(unique_token_ids), 100):
-            chunk = unique_token_ids[chunk_start : chunk_start + 100]
-            books = await self._get_books(chunk)
-            for book in books:
+        chunks = [
+            unique_token_ids[i : i + 100]
+            for i in range(0, len(unique_token_ids), 100)
+        ]
+        batch_results = await _asyncio.gather(
+            *[self._get_books(chunk) for chunk in chunks],
+            return_exceptions=True,
+        )
+        for result in batch_results:
+            if isinstance(result, Exception):
+                continue
+            for book in result:
                 token_id = str(book.get("asset_id") or book.get("token_id") or "")
                 if token_id:
                     token_to_book[token_id] = book
@@ -471,19 +480,11 @@ class PolymarketDataClient:
             if isinstance(payload, list):
                 return payload
             return []
-        except httpx.HTTPError:
-            # Fallback to legacy single-book endpoint per token if batch fails.
-            out: list[dict[str, Any]] = []
-            for token_id in token_ids:
-                try:
-                    resp = await self.http.get(f"{CLOB_API_URL}/book", params={"token_id": token_id})
-                    resp.raise_for_status()
-                    data = resp.json()
-                    data["asset_id"] = token_id
-                    out.append(data)
-                except httpx.HTTPError:
-                    self.reject_stats["book_fetch_error"] += 1
-            return out
+        except (httpx.HTTPError, httpx.TimeoutException):
+            # Batch failed — return empty rather than falling back to N sequential GETs
+            # which would take minutes and stall the entire scan.
+            self.reject_stats["book_batch_failed"] += len(token_ids)
+            return []
 
     def _extract_best_bid_ask(self, book: dict[str, Any]) -> tuple[float, float]:
         best_bid = float(book.get("bestBid", 0.0) or 0.0)

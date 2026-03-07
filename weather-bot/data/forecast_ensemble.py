@@ -21,7 +21,7 @@ from config.settings import (
 class EnsembleForecastClient:
     def __init__(
         self,
-        timeout_seconds: float = 20.0,
+        timeout_seconds: float = 10.0,
         calibration_path: str = CALIBRATION_JSON_PATH,
         rankings_path: str = MODEL_RANKINGS_JSON_PATH,
     ) -> None:
