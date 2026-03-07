@@ -34,6 +34,7 @@ from monitoring.dashboard import render_dashboard
 from monitoring.logger import BotLogger
 from strategy.signals import (
     generate_signals,
+    generate_mk2_ace_signals,
     generate_purdey_cavendish_signals,
     generate_top2_shadow_signals,
     summarize_top_missed_edges,
@@ -55,6 +56,9 @@ class ShadowTrader:
         "TOP2_PROP":     "shadow_2c",
         "PURDEY_MK1":    "shadow_purdey",
         "CAVENDISH_MK1": "shadow_cavendish",
+        "PURDEY_MK2":    "shadow_purdey2",
+        "CAVENDISH_MK2": "shadow_cavendish2",
+        "ACE":           "shadow_ace",
     }
 
     def __init__(self, variant: str) -> None:
@@ -71,10 +75,13 @@ class ShadowTrader:
         self._log = logging.getLogger(f"weather-bot.{slug}")
 
     _PURDEY_CAVENDISH_VARIANTS = {"PURDEY_MK1", "CAVENDISH_MK1"}
+    _MK2_ACE_VARIANTS = {"PURDEY_MK2", "CAVENDISH_MK2", "ACE"}
 
     def run_once(self, markets: list[dict], forecasts: dict, bankroll: float) -> None:
         """Execute one scan using shared market + forecast data."""
-        if self.variant in self._PURDEY_CAVENDISH_VARIANTS:
+        if self.variant in self._MK2_ACE_VARIANTS:
+            all_shadows = generate_mk2_ace_signals(markets, forecasts, bankroll)
+        elif self.variant in self._PURDEY_CAVENDISH_VARIANTS:
             all_shadows = generate_purdey_cavendish_signals(markets, forecasts, bankroll)
         else:
             all_shadows = generate_top2_shadow_signals(markets, forecasts, bankroll)
@@ -164,6 +171,9 @@ class PaperTrader:
             ShadowTrader("TOP2_PROP"),
             ShadowTrader("PURDEY_MK1"),
             ShadowTrader("CAVENDISH_MK1"),
+            ShadowTrader("PURDEY_MK2"),
+            ShadowTrader("CAVENDISH_MK2"),
+            ShadowTrader("ACE"),
         ]
 
     async def close(self) -> None:
@@ -323,6 +333,12 @@ class PaperTrader:
                 observed_display_cache=observed_display_cache,
             )
             self.forecasts.setdefault(station_icao, {})[date_str] = forecast_bundle
+
+            # Log individual model predictions for the accuracy tracker
+            det_mv = forecast_bundle.get("det_model_values")
+            if det_mv:
+                from strategy.model_weights import log_predictions
+                log_predictions(station_icao, date_str, det_mv)
 
     async def _log_accuweather_snapshots(self, markets: list[dict]) -> None:
         if self.accuweather_client is None:

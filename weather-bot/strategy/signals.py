@@ -1037,6 +1037,271 @@ def generate_purdey_cavendish_signals(
     return signals
 
 
+def generate_mk2_ace_signals(
+    markets: list[dict],
+    forecasts: dict[str, dict[str, dict]],
+    bankroll: float,
+) -> list["Signal"]:
+    """Generate PURDEY_MK2, CAVENDISH_MK2, and ACE signals.
+
+    These use recency-weighted model accuracy to pick buckets.  Models that
+    nailed yesterday's temperature get higher weight, shifting the probability
+    distribution toward their predictions.
+
+    PURDEY_MK2 — Hard cap of 2 bets per city-date.
+        Top-2 buckets by WEIGHTED model probability.  60/40 split.
+
+    CAVENDISH_MK2 — Hard cap of 3 bets per city-date.
+        Peak by weighted probability + immediate temperature flanks.  50/25/25.
+
+    ACE — Smart 2-or-3 bets.
+        Peak + runner-up (50/50).  Adds a 3rd "value bet" ONLY when:
+          • market price ≤ 11 cents (great odds)
+          • ≥ 2 individual models predict temps in that bucket
+          • weighted probability ≥ 8 %
+        When 3 bets: 40/30/30.
+    """
+    from collections import defaultdict
+    from strategy.model_weights import (
+        compute_weights,
+        models_in_bucket,
+        weighted_bucket_probs,
+    )
+
+    _log = logging.getLogger("weather-bot.signals")
+
+    if not ENABLE_TOP2_SHADOWS:
+        return []
+    if _in_metar_danger_window(datetime.now(UTC)):
+        return []
+
+    ACE_VALUE_MAX_PRICE = 0.11
+    ACE_VALUE_MIN_MODELS = 2
+    ACE_VALUE_MIN_WEIGHTED_PROB = 0.08
+
+    # Group binary markets by (station, date)
+    grouped: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    for market in markets:
+        grouped[(market["station_icao"], market["date"])].append(market)
+
+    signals: list[Signal] = []
+
+    for (station_icao, date_str), group_markets in grouped.items():
+        ref = group_markets[0]
+        city = ref["city"]
+        end_date_iso = ref["end_date_iso"]
+
+        if calculate_hours_to_resolution(end_date_iso) < HOURS_BEFORE_RESOLUTION_CUTOFF:
+            continue
+
+        forecast_bundle = forecasts.get(station_icao, {}).get(date_str)
+        if not forecast_bundle:
+            continue
+
+        det_model_values = forecast_bundle.get("det_model_values") or {}
+        if not det_model_values:
+            continue
+
+        ensemble_std = float(forecast_bundle.get("ensemble_std", 0.0) or 0.0)
+        if bool(forecast_bundle.get("ensemble_skip", False) or ensemble_std > ENSEMBLE_STD_SKIP_THRESHOLD):
+            continue
+
+        rounding_conf = forecast_bundle.get("rounding_confidence", "LOW")
+        pred_display = forecast_bundle.get("predicted_display_temp")
+        det_spread = float(forecast_bundle.get("det_spread", ensemble_std * 2.0) or 0.0)
+        det_spread_colour = str(forecast_bundle.get("det_spread_colour", "UNKNOWN"))
+        city_kelly = float(STATIONS.get(station_icao, {}).get("kelly_fraction", KELLY_FRACTION))
+        mv_json = json.dumps(
+            {k: round(v, 2) for k, v in det_model_values.items()},
+            separators=(",", ":"),
+        )
+
+        hours_to_res = calculate_hours_to_resolution(end_date_iso)
+        try:
+            days_ahead = (_date.fromisoformat(date_str) - _date.today()).days
+        except ValueError:
+            days_ahead = 1
+
+        if days_ahead >= 3:
+            temporal_discount = D3_P_WIN_DISCOUNT
+            _d_max = D3_MAX_YES_ENTRY_PRICE
+        elif days_ahead >= 2:
+            temporal_discount = D2_P_WIN_DISCOUNT
+            _d_max = D2_MAX_YES_ENTRY_PRICE
+        else:
+            temporal_discount = 1.0
+            _d_max = HARD_MAX_YES_ENTRY_PRICE
+
+        # Aggregate all buckets for this city-date
+        all_buckets: dict[str, dict] = {}
+        bucket_to_condition: dict[str, str] = {}
+        for mkt in group_markets:
+            for bucket, info in mkt.get("buckets", {}).items():
+                all_buckets[bucket] = info
+                bucket_to_condition[bucket] = mkt["condition_id"]
+
+        sorted_buckets = sorted(all_buckets.keys(), key=_bucket_lower_bound)
+        if not sorted_buckets:
+            continue
+
+        # Compute recency-weighted model accuracy
+        model_weights = compute_weights(station_icao, list(det_model_values.keys()))
+
+        # WEIGHTED bucket probabilities (the key differentiator from MK1)
+        w_probs = weighted_bucket_probs(det_model_values, model_weights, sorted_buckets)
+
+        # Build candidates: positive weighted-edge, price guards
+        candidates: list[dict] = []
+        for bucket in sorted_buckets:
+            token_info = all_buckets[bucket]
+            model_prob = w_probs.get(bucket, 0.0) * temporal_discount
+            market_prob = token_info["price"]
+            if model_prob < TOP2_SHADOW_MIN_PROB:
+                continue
+            if model_prob <= market_prob:
+                continue
+            if market_prob < HARD_MIN_YES_ENTRY_PRICE or market_prob > _d_max:
+                continue
+            candidates.append({
+                "bucket": bucket,
+                "token_id": token_info["yes_token_id"],
+                "condition_id": bucket_to_condition[bucket],
+                "model_prob": model_prob,
+                "market_prob": market_prob,
+                "edge": model_prob - market_prob,
+            })
+
+        if not candidates:
+            continue
+
+        candidates.sort(key=lambda c: c["model_prob"], reverse=True)
+        top1 = candidates[0]
+        top2 = candidates[1] if len(candidates) >= 2 else None
+        top3 = candidates[2] if len(candidates) >= 3 else None
+
+        def _make_sig(cand: dict, strategy: str, size_usd: float) -> Signal:
+            sz = round(max(size_usd, KELLY_MIN_BET_USD), 2)
+            ev = (
+                cand["model_prob"] * (sz / cand["market_prob"]) * (1.0 - cand["market_prob"])
+                - (1.0 - cand["model_prob"]) * sz
+            )
+            return Signal(
+                market_id=cand["condition_id"],
+                token_id=cand["token_id"],
+                side="BUY_YES",
+                edge=cand["edge"],
+                forecast_prob=cand["model_prob"],
+                market_prob=cand["market_prob"],
+                size_usd=sz,
+                city=city,
+                station_icao=station_icao,
+                date=date_str,
+                bucket=cand["bucket"],
+                rounding_confidence=rounding_conf,
+                predicted_display_temp=pred_display,
+                spread_colour=det_spread_colour,
+                det_spread=round(det_spread, 3),
+                model_values_json=mv_json,
+                ev_per_bet=round(ev, 3),
+                kelly_fraction_used=city_kelly,
+                days_ahead=days_ahead,
+                hours_to_resolution=round(hours_to_res, 1),
+                temporal_discount=temporal_discount,
+                strategy=strategy,
+            )
+
+        _base_sz = kelly_size(
+            market_price=top1["market_prob"],
+            win_prob=top1["model_prob"],
+            bankroll=bankroll,
+            edge=top1["edge"],
+            kelly_fraction=city_kelly,
+            max_position=KELLY_MAX_BET_USD,
+            rounding_confidence="MEDIUM",
+        )
+        _base_sz = max(_base_sz, KELLY_MIN_BET_USD) if _base_sz > 0 else KELLY_MIN_BET_USD
+
+        # ── PURDEY_MK2: top-2 by weighted probability, 60/40 ────────────
+        signals.append(_make_sig(top1, "PURDEY_MK2", _base_sz * 0.60))
+        if top2 is not None:
+            signals.append(_make_sig(top2, "PURDEY_MK2", _base_sz * 0.40))
+
+        # ── CAVENDISH_MK2: peak + adjacent flanks, 50/25/25 ─────────────
+        peak_bucket = top1["bucket"]
+        try:
+            peak_idx = sorted_buckets.index(peak_bucket)
+        except ValueError:
+            peak_idx = -1
+
+        signals.append(_make_sig(top1, "CAVENDISH_MK2", _base_sz * 0.50))
+
+        if peak_idx >= 0:
+            if peak_idx > 0:
+                fb_key = sorted_buckets[peak_idx - 1]
+                fb_info = all_buckets[fb_key]
+                fb_price = float(fb_info.get("price", 0) or 0)
+                fb_token = fb_info.get("yes_token_id", "")
+                if fb_token and HARD_MIN_YES_ENTRY_PRICE <= fb_price <= _d_max:
+                    fb_model = w_probs.get(fb_key, 0.0) * temporal_discount
+                    signals.append(_make_sig(
+                        {"bucket": fb_key, "token_id": fb_token,
+                         "condition_id": bucket_to_condition[fb_key],
+                         "model_prob": max(fb_model, 0.01),
+                         "market_prob": fb_price, "edge": max(fb_model - fb_price, 0.0)},
+                        "CAVENDISH_MK2", _base_sz * 0.25,
+                    ))
+
+            if peak_idx < len(sorted_buckets) - 1:
+                fa_key = sorted_buckets[peak_idx + 1]
+                fa_info = all_buckets[fa_key]
+                fa_price = float(fa_info.get("price", 0) or 0)
+                fa_token = fa_info.get("yes_token_id", "")
+                if fa_token and HARD_MIN_YES_ENTRY_PRICE <= fa_price <= _d_max:
+                    fa_model = w_probs.get(fa_key, 0.0) * temporal_discount
+                    signals.append(_make_sig(
+                        {"bucket": fa_key, "token_id": fa_token,
+                         "condition_id": bucket_to_condition[fa_key],
+                         "model_prob": max(fa_model, 0.01),
+                         "market_prob": fa_price, "edge": max(fa_model - fa_price, 0.0)},
+                        "CAVENDISH_MK2", _base_sz * 0.25,
+                    ))
+
+        # ── ACE: smart 2-or-3 bets ──────────────────────────────────────
+        signals.append(_make_sig(top1, "ACE", _base_sz * 0.50))
+        if top2 is not None:
+            signals.append(_make_sig(top2, "ACE", _base_sz * 0.50))
+
+        # 3rd "value bet" — only when market price is cheap, multiple
+        # models agree, and weighted probability is meaningful.
+        if top3 is not None:
+            price_cheap = top3["market_prob"] <= ACE_VALUE_MAX_PRICE
+            n_models = models_in_bucket(det_model_values, top3["bucket"])
+            model_consensus = n_models >= ACE_VALUE_MIN_MODELS
+            wp = w_probs.get(top3["bucket"], 0.0) * temporal_discount
+            prob_strong = wp >= ACE_VALUE_MIN_WEIGHTED_PROB
+
+            if price_cheap and (model_consensus or prob_strong):
+                signals.append(_make_sig(top3, "ACE", _base_sz * 0.30))
+                _log.info(
+                    f"ACE value bet {city} {date_str} {top3['bucket']} "
+                    f"price={top3['market_prob']:.3f} models_in={n_models} "
+                    f"w_prob={wp:.3f}"
+                )
+
+        _log.info(
+            f"MK2/ACE for {city} {date_str}: "
+            f"buckets={len(sorted_buckets)} candidates={len(candidates)} "
+            f"weighted_peak={peak_bucket} "
+            f"top3={'→'.join(c['bucket'] for c in candidates[:3])}"
+        )
+
+    n_p2 = sum(1 for s in signals if s.strategy == "PURDEY_MK2")
+    n_c2 = sum(1 for s in signals if s.strategy == "CAVENDISH_MK2")
+    n_ace = sum(1 for s in signals if s.strategy == "ACE")
+    _log.info(f"PURDEY_MK2={n_p2} | CAVENDISH_MK2={n_c2} | ACE={n_ace} signals")
+    return signals
+
+
 def _effective_edge_with_soft_guardrails(action: str, yes_price: float, edge: float) -> tuple[float, bool]:
     if not SOFT_PRICE_GUARDRAILS_ENABLED:
         return edge, False

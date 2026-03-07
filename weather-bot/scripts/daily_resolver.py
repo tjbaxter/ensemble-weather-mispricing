@@ -90,7 +90,11 @@ def _ensure_resolved_csv() -> None:
         csv.writer(f).writerow(RESOLVED_HEADER)
 
 
-_SHADOW_STRATEGIES = {"CONVICTION", "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP", "PURDEY_MK1", "CAVENDISH_MK1"}
+_SHADOW_STRATEGIES = {
+    "CONVICTION", "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP",
+    "PURDEY_MK1", "CAVENDISH_MK1",
+    "PURDEY_MK2", "CAVENDISH_MK2", "ACE",
+}
 
 
 def _load_resolved_keys() -> set[tuple[str, str, str, str, str]]:
@@ -230,6 +234,9 @@ def _load_pending_trades() -> list[dict]:
         (ROOT / "data" / "positions_shadow_2c.json",        "TOP2_PROP"),
         (ROOT / "data" / "positions_shadow_purdey.json",    "PURDEY_MK1"),
         (ROOT / "data" / "positions_shadow_cavendish.json", "CAVENDISH_MK1"),
+        (ROOT / "data" / "positions_shadow_purdey2.json",   "PURDEY_MK2"),
+        (ROOT / "data" / "positions_shadow_cavendish2.json","CAVENDISH_MK2"),
+        (ROOT / "data" / "positions_shadow_ace.json",       "ACE"),
     ]
     for shadow_path, shadow_strategy in _SHADOW_FILES:
         if not shadow_path.exists():
@@ -516,6 +523,9 @@ def print_summary(stats: dict) -> None:
             "TOP2_PROP":     "TOP2_PROP    (2C proportional)",
             "PURDEY_MK1":    "PURDEY_MK1   (top-2, cap 2, 60/40)",
             "CAVENDISH_MK1": "CAVENDISH_MK1 (flank-3, cap 3, 50/25/25)",
+            "PURDEY_MK2":    "PURDEY_MK2   (weighted top-2, cap 2)",
+            "CAVENDISH_MK2": "CAVENDISH_MK2 (weighted flank-3, cap 3)",
+            "ACE":           "ACE           (smart 2-or-3, value bets)",
         }
 
         def _strat_summary(rows: list[dict], label: str) -> None:
