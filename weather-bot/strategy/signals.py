@@ -1271,22 +1271,47 @@ def generate_mk2_ace_signals(
         if top2 is not None:
             signals.append(_make_sig(top2, "ACE", _base_sz * 0.50))
 
-        # 3rd "value bet" — only when market price is cheap, multiple
-        # models agree, and weighted probability is meaningful.
-        if top3 is not None:
-            price_cheap = top3["market_prob"] <= ACE_VALUE_MAX_PRICE
-            n_models = models_in_bucket(det_model_values, top3["bucket"])
-            model_consensus = n_models >= ACE_VALUE_MIN_MODELS
-            wp = w_probs.get(top3["bucket"], 0.0) * temporal_discount
-            prob_strong = wp >= ACE_VALUE_MIN_WEIGHTED_PROB
+        # 3rd "value bet" — scans ALL tradeable buckets (not just positive-
+        # edge candidates) for cheap long-shots where multiple models agree.
+        # This is what makes ACE different from PURDEY_MK2.
+        ace_main_buckets = {top1["bucket"]}
+        if top2 is not None:
+            ace_main_buckets.add(top2["bucket"])
 
-            if price_cheap and (model_consensus or prob_strong):
-                signals.append(_make_sig(top3, "ACE", _base_sz * 0.30))
-                _log.info(
-                    f"ACE value bet {city} {date_str} {top3['bucket']} "
-                    f"price={top3['market_prob']:.3f} models_in={n_models} "
-                    f"w_prob={wp:.3f}"
-                )
+        best_value: dict | None = None
+        best_value_score = -1.0
+
+        for bucket in sorted_buckets:
+            if bucket in ace_main_buckets:
+                continue
+            token_info = all_buckets[bucket]
+            mkt_price = float(token_info.get("price", 0) or 0)
+            if mkt_price < HARD_MIN_YES_ENTRY_PRICE or mkt_price > ACE_VALUE_MAX_PRICE:
+                continue
+            n_models = models_in_bucket(det_model_values, bucket)
+            wp = w_probs.get(bucket, 0.0) * temporal_discount
+            if n_models >= ACE_VALUE_MIN_MODELS or wp >= ACE_VALUE_MIN_WEIGHTED_PROB:
+                score = n_models * 2.0 + wp * 10.0 + (ACE_VALUE_MAX_PRICE - mkt_price) * 5.0
+                if score > best_value_score:
+                    best_value_score = score
+                    best_value = {
+                        "bucket": bucket,
+                        "token_id": token_info["yes_token_id"],
+                        "condition_id": bucket_to_condition[bucket],
+                        "model_prob": max(wp, 0.01),
+                        "market_prob": mkt_price,
+                        "edge": max(wp - mkt_price, 0.0),
+                    }
+
+        if best_value is not None:
+            signals.append(_make_sig(best_value, "ACE", _base_sz * 0.30))
+            bv = best_value
+            _log.info(
+                f"ACE value bet {city} {date_str} {bv['bucket']} "
+                f"price={bv['market_prob']:.3f} "
+                f"models_in={models_in_bucket(det_model_values, bv['bucket'])} "
+                f"w_prob={w_probs.get(bv['bucket'], 0):.3f}"
+            )
 
         _log.info(
             f"MK2/ACE for {city} {date_str}: "
