@@ -823,61 +823,67 @@ def generate_purdey_cavendish_signals(
 ) -> list["Signal"]:
     """Generate PURDEY_MK1 and CAVENDISH_MK1 shadow signals.
 
-    These are shadow-only strategies (never executed) designed to fix the
-    uncapped-bet problem observed in 2A/2B/2C.
+    KEY INSIGHT: Polymarket creates separate binary markets per temperature
+    bucket, so each ``market`` in the list has exactly 1 bucket.  We must
+    group by (station, date) first to reconstruct the full bucket range,
+    then apply multi-bucket selection logic over the aggregated set.
 
-    PURDEY_MK1 — Hard cap of 2 bets per market.
-        Bets on the top-1 bucket (60% of budget) and top-2 bucket (40% of
-        budget) by model probability.  Never more than 2.  If the runner-up
-        doesn't have at least TOP2_SHADOW_MIN_PROB model probability, only 1
-        bet is placed.
+    PURDEY_MK1 — Hard cap of 2 bets per city-date.
+        Bets on the top-1 bucket (60 % of budget) and top-2 bucket (40 %)
+        by model probability.  If the runner-up doesn't meet
+        TOP2_SHADOW_MIN_PROB, only 1 bet is placed.
 
-    CAVENDISH_MK1 — Hard cap of 3 bets per market.
-        Bets on the peak bucket (50% of budget) and its immediate temperature
-        neighbours in the sorted bucket list: one below (25%) and one above
-        (25%).  This "flanks" the favourite spatially rather than by probability
-        rank — covering the case where the model is exactly 1 bucket off.
-        Neighbours are included regardless of their own edge, as long as a
-        reasonable market price exists.
+    CAVENDISH_MK1 — Hard cap of 3 bets per city-date.
+        Bets on the peak bucket (50 %) and its immediate temperature
+        neighbours: one cooler (25 %) and one warmer (25 %).
+        Flanks are included regardless of their own edge — the strategy
+        hedges the "off by one bucket" scenario.
     """
-    from config.settings import ENABLE_TOP2_SHADOWS  # reuse the toggle
+    from config.settings import ENABLE_TOP2_SHADOWS
+    _log = logging.getLogger("weather-bot.signals")
 
     if not ENABLE_TOP2_SHADOWS:
         return []
     if _in_metar_danger_window(datetime.now(UTC)):
         return []
 
+    # ── Step 1: group individual binary markets by (station, date) ──────
+    from collections import defaultdict
+    grouped: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    for market in markets:
+        key = (market["station_icao"], market["date"])
+        grouped[key].append(market)
+
     signals: list[Signal] = []
 
-    for market in markets:
-        station_icao = market["station_icao"]
-        city         = market["city"]
-        date         = market["date"]
-        end_date_iso = market["end_date_iso"]
+    for (station_icao, date_str), group_markets in grouped.items():
+        ref = group_markets[0]
+        city = ref["city"]
+        end_date_iso = ref["end_date_iso"]
 
         if calculate_hours_to_resolution(end_date_iso) < HOURS_BEFORE_RESOLUTION_CUTOFF:
             continue
 
-        forecast_bundle = forecasts.get(station_icao, {}).get(date)
+        forecast_bundle = forecasts.get(station_icao, {}).get(date_str)
         if not forecast_bundle:
             continue
 
-        forecast      = forecast_bundle.get("probs", {})
+        forecast = forecast_bundle.get("probs", {})
         rounding_conf = forecast_bundle.get("rounding_confidence", "LOW")
-        pred_display  = forecast_bundle.get("predicted_display_temp")
-        ensemble_std  = float(forecast_bundle.get("ensemble_std", 0.0) or 0.0)
+        pred_display = forecast_bundle.get("predicted_display_temp")
+        ensemble_std = float(forecast_bundle.get("ensemble_std", 0.0) or 0.0)
         if bool(forecast_bundle.get("ensemble_skip", False) or ensemble_std > ENSEMBLE_STD_SKIP_THRESHOLD):
             continue
 
-        det_spread        = float(forecast_bundle.get("det_spread", ensemble_std * 2.0) or 0.0)
+        det_spread = float(forecast_bundle.get("det_spread", ensemble_std * 2.0) or 0.0)
         det_spread_colour = str(forecast_bundle.get("det_spread_colour", "UNKNOWN"))
-        det_model_values  = forecast_bundle.get("det_model_values") or {}
-        city_kelly        = float(STATIONS.get(station_icao, {}).get("kelly_fraction", KELLY_FRACTION))
+        det_model_values = forecast_bundle.get("det_model_values") or {}
+        city_kelly = float(STATIONS.get(station_icao, {}).get("kelly_fraction", KELLY_FRACTION))
         mv_json = json.dumps({k: round(v, 2) for k, v in det_model_values.items()}, separators=(",", ":"))
 
         hours_to_res = calculate_hours_to_resolution(end_date_iso)
         try:
-            days_ahead = (_date.fromisoformat(date) - _date.today()).days
+            days_ahead = (_date.fromisoformat(date_str) - _date.today()).days
         except ValueError:
             days_ahead = 1
 
@@ -891,14 +897,21 @@ def generate_purdey_cavendish_signals(
             temporal_discount = 1.0
             _d_max = HARD_MAX_YES_ENTRY_PRICE
 
-        # All available buckets with their market data
-        all_buckets: dict[str, dict] = market.get("buckets", {})
+        # ── Step 2: aggregate ALL buckets for this city-date from all binary markets ──
+        all_buckets: dict[str, dict] = {}
+        bucket_to_condition: dict[str, str] = {}
+        for mkt in group_markets:
+            for bucket, info in mkt.get("buckets", {}).items():
+                all_buckets[bucket] = info
+                bucket_to_condition[bucket] = mkt["condition_id"]
+
         sorted_buckets = sorted(all_buckets.keys(), key=_bucket_lower_bound)
 
-        # Candidates: buckets with positive edge and acceptable price
+        # ── Step 3: build candidate list (positive edge, price guards) ──
         candidates: list[dict] = []
-        for bucket, token_info in all_buckets.items():
-            model_prob  = forecast.get(bucket, 0.0) * temporal_discount
+        for bucket in sorted_buckets:
+            token_info = all_buckets[bucket]
+            model_prob = forecast.get(bucket, 0.0) * temporal_discount
             market_prob = token_info["price"]
             if model_prob < TOP2_SHADOW_MIN_PROB:
                 continue
@@ -907,11 +920,12 @@ def generate_purdey_cavendish_signals(
             if market_prob < HARD_MIN_YES_ENTRY_PRICE or market_prob > _d_max:
                 continue
             candidates.append({
-                "bucket":      bucket,
-                "token_id":    token_info["yes_token_id"],
-                "model_prob":  model_prob,
+                "bucket": bucket,
+                "token_id": token_info["yes_token_id"],
+                "condition_id": bucket_to_condition[bucket],
+                "model_prob": model_prob,
                 "market_prob": market_prob,
-                "edge":        model_prob - market_prob,
+                "edge": model_prob - market_prob,
             })
 
         if not candidates:
@@ -928,7 +942,7 @@ def generate_purdey_cavendish_signals(
                 - (1.0 - cand["model_prob"]) * sz
             )
             return Signal(
-                market_id=market["condition_id"],
+                market_id=cand["condition_id"],
                 token_id=cand["token_id"],
                 side="BUY_YES",
                 edge=cand["edge"],
@@ -937,7 +951,7 @@ def generate_purdey_cavendish_signals(
                 size_usd=sz,
                 city=city,
                 station_icao=station_icao,
-                date=date,
+                date=date_str,
                 bucket=cand["bucket"],
                 rounding_confidence=rounding_conf,
                 predicted_display_temp=pred_display,
@@ -969,8 +983,6 @@ def generate_purdey_cavendish_signals(
             signals.append(_make_pc(top2, "PURDEY_MK1", _base_sz * 0.40))
 
         # ── CAVENDISH_MK1: peak + adjacent flanks, hard cap 3, 50/25/25 split ─
-        # Find peak's position in temperature-sorted bucket list, then take
-        # the bucket immediately below and immediately above as flanks.
         peak_bucket = top1["bucket"]
         try:
             peak_idx = sorted_buckets.index(peak_bucket)
@@ -980,37 +992,45 @@ def generate_purdey_cavendish_signals(
         signals.append(_make_pc(top1, "CAVENDISH_MK1", _base_sz * 0.50))
 
         if peak_idx >= 0:
-            # Bucket immediately below in temperature
+            # Flank below (one cooler bucket in temperature order)
             if peak_idx > 0:
                 flank_below_key = sorted_buckets[peak_idx - 1]
-                flank_info = all_buckets.get(flank_below_key, {})
+                flank_info = all_buckets[flank_below_key]
                 flank_price = float(flank_info.get("price", 0) or 0)
                 flank_token = flank_info.get("yes_token_id", "")
                 if flank_token and HARD_MIN_YES_ENTRY_PRICE <= flank_price <= _d_max:
                     flank_model = forecast.get(flank_below_key, 0.0) * temporal_discount
                     signals.append(_make_pc(
                         {"bucket": flank_below_key, "token_id": flank_token,
+                         "condition_id": bucket_to_condition[flank_below_key],
                          "model_prob": max(flank_model, 0.01),
                          "market_prob": flank_price, "edge": max(flank_model - flank_price, 0.0)},
                         "CAVENDISH_MK1", _base_sz * 0.25,
                     ))
 
-            # Bucket immediately above in temperature
+            # Flank above (one warmer bucket in temperature order)
             if peak_idx < len(sorted_buckets) - 1:
                 flank_above_key = sorted_buckets[peak_idx + 1]
-                flank_info = all_buckets.get(flank_above_key, {})
+                flank_info = all_buckets[flank_above_key]
                 flank_price = float(flank_info.get("price", 0) or 0)
                 flank_token = flank_info.get("yes_token_id", "")
                 if flank_token and HARD_MIN_YES_ENTRY_PRICE <= flank_price <= _d_max:
                     flank_model = forecast.get(flank_above_key, 0.0) * temporal_discount
                     signals.append(_make_pc(
                         {"bucket": flank_above_key, "token_id": flank_token,
+                         "condition_id": bucket_to_condition[flank_above_key],
                          "model_prob": max(flank_model, 0.01),
                          "market_prob": flank_price, "edge": max(flank_model - flank_price, 0.0)},
                         "CAVENDISH_MK1", _base_sz * 0.25,
                     ))
 
-    _log = logging.getLogger("weather-bot.signals")
+        _log.info(
+            f"PC signals for {city} {date_str}: "
+            f"buckets={len(sorted_buckets)} candidates={len(candidates)} "
+            f"PURDEY={1 + (1 if top2 else 0)} "
+            f"CAVENDISH peak={peak_bucket}[{peak_idx}] of {sorted_buckets}"
+        )
+
     n_purdey = sum(1 for s in signals if s.strategy == "PURDEY_MK1")
     n_cavendish = sum(1 for s in signals if s.strategy == "CAVENDISH_MK1")
     _log.info(f"PURDEY_MK1 generated {n_purdey} signals | CAVENDISH_MK1 generated {n_cavendish} signals")
