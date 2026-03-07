@@ -1150,47 +1150,47 @@ def generate_mk2_ace_signals(
         # WEIGHTED bucket probabilities (the key differentiator from MK1)
         w_probs = weighted_bucket_probs(det_model_values, model_weights, sorted_buckets)
 
-        # Build candidates: positive weighted-edge, price guards
-        candidates: list[dict] = []
+        # ── Build ranked buckets: purely by WEIGHTED PROBABILITY ─────────
+        # No edge requirement.  No old MIN_PROB filter.  The recency-
+        # weighted model analysis is the SOLE driver of bucket selection.
+        ranked: list[dict] = []
         for bucket in sorted_buckets:
             token_info = all_buckets[bucket]
-            model_prob = w_probs.get(bucket, 0.0) * temporal_discount
-            market_prob = token_info["price"]
-            if model_prob < TOP2_SHADOW_MIN_PROB:
+            wp = w_probs.get(bucket, 0.0) * temporal_discount
+            mkt_price = float(token_info.get("price", 0) or 0)
+            token_id = token_info.get("yes_token_id", "")
+            if not token_id or mkt_price < HARD_MIN_YES_ENTRY_PRICE or mkt_price > _d_max:
                 continue
-            if model_prob <= market_prob:
+            if wp < 0.01:
                 continue
-            if market_prob < HARD_MIN_YES_ENTRY_PRICE or market_prob > _d_max:
-                continue
-            candidates.append({
+            ranked.append({
                 "bucket": bucket,
-                "token_id": token_info["yes_token_id"],
+                "token_id": token_id,
                 "condition_id": bucket_to_condition[bucket],
-                "model_prob": model_prob,
-                "market_prob": market_prob,
-                "edge": model_prob - market_prob,
+                "model_prob": wp,
+                "market_prob": mkt_price,
+                "edge": wp - mkt_price,
+                "n_models": models_in_bucket(det_model_values, bucket),
             })
 
-        if not candidates:
+        if not ranked:
             continue
 
-        candidates.sort(key=lambda c: c["model_prob"], reverse=True)
-        top1 = candidates[0]
-        top2 = candidates[1] if len(candidates) >= 2 else None
-        top3 = candidates[2] if len(candidates) >= 3 else None
+        ranked.sort(key=lambda c: c["model_prob"], reverse=True)
+        top1 = ranked[0]
+        top2 = ranked[1] if len(ranked) >= 2 else None
 
         def _make_sig(cand: dict, strategy: str, size_usd: float) -> Signal:
             sz = round(max(size_usd, KELLY_MIN_BET_USD), 2)
-            ev = (
-                cand["model_prob"] * (sz / cand["market_prob"]) * (1.0 - cand["market_prob"])
-                - (1.0 - cand["model_prob"]) * sz
-            )
+            mp = max(cand["market_prob"], 0.01)
+            wp_ = cand["model_prob"]
+            ev = wp_ * (sz / mp) * (1.0 - mp) - (1.0 - wp_) * sz
             return Signal(
                 market_id=cand["condition_id"],
                 token_id=cand["token_id"],
                 side="BUY_YES",
                 edge=cand["edge"],
-                forecast_prob=cand["model_prob"],
+                forecast_prob=wp_,
                 market_prob=cand["market_prob"],
                 size_usd=sz,
                 city=city,
@@ -1210,16 +1210,20 @@ def generate_mk2_ace_signals(
                 strategy=strategy,
             )
 
-        _base_sz = kelly_size(
-            market_price=top1["market_prob"],
-            win_prob=top1["model_prob"],
-            bankroll=bankroll,
-            edge=top1["edge"],
-            kelly_fraction=city_kelly,
-            max_position=KELLY_MAX_BET_USD,
-            rounding_confidence="MEDIUM",
+        _base_sz = max(
+            kelly_size(
+                market_price=top1["market_prob"],
+                win_prob=max(top1["model_prob"], top1["market_prob"] + 0.01),
+                bankroll=bankroll,
+                edge=max(top1["edge"], 0.01),
+                kelly_fraction=city_kelly,
+                max_position=KELLY_MAX_BET_USD,
+                rounding_confidence="MEDIUM",
+            ),
+            KELLY_MIN_BET_USD,
         )
-        _base_sz = max(_base_sz, KELLY_MIN_BET_USD) if _base_sz > 0 else KELLY_MIN_BET_USD
+
+        peak_bucket = top1["bucket"]
 
         # ── PURDEY_MK2: top-2 by weighted probability, 60/40 ────────────
         signals.append(_make_sig(top1, "PURDEY_MK2", _base_sz * 0.60))
@@ -1227,7 +1231,6 @@ def generate_mk2_ace_signals(
             signals.append(_make_sig(top2, "PURDEY_MK2", _base_sz * 0.40))
 
         # ── CAVENDISH_MK2: peak + adjacent flanks, 50/25/25 ─────────────
-        peak_bucket = top1["bucket"]
         try:
             peak_idx = sorted_buckets.index(peak_bucket)
         except ValueError:
@@ -1241,13 +1244,15 @@ def generate_mk2_ace_signals(
                 fb_info = all_buckets[fb_key]
                 fb_price = float(fb_info.get("price", 0) or 0)
                 fb_token = fb_info.get("yes_token_id", "")
-                if fb_token and HARD_MIN_YES_ENTRY_PRICE <= fb_price <= _d_max:
+                if fb_token and fb_price >= HARD_MIN_YES_ENTRY_PRICE:
                     fb_model = w_probs.get(fb_key, 0.0) * temporal_discount
                     signals.append(_make_sig(
                         {"bucket": fb_key, "token_id": fb_token,
                          "condition_id": bucket_to_condition[fb_key],
                          "model_prob": max(fb_model, 0.01),
-                         "market_prob": fb_price, "edge": max(fb_model - fb_price, 0.0)},
+                         "market_prob": fb_price,
+                         "edge": fb_model - fb_price,
+                         "n_models": models_in_bucket(det_model_values, fb_key)},
                         "CAVENDISH_MK2", _base_sz * 0.25,
                     ))
 
@@ -1256,84 +1261,68 @@ def generate_mk2_ace_signals(
                 fa_info = all_buckets[fa_key]
                 fa_price = float(fa_info.get("price", 0) or 0)
                 fa_token = fa_info.get("yes_token_id", "")
-                if fa_token and HARD_MIN_YES_ENTRY_PRICE <= fa_price <= _d_max:
+                if fa_token and fa_price >= HARD_MIN_YES_ENTRY_PRICE:
                     fa_model = w_probs.get(fa_key, 0.0) * temporal_discount
                     signals.append(_make_sig(
                         {"bucket": fa_key, "token_id": fa_token,
                          "condition_id": bucket_to_condition[fa_key],
                          "model_prob": max(fa_model, 0.01),
-                         "market_prob": fa_price, "edge": max(fa_model - fa_price, 0.0)},
+                         "market_prob": fa_price,
+                         "edge": fa_model - fa_price,
+                         "n_models": models_in_bucket(det_model_values, fa_key)},
                         "CAVENDISH_MK2", _base_sz * 0.25,
                     ))
 
-        # ── ACE: odds-driven smart 2-or-3 bets ────────────────────────────
-        # ACE always bets the weighted peak (same as PURDEY_MK2 top1).
-        # Its 2nd bet picks the CHEAPEST bucket with model support —
-        # odds-driven rather than probability-driven.  This is what makes
-        # ACE different from PURDEY_MK2 (which picks 2nd-highest probability).
-        # Optionally adds a 3rd "value bet" when another cheap bucket qualifies.
-        ACE_ODDS_MAX_PRICE = 0.15
-        ACE_ODDS_MIN_SUPPORT = 1  # at least 1 model or 5% weighted prob
+        # ── ACE: smart 2-or-3 bets (odds + model consensus driven) ──────
+        # Peak = same weighted peak.
+        # 2nd bet = best VALUE pick: scored by model consensus + weighted
+        #   probability + price cheapness.  Distinct from PURDEY (which uses
+        #   raw probability ranking) because ACE rewards cheaper odds.
+        # 3rd bet (conditional) = fires when a second bucket has cheap odds
+        #   (≤ 11¢) AND strong model support (≥ 2 models or ≥ 8% w_prob).
 
         signals.append(_make_sig(top1, "ACE", _base_sz * 0.50))
 
-        # Scan ALL tradeable buckets for odds-based selection
-        value_candidates: list[tuple[float, dict]] = []
-        for bucket in sorted_buckets:
-            if bucket == top1["bucket"]:
+        ace_value_pool: list[tuple[float, dict]] = []
+        for r in ranked:
+            if r["bucket"] == top1["bucket"]:
                 continue
-            token_info = all_buckets[bucket]
-            mkt_price = float(token_info.get("price", 0) or 0)
-            if mkt_price < HARD_MIN_YES_ENTRY_PRICE or mkt_price > _d_max:
-                continue
-            n_models = models_in_bucket(det_model_values, bucket)
-            wp = w_probs.get(bucket, 0.0) * temporal_discount
-            has_support = n_models >= ACE_ODDS_MIN_SUPPORT or wp >= 0.05
+            nm = r["n_models"]
+            wp_r = r["model_prob"]
+            mp_r = r["market_prob"]
+            has_support = nm >= 1 or wp_r >= 0.05
             if not has_support:
                 continue
-            # Score: cheaper price = better; more models = better
-            score = n_models * 3.0 + wp * 10.0 - mkt_price * 5.0
-            value_candidates.append((score, {
-                "bucket": bucket,
-                "token_id": token_info["yes_token_id"],
-                "condition_id": bucket_to_condition[bucket],
-                "model_prob": max(wp, 0.01),
-                "market_prob": mkt_price,
-                "edge": max(wp - mkt_price, 0.0),
-                "_n_models": n_models,
-            }))
+            score = nm * 3.0 + wp_r * 10.0 - mp_r * 5.0
+            ace_value_pool.append((score, r))
 
-        value_candidates.sort(key=lambda x: x[0], reverse=True)
+        ace_value_pool.sort(key=lambda x: x[0], reverse=True)
 
-        # 2nd bet: best odds-driven pick (always placed if available)
-        if value_candidates:
-            pick2 = value_candidates[0][1]
+        if ace_value_pool:
+            pick2 = ace_value_pool[0][1]
             signals.append(_make_sig(pick2, "ACE", _base_sz * 0.50))
             _log.info(
-                f"ACE odds pick {city} {date_str} {pick2['bucket']} "
-                f"price={pick2['market_prob']:.3f} "
-                f"models={pick2['_n_models']} w_prob={pick2['model_prob']:.3f}"
+                f"ACE pick2 {city} {date_str} {pick2['bucket']} "
+                f"price={pick2['market_prob']:.3f} models={pick2['n_models']} "
+                f"w_prob={pick2['model_prob']:.3f}"
             )
 
-            # 3rd "value bet" — only when a SECOND cheap bucket also qualifies
-            for _, vc in value_candidates[1:]:
+            for _, vc in ace_value_pool[1:]:
                 if vc["market_prob"] <= ACE_VALUE_MAX_PRICE:
-                    nm = vc["_n_models"]
-                    vwp = vc["model_prob"]
-                    if nm >= ACE_VALUE_MIN_MODELS or vwp >= ACE_VALUE_MIN_WEIGHTED_PROB:
+                    if vc["n_models"] >= ACE_VALUE_MIN_MODELS or vc["model_prob"] >= ACE_VALUE_MIN_WEIGHTED_PROB:
                         signals.append(_make_sig(vc, "ACE", _base_sz * 0.30))
                         _log.info(
                             f"ACE value bet {city} {date_str} {vc['bucket']} "
-                            f"price={vc['market_prob']:.3f} "
-                            f"models={nm} w_prob={vwp:.3f}"
+                            f"price={vc['market_prob']:.3f} models={vc['n_models']} "
+                            f"w_prob={vc['model_prob']:.3f}"
                         )
                         break
 
         _log.info(
             f"MK2/ACE for {city} {date_str}: "
-            f"buckets={len(sorted_buckets)} candidates={len(candidates)} "
+            f"buckets={len(sorted_buckets)} ranked={len(ranked)} "
             f"weighted_peak={peak_bucket} "
-            f"top3={'→'.join(c['bucket'] for c in candidates[:3])}"
+            f"top3={'→'.join(c['bucket'] for c in ranked[:3])}"
         )
 
     n_p2 = sum(1 for s in signals if s.strategy == "PURDEY_MK2")
