@@ -468,11 +468,12 @@
         "icon_seamless": 10.2,
         "dmi_seamless": 10.7,
         "ecmwf_ifs025": 10.9,
+        "kma_seamless": 10.5,
+        "ukmo_uk_deterministic_2km": 12.6,
         "ukmo_seamless": 12.6,
-        "ukmo_global_deterministic_10km": 10.5,
-        "ncep_aigfs025": 10.6
+        "ncep_aigfs025": 11.0
       },
-      "logged_at": "2026-03-07T04:50:14.786410+00:00"
+      "logged_at": "2026-03-07T05:35:45.530331+00:00"
     }
   },
   "Miami": {
