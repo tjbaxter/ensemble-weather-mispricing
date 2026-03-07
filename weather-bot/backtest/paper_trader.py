@@ -427,10 +427,13 @@ class PaperTrader:
         if not self._cached_markets or not self.forecasts:
             self.logger.info("SHADOW_SKIP no cached markets or forecasts yet")
             return
-        bankroll = self.portfolio.current_cash
         for shadow in self.shadows:
             try:
-                shadow.run_once(self._cached_markets, self.forecasts, bankroll)
+                shadow.run_once(
+                    self._cached_markets,
+                    self.forecasts,
+                    shadow.portfolio.current_cash,
+                )
             except Exception as exc:
                 self.logger.warning(f"Shadow {shadow.variant} failed: {exc}")
 
