@@ -1269,44 +1269,51 @@ def generate_mk2_ace_signals(
                     "CAVENDISH_MK2",
                 ))
 
-        # ── ACE: smart 2-or-3 bets (odds + model consensus driven) ──────
+        # ── ACE: smart 2-or-3 bets (weighted peak + runner-up + conditional 3rd) ──
+        # 1st: weighted peak (always)
+        # 2nd: next best by weighted probability (always if available)
+        # 3rd: fires when a THIRD bucket has EITHER:
+        #      (a) cheap price (≤ 11¢) with model support, OR
+        #      (b) strong model consensus (≥ 2 individual models point there)
         signals.append(_make_sig(top1, "ACE"))
 
-        ace_value_pool: list[tuple[float, dict]] = []
+        if top2 is not None:
+            signals.append(_make_sig(top2, "ACE"))
+            _log.info(
+                f"ACE pick2 {city} {date_str} {top2['bucket']} "
+                f"price={top2['market_prob']:.3f} models={top2['n_models']} "
+                f"w_prob={top2['model_prob']:.3f} "
+                f"kelly=${_kelly_for(top2):.2f}"
+            )
+
+        ace_placed = {top1["bucket"]}
+        if top2 is not None:
+            ace_placed.add(top2["bucket"])
+
+        best_3rd: dict | None = None
+        best_3rd_score = -1.0
         for r in ranked:
-            if r["bucket"] == top1["bucket"]:
+            if r["bucket"] in ace_placed:
                 continue
             nm = r["n_models"]
             wp_r = r["model_prob"]
             mp_r = r["market_prob"]
-            if nm < 1 and wp_r < 0.05:
-                continue
-            score = nm * 3.0 + wp_r * 10.0 - mp_r * 5.0
-            ace_value_pool.append((score, r))
+            cheap_value = mp_r <= ACE_VALUE_MAX_PRICE and (nm >= 1 or wp_r >= ACE_VALUE_MIN_WEIGHTED_PROB)
+            model_consensus = nm >= ACE_VALUE_MIN_MODELS
+            if cheap_value or model_consensus:
+                sc = nm * 3.0 + wp_r * 10.0
+                if sc > best_3rd_score:
+                    best_3rd_score = sc
+                    best_3rd = r
 
-        ace_value_pool.sort(key=lambda x: x[0], reverse=True)
-
-        if ace_value_pool:
-            pick2 = ace_value_pool[0][1]
-            signals.append(_make_sig(pick2, "ACE"))
+        if best_3rd is not None:
+            signals.append(_make_sig(best_3rd, "ACE"))
             _log.info(
-                f"ACE pick2 {city} {date_str} {pick2['bucket']} "
-                f"price={pick2['market_prob']:.3f} models={pick2['n_models']} "
-                f"w_prob={pick2['model_prob']:.3f} "
-                f"kelly=${_kelly_for(pick2):.2f}"
+                f"ACE 3rd bet {city} {date_str} {best_3rd['bucket']} "
+                f"price={best_3rd['market_prob']:.3f} models={best_3rd['n_models']} "
+                f"w_prob={best_3rd['model_prob']:.3f} "
+                f"kelly=${_kelly_for(best_3rd):.2f}"
             )
-
-            for _, vc in ace_value_pool[1:]:
-                if vc["market_prob"] <= ACE_VALUE_MAX_PRICE:
-                    if vc["n_models"] >= ACE_VALUE_MIN_MODELS or vc["model_prob"] >= ACE_VALUE_MIN_WEIGHTED_PROB:
-                        signals.append(_make_sig(vc, "ACE"))
-                        _log.info(
-                            f"ACE value bet {city} {date_str} {vc['bucket']} "
-                            f"price={vc['market_prob']:.3f} models={vc['n_models']} "
-                            f"w_prob={vc['model_prob']:.3f} "
-                            f"kelly=${_kelly_for(vc):.2f}"
-                        )
-                        break
 
         _log.info(
             f"MK2/ACE for {city} {date_str}: "
