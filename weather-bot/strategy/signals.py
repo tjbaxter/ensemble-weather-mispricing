@@ -1180,8 +1180,30 @@ def generate_mk2_ace_signals(
         top1 = ranked[0]
         top2 = ranked[1] if len(ranked) >= 2 else None
 
-        def _make_sig(cand: dict, strategy: str, size_usd: float) -> Signal:
-            sz = round(max(size_usd, KELLY_MIN_BET_USD), 2)
+        def _kelly_for(cand: dict) -> float:
+            """Independent Kelly size for a single bet."""
+            wp_ = cand["model_prob"]
+            mp_ = cand["market_prob"]
+            edge_ = wp_ - mp_
+            nm = cand.get("n_models", 0)
+            conf = "HIGH" if nm >= 3 else ("MEDIUM" if nm >= 2 else "LOW")
+            if edge_ > 0:
+                return max(
+                    kelly_size(
+                        market_price=mp_,
+                        win_prob=wp_,
+                        bankroll=bankroll,
+                        edge=edge_,
+                        kelly_fraction=city_kelly,
+                        max_position=KELLY_MAX_BET_USD,
+                        rounding_confidence=conf,
+                    ),
+                    KELLY_MIN_BET_USD,
+                )
+            return KELLY_MIN_BET_USD
+
+        def _make_sig(cand: dict, strategy: str) -> Signal:
+            sz = _kelly_for(cand)
             mp = max(cand["market_prob"], 0.01)
             wp_ = cand["model_prob"]
             ev = wp_ * (sz / mp) * (1.0 - mp) - (1.0 - wp_) * sz
@@ -1210,78 +1232,45 @@ def generate_mk2_ace_signals(
                 strategy=strategy,
             )
 
-        _base_sz = max(
-            kelly_size(
-                market_price=top1["market_prob"],
-                win_prob=max(top1["model_prob"], top1["market_prob"] + 0.01),
-                bankroll=bankroll,
-                edge=max(top1["edge"], 0.01),
-                kelly_fraction=city_kelly,
-                max_position=KELLY_MAX_BET_USD,
-                rounding_confidence="MEDIUM",
-            ),
-            KELLY_MIN_BET_USD,
-        )
-
         peak_bucket = top1["bucket"]
 
-        # ── PURDEY_MK2: top-2 by weighted probability, 60/40 ────────────
-        signals.append(_make_sig(top1, "PURDEY_MK2", _base_sz * 0.60))
+        # ── PURDEY_MK2: top-2 by weighted probability ───────────────────
+        signals.append(_make_sig(top1, "PURDEY_MK2"))
         if top2 is not None:
-            signals.append(_make_sig(top2, "PURDEY_MK2", _base_sz * 0.40))
+            signals.append(_make_sig(top2, "PURDEY_MK2"))
 
-        # ── CAVENDISH_MK2: peak + adjacent flanks, 50/25/25 ─────────────
+        # ── CAVENDISH_MK2: peak + adjacent flanks ───────────────────────
         try:
             peak_idx = sorted_buckets.index(peak_bucket)
         except ValueError:
             peak_idx = -1
 
-        signals.append(_make_sig(top1, "CAVENDISH_MK2", _base_sz * 0.50))
+        signals.append(_make_sig(top1, "CAVENDISH_MK2"))
 
         if peak_idx >= 0:
-            if peak_idx > 0:
-                fb_key = sorted_buckets[peak_idx - 1]
-                fb_info = all_buckets[fb_key]
-                fb_price = float(fb_info.get("price", 0) or 0)
-                fb_token = fb_info.get("yes_token_id", "")
-                if fb_token and fb_price >= HARD_MIN_YES_ENTRY_PRICE:
-                    fb_model = w_probs.get(fb_key, 0.0) * temporal_discount
-                    signals.append(_make_sig(
-                        {"bucket": fb_key, "token_id": fb_token,
-                         "condition_id": bucket_to_condition[fb_key],
-                         "model_prob": max(fb_model, 0.01),
-                         "market_prob": fb_price,
-                         "edge": fb_model - fb_price,
-                         "n_models": models_in_bucket(det_model_values, fb_key)},
-                        "CAVENDISH_MK2", _base_sz * 0.25,
-                    ))
-
-            if peak_idx < len(sorted_buckets) - 1:
-                fa_key = sorted_buckets[peak_idx + 1]
-                fa_info = all_buckets[fa_key]
-                fa_price = float(fa_info.get("price", 0) or 0)
-                fa_token = fa_info.get("yes_token_id", "")
-                if fa_token and fa_price >= HARD_MIN_YES_ENTRY_PRICE:
-                    fa_model = w_probs.get(fa_key, 0.0) * temporal_discount
-                    signals.append(_make_sig(
-                        {"bucket": fa_key, "token_id": fa_token,
-                         "condition_id": bucket_to_condition[fa_key],
-                         "model_prob": max(fa_model, 0.01),
-                         "market_prob": fa_price,
-                         "edge": fa_model - fa_price,
-                         "n_models": models_in_bucket(det_model_values, fa_key)},
-                        "CAVENDISH_MK2", _base_sz * 0.25,
-                    ))
+            for offset in (-1, +1):
+                idx = peak_idx + offset
+                if idx < 0 or idx >= len(sorted_buckets):
+                    continue
+                fk = sorted_buckets[idx]
+                fi = all_buckets[fk]
+                fp = float(fi.get("price", 0) or 0)
+                ft = fi.get("yes_token_id", "")
+                if not ft or fp < HARD_MIN_YES_ENTRY_PRICE:
+                    continue
+                fwp = w_probs.get(fk, 0.0) * temporal_discount
+                signals.append(_make_sig(
+                    {"bucket": fk, "token_id": ft,
+                     "condition_id": bucket_to_condition[fk],
+                     "model_prob": max(fwp, 0.01),
+                     "market_prob": fp,
+                     "edge": fwp - fp,
+                     "n_models": models_in_bucket(det_model_values, fk)},
+                    "CAVENDISH_MK2",
+                ))
 
         # ── ACE: smart 2-or-3 bets (odds + model consensus driven) ──────
-        # Peak = same weighted peak.
-        # 2nd bet = best VALUE pick: scored by model consensus + weighted
-        #   probability + price cheapness.  Distinct from PURDEY (which uses
-        #   raw probability ranking) because ACE rewards cheaper odds.
-        # 3rd bet (conditional) = fires when a second bucket has cheap odds
-        #   (≤ 11¢) AND strong model support (≥ 2 models or ≥ 8% w_prob).
-
-        signals.append(_make_sig(top1, "ACE", _base_sz * 0.50))
+        signals.append(_make_sig(top1, "ACE"))
 
         ace_value_pool: list[tuple[float, dict]] = []
         for r in ranked:
@@ -1290,8 +1279,7 @@ def generate_mk2_ace_signals(
             nm = r["n_models"]
             wp_r = r["model_prob"]
             mp_r = r["market_prob"]
-            has_support = nm >= 1 or wp_r >= 0.05
-            if not has_support:
+            if nm < 1 and wp_r < 0.05:
                 continue
             score = nm * 3.0 + wp_r * 10.0 - mp_r * 5.0
             ace_value_pool.append((score, r))
@@ -1300,21 +1288,23 @@ def generate_mk2_ace_signals(
 
         if ace_value_pool:
             pick2 = ace_value_pool[0][1]
-            signals.append(_make_sig(pick2, "ACE", _base_sz * 0.50))
+            signals.append(_make_sig(pick2, "ACE"))
             _log.info(
                 f"ACE pick2 {city} {date_str} {pick2['bucket']} "
                 f"price={pick2['market_prob']:.3f} models={pick2['n_models']} "
-                f"w_prob={pick2['model_prob']:.3f}"
+                f"w_prob={pick2['model_prob']:.3f} "
+                f"kelly=${_kelly_for(pick2):.2f}"
             )
 
             for _, vc in ace_value_pool[1:]:
                 if vc["market_prob"] <= ACE_VALUE_MAX_PRICE:
                     if vc["n_models"] >= ACE_VALUE_MIN_MODELS or vc["model_prob"] >= ACE_VALUE_MIN_WEIGHTED_PROB:
-                        signals.append(_make_sig(vc, "ACE", _base_sz * 0.30))
+                        signals.append(_make_sig(vc, "ACE"))
                         _log.info(
                             f"ACE value bet {city} {date_str} {vc['bucket']} "
                             f"price={vc['market_prob']:.3f} models={vc['n_models']} "
-                            f"w_prob={vc['model_prob']:.3f}"
+                            f"w_prob={vc['model_prob']:.3f} "
+                            f"kelly=${_kelly_for(vc):.2f}"
                         )
                         break
 
