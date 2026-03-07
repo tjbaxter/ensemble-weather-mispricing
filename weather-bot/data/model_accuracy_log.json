@@ -1,7 +1,6 @@
 {
   "KLGA/2026-03-08": {
     "preds": {
-      "ncep_nbm_conus": 61.2,
       "icon_seamless": 60.9,
       "gfs_graphcast025": 60.5,
       "kma_seamless": 64.3,
@@ -11,7 +10,7 @@
   },
   "KLGA/2026-03-09": {
     "preds": {
-      "ncep_nbm_conus": 62.0,
+      "ncep_nbm_conus": 62.5,
       "icon_seamless": 61.1,
       "gfs_graphcast025": 62.9,
       "kma_seamless": 61.0,
@@ -21,7 +20,7 @@
   },
   "KORD/2026-03-08": {
     "preds": {
-      "ncep_nbm_conus": 60.8,
+      "ncep_nbm_conus": 60.6,
       "ncep_aigfs025": 60.4,
       "gem_seamless": 57.4,
       "best_match": 56.1,
@@ -31,7 +30,7 @@
   },
   "KORD/2026-03-09": {
     "preds": {
-      "ncep_nbm_conus": 68.1,
+      "ncep_nbm_conus": 67.9,
       "ncep_aigfs025": 69.3,
       "gem_seamless": 64.4,
       "best_match": 70.1,
@@ -41,7 +40,7 @@
   },
   "KMIA/2026-03-08": {
     "preds": {
-      "ncep_nbm_conus": 81.7,
+      "ncep_nbm_conus": 81.6,
       "gfs_seamless": 82.0,
       "ecmwf_ifs025": 81.0,
       "icon_seamless": 83.6
@@ -50,7 +49,7 @@
   },
   "KMIA/2026-03-09": {
     "preds": {
-      "ncep_nbm_conus": 81.8,
+      "ncep_nbm_conus": 82.0,
       "gfs_seamless": 83.0,
       "ecmwf_ifs025": 81.1,
       "icon_seamless": 83.9
@@ -61,7 +60,7 @@
     "preds": {
       "icon_seamless": 54.5,
       "gem_seamless": 53.7,
-      "ncep_nbm_conus": 50.1
+      "ncep_nbm_conus": 50.4
     },
     "actual": null
   },
@@ -69,7 +68,7 @@
     "preds": {
       "icon_seamless": 43.7,
       "gem_seamless": 45.0,
-      "ncep_nbm_conus": 44.2
+      "ncep_nbm_conus": 43.6
     },
     "actual": null
   },
@@ -84,7 +83,7 @@
   },
   "KDFW/2026-03-09": {
     "preds": {
-      "ncep_nbm_conus": 80.3,
+      "ncep_nbm_conus": 80.1,
       "gfs_seamless": 81.6,
       "ecmwf_ifs025": 79.1,
       "icon_seamless": 83.3
@@ -102,7 +101,7 @@
   },
   "KATL/2026-03-09": {
     "preds": {
-      "ncep_nbm_conus": 76.7,
+      "ncep_nbm_conus": 76.5,
       "gfs_seamless": 79.5,
       "ecmwf_ifs025": 73.4,
       "icon_seamless": 77.6
@@ -114,7 +113,7 @@
       "meteofrance_arome_france": 9.6,
       "meteofrance_seamless": 9.6,
       "meteofrance_arome_france_hd": 9.6,
-      "icon_seamless": 9.9,
+      "icon_seamless": 10.2,
       "dmi_seamless": 10.4
     },
     "actual": null
@@ -122,16 +121,16 @@
   "EGLC/2026-03-09": {
     "preds": {
       "meteofrance_seamless": 15.6,
-      "icon_seamless": 15.5,
+      "icon_seamless": 15.3,
       "dmi_seamless": 15.3
     },
     "actual": null
   },
   "LFPG/2026-03-08": {
     "preds": {
-      "ukmo_uk_deterministic_2km": 17.0,
+      "ukmo_uk_deterministic_2km": 18.2,
       "metno_seamless": 17.0,
-      "ukmo_seamless": 17.0,
+      "ukmo_seamless": 18.2,
       "ecmwf_ifs025": 17.2
     },
     "actual": null
@@ -139,7 +138,7 @@
   "LFPG/2026-03-09": {
     "preds": {
       "metno_seamless": 15.9,
-      "ukmo_seamless": 17.4,
+      "ukmo_seamless": 17.0,
       "ecmwf_ifs025": 15.9
     },
     "actual": null
@@ -175,7 +174,7 @@
   },
   "SAEZ/2026-03-08": {
     "preds": {
-      "ukmo_seamless": 25.2,
+      "ukmo_seamless": 25.6,
       "ecmwf_ifs025": 24.6,
       "icon_seamless": 25.9,
       "gem_global": 24.8
@@ -184,7 +183,7 @@
   },
   "SAEZ/2026-03-09": {
     "preds": {
-      "ukmo_seamless": 24.9,
+      "ukmo_seamless": 25.6,
       "ecmwf_ifs025": 24.8,
       "icon_seamless": 26.2,
       "gem_global": 24.6
@@ -193,7 +192,7 @@
   },
   "NZWN/2026-03-08": {
     "preds": {
-      "ukmo_seamless": 19.5,
+      "ukmo_seamless": 19.4,
       "ecmwf_ifs025": 18.6,
       "icon_seamless": 18.6
     },
@@ -201,7 +200,7 @@
   },
   "NZWN/2026-03-09": {
     "preds": {
-      "ukmo_seamless": 16.4,
+      "ukmo_seamless": 16.6,
       "ecmwf_ifs025": 16.3,
       "icon_seamless": 17.6
     },
@@ -235,6 +234,15 @@
       "meteofrance_arpege_world": 13.9,
       "gem_global": 12.5,
       "dmi_seamless": 18.1
+    },
+    "actual": null
+  },
+  "CYYZ/2026-03-08": {
+    "preds": {
+      "kma_gdps": 11.0,
+      "meteofrance_arpege_world": 9.3,
+      "gem_global": 8.6,
+      "dmi_seamless": 11.4
     },
     "actual": null
   }

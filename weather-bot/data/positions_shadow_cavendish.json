@@ -234,7 +234,7 @@
     "fill_price": 0.07500000000000001,
     "fill_size": 66.66666666666666,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.144944+00:00",
+    "timestamp": "2026-03-07T19:41:33.145132+00:00",
     "strategy": "CAVENDISH_MK1"
   },
   {
@@ -245,10 +245,10 @@
     "station_icao": "KMIA",
     "date": "2026-03-08",
     "bucket": "84-85",
-    "fill_price": 0.345,
-    "fill_size": 14.492753623188406,
+    "fill_price": 0.35,
+    "fill_size": 14.285714285714286,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.151583+00:00",
+    "timestamp": "2026-03-07T19:41:33.148844+00:00",
     "strategy": "CAVENDISH_MK1"
   },
   {
@@ -262,7 +262,7 @@
     "fill_price": 0.0625,
     "fill_size": 80.0,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.158814+00:00",
+    "timestamp": "2026-03-07T19:44:24.368215+00:00",
     "strategy": "CAVENDISH_MK1"
   },
   {
@@ -273,10 +273,10 @@
     "station_icao": "KSEA",
     "date": "2026-03-08",
     "bucket": "52-53",
-    "fill_price": 0.36,
-    "fill_size": 13.88888888888889,
+    "fill_price": 0.375,
+    "fill_size": 13.333333333333334,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.354788+00:00",
+    "timestamp": "2026-03-07T19:44:24.369982+00:00",
     "strategy": "CAVENDISH_MK1"
   },
   {
@@ -290,7 +290,7 @@
     "fill_price": 0.23499999999999996,
     "fill_size": 21.276595744680854,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.358309+00:00",
+    "timestamp": "2026-03-07T19:44:24.371804+00:00",
     "strategy": "CAVENDISH_MK1"
   },
   {
@@ -301,10 +301,10 @@
     "station_icao": "KSEA",
     "date": "2026-03-09",
     "bucket": "42-43",
-    "fill_price": 0.08,
-    "fill_size": 62.5,
+    "fill_price": 0.075,
+    "fill_size": 66.66666666666667,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.362196+00:00",
+    "timestamp": "2026-03-07T19:44:24.373591+00:00",
     "strategy": "CAVENDISH_MK1"
   },
   {
@@ -315,10 +315,10 @@
     "station_icao": "NZWN",
     "date": "2026-03-08",
     "bucket": "21+",
-    "fill_price": 0.185,
-    "fill_size": 27.027027027027028,
+    "fill_price": 0.20500000000000002,
+    "fill_size": 24.39024390243902,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.366537+00:00",
+    "timestamp": "2026-03-07T19:44:24.375379+00:00",
     "strategy": "CAVENDISH_MK1"
   },
   {
@@ -329,10 +329,10 @@
     "station_icao": "NZWN",
     "date": "2026-03-09",
     "bucket": "19+",
-    "fill_price": 0.14500000000000002,
-    "fill_size": 34.48275862068965,
+    "fill_price": 0.11000000000000001,
+    "fill_size": 45.454545454545446,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.372504+00:00",
+    "timestamp": "2026-03-07T19:59:12.900251+00:00",
     "strategy": "CAVENDISH_MK1"
   }
 ]

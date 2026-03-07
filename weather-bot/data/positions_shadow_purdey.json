@@ -175,10 +175,10 @@
     "station_icao": "KLGA",
     "date": "2026-03-08",
     "bucket": "56-57",
-    "fill_price": 0.05550000000000001,
-    "fill_size": 90.09009009009007,
+    "fill_price": 0.05450000000000001,
+    "fill_size": 91.74311926605503,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:31.898768+00:00",
+    "timestamp": "2026-03-07T19:41:33.131159+00:00",
     "strategy": "PURDEY_MK1"
   },
   {
@@ -192,7 +192,7 @@
     "fill_price": 0.215,
     "fill_size": 23.25581395348837,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.103207+00:00",
+    "timestamp": "2026-03-07T19:41:33.136610+00:00",
     "strategy": "PURDEY_MK1"
   },
   {
@@ -206,7 +206,7 @@
     "fill_price": 0.07500000000000001,
     "fill_size": 66.66666666666666,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.107499+00:00",
+    "timestamp": "2026-03-07T19:41:33.140132+00:00",
     "strategy": "PURDEY_MK1"
   },
   {
@@ -217,10 +217,10 @@
     "station_icao": "KSEA",
     "date": "2026-03-08",
     "bucket": "52-53",
-    "fill_price": 0.36,
-    "fill_size": 13.88888888888889,
+    "fill_price": 0.375,
+    "fill_size": 13.333333333333334,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.110471+00:00",
+    "timestamp": "2026-03-07T19:44:24.358741+00:00",
     "strategy": "PURDEY_MK1"
   },
   {
@@ -231,10 +231,10 @@
     "station_icao": "KSEA",
     "date": "2026-03-09",
     "bucket": "42-43",
-    "fill_price": 0.08,
-    "fill_size": 62.5,
+    "fill_price": 0.075,
+    "fill_size": 66.66666666666667,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.116401+00:00",
+    "timestamp": "2026-03-07T19:44:24.360547+00:00",
     "strategy": "PURDEY_MK1"
   },
   {
@@ -245,10 +245,10 @@
     "station_icao": "NZWN",
     "date": "2026-03-08",
     "bucket": "21+",
-    "fill_price": 0.185,
-    "fill_size": 27.027027027027028,
+    "fill_price": 0.20500000000000002,
+    "fill_size": 24.39024390243902,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.120494+00:00",
+    "timestamp": "2026-03-07T19:44:24.362063+00:00",
     "strategy": "PURDEY_MK1"
   },
   {
@@ -259,10 +259,10 @@
     "station_icao": "NZWN",
     "date": "2026-03-09",
     "bucket": "19+",
-    "fill_price": 0.14500000000000002,
-    "fill_size": 34.48275862068965,
+    "fill_price": 0.11000000000000001,
+    "fill_size": 45.454545454545446,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:32.124634+00:00",
+    "timestamp": "2026-03-07T19:59:12.874624+00:00",
     "strategy": "PURDEY_MK1"
   }
 ]

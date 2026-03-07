@@ -7,10 +7,10 @@
     "station_icao": "KLGA",
     "date": "2026-03-08",
     "bucket": "58-59",
-    "fill_price": 0.165,
-    "fill_size": 30.3030303030303,
+    "fill_price": 0.14500000000000002,
+    "fill_size": 34.48275862068965,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:33.863755+00:00",
+    "timestamp": "2026-03-07T19:59:14.602135+00:00",
     "strategy": "CAVENDISH_MK2"
   },
   {
@@ -21,10 +21,24 @@
     "station_icao": "KLGA",
     "date": "2026-03-08",
     "bucket": "56-57",
-    "fill_price": 0.05550000000000001,
-    "fill_size": 90.09009009009007,
+    "fill_price": 0.054000000000000006,
+    "fill_size": 92.59259259259258,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:33.867307+00:00",
+    "timestamp": "2026-03-07T19:59:14.635798+00:00",
+    "strategy": "CAVENDISH_MK2"
+  },
+  {
+    "market_id": "0xede0ff358842764615f26128d406250003fcee9a7910d0ec7090f34705ad0152",
+    "token_id": "33572565047633752804720633820545330731579196744343232530065552480218983657315",
+    "side": "BUY_YES",
+    "city": "NYC",
+    "station_icao": "KLGA",
+    "date": "2026-03-08",
+    "bucket": "60+",
+    "fill_price": 0.765,
+    "fill_size": 6.5359477124183005,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T19:59:14.638494+00:00",
     "strategy": "CAVENDISH_MK2"
   },
   {
@@ -38,7 +52,7 @@
     "fill_price": 0.215,
     "fill_size": 23.25581395348837,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:33.870492+00:00",
+    "timestamp": "2026-03-07T19:59:14.639593+00:00",
     "strategy": "CAVENDISH_MK2"
   },
   {
@@ -52,7 +66,7 @@
     "fill_price": 0.07500000000000001,
     "fill_size": 66.66666666666666,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:33.871578+00:00",
+    "timestamp": "2026-03-07T19:59:14.642754+00:00",
     "strategy": "CAVENDISH_MK2"
   },
   {
@@ -63,10 +77,10 @@
     "station_icao": "KORD",
     "date": "2026-03-08",
     "bucket": "60-61",
-    "fill_price": 0.325,
-    "fill_size": 15.384615384615383,
+    "fill_price": 0.315,
+    "fill_size": 15.873015873015873,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:33.872535+00:00",
+    "timestamp": "2026-03-07T19:59:14.646475+00:00",
     "strategy": "CAVENDISH_MK2"
   },
   {
@@ -77,10 +91,24 @@
     "station_icao": "KORD",
     "date": "2026-03-09",
     "bucket": "64-65",
-    "fill_price": 0.065,
-    "fill_size": 76.92307692307692,
+    "fill_price": 0.06000000000000001,
+    "fill_size": 83.33333333333331,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:33.873511+00:00",
+    "timestamp": "2026-03-07T19:59:14.647641+00:00",
+    "strategy": "CAVENDISH_MK2"
+  },
+  {
+    "market_id": "0x078d34285f81b89cf4f9ebbb2edd951102517f56a293fe73ebced1252410c85e",
+    "token_id": "82947004916856957933268295409673411186929150183824730160945967002446370839899",
+    "side": "BUY_YES",
+    "city": "Chicago",
+    "station_icao": "KORD",
+    "date": "2026-03-09",
+    "bucket": "66-67",
+    "fill_price": 0.155,
+    "fill_size": 32.25806451612903,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T19:59:14.650474+00:00",
     "strategy": "CAVENDISH_MK2"
   },
   {
@@ -91,10 +119,10 @@
     "station_icao": "KMIA",
     "date": "2026-03-08",
     "bucket": "80-81",
-    "fill_price": 0.135,
-    "fill_size": 37.03703703703704,
-    "cost": 5.000000000000001,
-    "timestamp": "2026-03-07T19:27:33.876238+00:00",
+    "fill_price": 0.14,
+    "fill_size": 35.71428571428571,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T19:59:14.653469+00:00",
     "strategy": "CAVENDISH_MK2"
   },
   {
@@ -105,38 +133,10 @@
     "station_icao": "KMIA",
     "date": "2026-03-08",
     "bucket": "82-83",
-    "fill_price": 0.4149999999999999,
-    "fill_size": 12.04819277108434,
+    "fill_price": 0.4050000000000001,
+    "fill_size": 12.345679012345677,
     "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:33.879472+00:00",
-    "strategy": "CAVENDISH_MK2"
-  },
-  {
-    "market_id": "0x4b329427fd233c48af7123bc6504a0b3141188828ea4df038faeb3acab13f85f",
-    "token_id": "6056117451598364070728977904324898864287974897270911884173230390924478273921",
-    "side": "BUY_YES",
-    "city": "Miami",
-    "station_icao": "KMIA",
-    "date": "2026-03-09",
-    "bucket": "80-81",
-    "fill_price": 0.125,
-    "fill_size": 40.0,
-    "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:33.880685+00:00",
-    "strategy": "CAVENDISH_MK2"
-  },
-  {
-    "market_id": "0x3cff3a4c7fe6ca0debe9e17f44765b3c90fdbb56a35875089e992feb23ff1200",
-    "token_id": "37631307383340860290408641590575771795645429628952264878158346578982549483510",
-    "side": "BUY_YES",
-    "city": "Miami",
-    "station_icao": "KMIA",
-    "date": "2026-03-09",
-    "bucket": "78-79",
-    "fill_price": 0.0625,
-    "fill_size": 80.0,
-    "cost": 5.0,
-    "timestamp": "2026-03-07T19:27:33.883551+00:00",
+    "timestamp": "2026-03-07T19:59:14.654785+00:00",
     "strategy": "CAVENDISH_MK2"
   }
 ]
