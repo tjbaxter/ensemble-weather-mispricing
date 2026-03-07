@@ -1468,5 +1468,19 @@
     "cost": 5.0,
     "timestamp": "2026-03-07T16:33:33.101530+00:00",
     "strategy": "TOP2_PROP"
+  },
+  {
+    "market_id": "0xed0fb31f9d9179e572e9a1458a9b94cf77198398c14ebbe5fcc8af21797cb52a",
+    "token_id": "87964087119811004915238034889817454762994501698824279764365433430750903578154",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-08",
+    "bucket": "80-81",
+    "fill_price": 0.23499999999999996,
+    "fill_size": 21.276595744680854,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T18:06:56.396994+00:00",
+    "strategy": "TOP2_PROP"
   }
 ]

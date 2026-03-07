@@ -54,5 +54,61 @@
     "cost": 5.0,
     "timestamp": "2026-03-07T17:59:56.631854+00:00",
     "strategy": "PURDEY_MK1"
+  },
+  {
+    "market_id": "0x6c5188485f5c0679e90005fcabba57b721a69b8f512508af37839bed356cfbc3",
+    "token_id": "9882314643775585367142857871697341133896688478988285220315978564697242941373",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-08",
+    "bucket": "82-83",
+    "fill_price": 0.42000000000000004,
+    "fill_size": 11.904761904761903,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T18:06:56.406197+00:00",
+    "strategy": "PURDEY_MK1"
+  },
+  {
+    "market_id": "0xed0fb31f9d9179e572e9a1458a9b94cf77198398c14ebbe5fcc8af21797cb52a",
+    "token_id": "87964087119811004915238034889817454762994501698824279764365433430750903578154",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-08",
+    "bucket": "80-81",
+    "fill_price": 0.23499999999999996,
+    "fill_size": 21.276595744680854,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T18:06:56.407803+00:00",
+    "strategy": "PURDEY_MK1"
+  },
+  {
+    "market_id": "0x4b329427fd233c48af7123bc6504a0b3141188828ea4df038faeb3acab13f85f",
+    "token_id": "6056117451598364070728977904324898864287974897270911884173230390924478273921",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-09",
+    "bucket": "80-81",
+    "fill_price": 0.1,
+    "fill_size": 50.0,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T18:13:53.149175+00:00",
+    "strategy": "PURDEY_MK1"
+  },
+  {
+    "market_id": "0x62b54295795f1d62e4a630428f6732e04342a98d818052dfe355c11a075a73d7",
+    "token_id": "102567352026290085856628839104621665686409288517421932202708161660473204828313",
+    "side": "BUY_YES",
+    "city": "Seattle",
+    "station_icao": "KSEA",
+    "date": "2026-03-08",
+    "bucket": "48-49",
+    "fill_price": 0.07,
+    "fill_size": 71.42857142857142,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T18:20:50.658771+00:00",
+    "strategy": "PURDEY_MK1"
   }
 ]
