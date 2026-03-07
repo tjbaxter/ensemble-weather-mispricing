@@ -59,6 +59,7 @@ class ShadowTrader:
         "PURDEY_MK2":    "shadow_purdey2",
         "CAVENDISH_MK2": "shadow_cavendish2",
         "ACE":           "shadow_ace",
+        "PROPS_KELLY":   "shadow_props_kelly",
     }
 
     def __init__(self, variant: str) -> None:
@@ -75,7 +76,7 @@ class ShadowTrader:
         self._log = logging.getLogger(f"weather-bot.{slug}")
 
     _PURDEY_CAVENDISH_VARIANTS = {"PURDEY_MK1", "CAVENDISH_MK1"}
-    _MK2_ACE_VARIANTS = {"PURDEY_MK2", "CAVENDISH_MK2", "ACE"}
+    _MK2_ACE_VARIANTS = {"PURDEY_MK2", "CAVENDISH_MK2", "ACE", "PROPS_KELLY"}
 
     def run_once(self, markets: list[dict], forecasts: dict, bankroll: float) -> None:
         """Execute one scan using shared market + forecast data."""
@@ -174,6 +175,7 @@ class PaperTrader:
             ShadowTrader("PURDEY_MK2"),
             ShadowTrader("CAVENDISH_MK2"),
             ShadowTrader("ACE"),
+            ShadowTrader("PROPS_KELLY"),
         ]
 
     async def close(self) -> None:

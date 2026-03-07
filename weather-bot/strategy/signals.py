@@ -1042,24 +1042,25 @@ def generate_mk2_ace_signals(
     forecasts: dict[str, dict[str, dict]],
     bankroll: float,
 ) -> list["Signal"]:
-    """Generate PURDEY_MK2, CAVENDISH_MK2, and ACE signals.
+    """Generate PURDEY_MK2, CAVENDISH_MK2, ACE, and PROPS_KELLY signals.
 
     These use recency-weighted model accuracy to pick buckets.  Models that
     nailed yesterday's temperature get higher weight, shifting the probability
     distribution toward their predictions.
 
     PURDEY_MK2 — Hard cap of 2 bets per city-date.
-        Top-2 buckets by WEIGHTED model probability.  60/40 split.
+        Top-2 buckets by WEIGHTED model probability.
 
     CAVENDISH_MK2 — Hard cap of 3 bets per city-date.
-        Peak by weighted probability + immediate temperature flanks.  50/25/25.
+        Peak by weighted probability + immediate temperature flanks.
 
     ACE — Smart 2-or-3 bets.
-        Peak + runner-up (50/50).  Adds a 3rd "value bet" ONLY when:
-          • market price ≤ 11 cents (great odds)
-          • ≥ 2 individual models predict temps in that bucket
-          • weighted probability ≥ 8 %
-        When 3 bets: 40/30/30.
+        Peak + runner-up.  Adds a 3rd bet when ≥ 2 models agree or price ≤ 11¢.
+
+    PROPS_KELLY — Hard cap of 3 bets per city-date.
+        Peak + flanks (like CAVENDISH_MK2) but with PROPORTIONAL Kelly sizing:
+        each bet sized independently by its own Kelly, then scaled proportional
+        to weighted probability (higher weighted prob → bigger share of Kelly).
     """
     from collections import defaultdict
     from strategy.model_weights import (
@@ -1202,8 +1203,8 @@ def generate_mk2_ace_signals(
                 )
             return KELLY_MIN_BET_USD
 
-        def _make_sig(cand: dict, strategy: str) -> Signal:
-            sz = _kelly_for(cand)
+        def _make_sig(cand: dict, strategy: str, _override_sz: float | None = None) -> Signal:
+            sz = _override_sz if _override_sz is not None else _kelly_for(cand)
             mp = max(cand["market_prob"], 0.01)
             wp_ = cand["model_prob"]
             ev = wp_ * (sz / mp) * (1.0 - mp) - (1.0 - wp_) * sz
@@ -1315,17 +1316,55 @@ def generate_mk2_ace_signals(
                 f"kelly=${_kelly_for(best_3rd):.2f}"
             )
 
+        # ── PROPS_KELLY: peak + flanks, proportional Kelly sizing ────────
+        # Like CAVENDISH_MK2 (peak + adjacent flanks, max 3) but each bet
+        # gets independent Kelly, then scaled proportionally by weighted prob
+        # so the peak (highest conviction) gets the largest share.
+        pk_bets: list[dict] = [top1]
+        if peak_idx >= 0:
+            for off in (-1, +1):
+                idx = peak_idx + off
+                if idx < 0 or idx >= len(sorted_buckets):
+                    continue
+                fk = sorted_buckets[idx]
+                fi = all_buckets[fk]
+                fp = float(fi.get("price", 0) or 0)
+                ft = fi.get("yes_token_id", "")
+                if not ft or fp < HARD_MIN_YES_ENTRY_PRICE:
+                    continue
+                fwp = w_probs.get(fk, 0.0) * temporal_discount
+                pk_bets.append({
+                    "bucket": fk, "token_id": ft,
+                    "condition_id": bucket_to_condition[fk],
+                    "model_prob": max(fwp, 0.01),
+                    "market_prob": fp,
+                    "edge": fwp - fp,
+                    "n_models": models_in_bucket(det_model_values, fk),
+                })
+
+        total_wp = sum(b["model_prob"] for b in pk_bets)
+        for bet in pk_bets:
+            prop = bet["model_prob"] / total_wp if total_wp > 0 else 1.0 / len(pk_bets)
+            raw_kelly = _kelly_for(bet)
+            sz = round(max(raw_kelly * prop * len(pk_bets), KELLY_MIN_BET_USD), 2)
+            signals.append(_make_sig(
+                bet, "PROPS_KELLY",
+                _override_sz=sz,
+            ))
+
         _log.info(
-            f"MK2/ACE for {city} {date_str}: "
+            f"MK2/ACE/PK for {city} {date_str}: "
             f"buckets={len(sorted_buckets)} ranked={len(ranked)} "
             f"weighted_peak={peak_bucket} "
-            f"top3={'→'.join(c['bucket'] for c in ranked[:3])}"
+            f"top3={'→'.join(c['bucket'] for c in ranked[:3])} "
+            f"PK_bets={len(pk_bets)}"
         )
 
     n_p2 = sum(1 for s in signals if s.strategy == "PURDEY_MK2")
     n_c2 = sum(1 for s in signals if s.strategy == "CAVENDISH_MK2")
     n_ace = sum(1 for s in signals if s.strategy == "ACE")
-    _log.info(f"PURDEY_MK2={n_p2} | CAVENDISH_MK2={n_c2} | ACE={n_ace} signals")
+    n_pk = sum(1 for s in signals if s.strategy == "PROPS_KELLY")
+    _log.info(f"PURDEY_MK2={n_p2} | CAVENDISH_MK2={n_c2} | ACE={n_ace} | PROPS_KELLY={n_pk} signals")
     return signals
 
 

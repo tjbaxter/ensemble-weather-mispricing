@@ -93,7 +93,7 @@ def _ensure_resolved_csv() -> None:
 _SHADOW_STRATEGIES = {
     "CONVICTION", "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP",
     "PURDEY_MK1", "CAVENDISH_MK1",
-    "PURDEY_MK2", "CAVENDISH_MK2", "ACE",
+    "PURDEY_MK2", "CAVENDISH_MK2", "ACE", "PROPS_KELLY",
 }
 
 
@@ -237,6 +237,7 @@ def _load_pending_trades() -> list[dict]:
         (ROOT / "data" / "positions_shadow_purdey2.json",   "PURDEY_MK2"),
         (ROOT / "data" / "positions_shadow_cavendish2.json","CAVENDISH_MK2"),
         (ROOT / "data" / "positions_shadow_ace.json",       "ACE"),
+        (ROOT / "data" / "positions_shadow_props_kelly.json", "PROPS_KELLY"),
     ]
     for shadow_path, shadow_strategy in _SHADOW_FILES:
         if not shadow_path.exists():
@@ -526,6 +527,7 @@ def print_summary(stats: dict) -> None:
             "PURDEY_MK2":    "PURDEY_MK2   (weighted top-2, cap 2)",
             "CAVENDISH_MK2": "CAVENDISH_MK2 (weighted flank-3, cap 3)",
             "ACE":           "ACE           (smart 2-or-3, value bets)",
+            "PROPS_KELLY":   "PROPS_KELLY   (weighted peak+flanks, prop Kelly)",
         }
 
         def _strat_summary(rows: list[dict], label: str) -> None:
