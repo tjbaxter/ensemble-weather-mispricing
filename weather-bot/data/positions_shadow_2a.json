@@ -1482,5 +1482,19 @@
     "cost": 5.0,
     "timestamp": "2026-03-07T19:44:24.114617+00:00",
     "strategy": "TOP2_EQUAL"
+  },
+  {
+    "market_id": "0x023641a3c4fde22be45661072bcb7d7fb4b2ba5ef0271983d1045a9854915e69",
+    "token_id": "42312797798557618568527570566427488713945558379319422011145884846159360664525",
+    "side": "BUY_YES",
+    "city": "NYC",
+    "station_icao": "KLGA",
+    "date": "2026-03-09",
+    "bucket": "60-61",
+    "fill_price": 0.145,
+    "fill_size": 34.48275862068966,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T20:32:01.144596+00:00",
+    "strategy": "TOP2_EQUAL"
   }
 ]
