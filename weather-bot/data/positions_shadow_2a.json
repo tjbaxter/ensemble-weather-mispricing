@@ -1454,5 +1454,33 @@
     "cost": 5.0,
     "timestamp": "2026-03-07T15:22:56.622411+00:00",
     "strategy": "TOP2_EQUAL"
+  },
+  {
+    "market_id": "0x402eb523ecfca3e24019d4bf354e2b846c5aa85b2894e53af6ef36a0d7b7750c",
+    "token_id": "31756400116869336445014891773239459224999457646937133531924755038652699946425",
+    "side": "BUY_YES",
+    "city": "NYC",
+    "station_icao": "KLGA",
+    "date": "2026-03-09",
+    "bucket": "58-59",
+    "fill_price": 0.06,
+    "fill_size": 83.33333333333334,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T16:33:32.381009+00:00",
+    "strategy": "TOP2_EQUAL"
+  },
+  {
+    "market_id": "0x3605fa0e979aae78cd52548b62ee8ffb449c057e311db330b5d4f3cf2ae52237",
+    "token_id": "67988463902419451476433870717306713376753266626494427547979815612950059983398",
+    "side": "BUY_YES",
+    "city": "Ankara",
+    "station_icao": "LTAC",
+    "date": "2026-03-09",
+    "bucket": "12+",
+    "fill_price": 0.07500000000000001,
+    "fill_size": 66.66666666666666,
+    "cost": 5.0,
+    "timestamp": "2026-03-07T16:33:32.643689+00:00",
+    "strategy": "TOP2_EQUAL"
   }
 ]
