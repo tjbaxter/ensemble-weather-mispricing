@@ -520,16 +520,16 @@
         "meteofrance_arome_france": 15.2,
         "meteofrance_seamless": 15.3,
         "meteofrance_arome_france_hd": 15.3,
-        "icon_seamless": 15.8,
+        "icon_seamless": 15.1,
         "dmi_seamless": 15.8,
-        "ecmwf_ifs025": 14.4,
+        "ecmwf_ifs025": 15.4,
         "kma_seamless": 14.1,
-        "ukmo_uk_deterministic_2km": 15.7,
-        "ukmo_seamless": 15.7,
-        "ukmo_global_deterministic_10km": 13.5,
+        "ukmo_uk_deterministic_2km": 16.5,
+        "ukmo_seamless": 16.5,
+        "ukmo_global_deterministic_10km": 12.9,
         "ncep_aigfs025": 13.9
       },
-      "logged_at": "2026-03-08T13:18:25.004456+00:00"
+      "logged_at": "2026-03-08T13:50:28.266621+00:00"
     }
   },
   "Miami": {

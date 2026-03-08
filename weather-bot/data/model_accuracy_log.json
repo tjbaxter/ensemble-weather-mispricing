@@ -79,10 +79,9 @@
   },
   "KDFW/2026-03-09": {
     "preds": {
-      "ncep_nbm_conus": 80.2,
+      "ncep_nbm_conus": 81.5,
       "gfs_seamless": 80.8,
-      "ecmwf_ifs025": 80.1,
-      "icon_seamless": 80.0
+      "ecmwf_ifs025": 80.1
     },
     "actual": null
   },
