@@ -23,6 +23,15 @@ class Position:
     cost: float
     timestamp: datetime
     strategy: str = ""
+    forecast_prob: float = 0.0
+    market_prob: float = 0.0
+    edge: float = 0.0
+    ev_per_bet: float = 0.0
+    spread_colour: str = ""
+    det_spread: float = 0.0
+    model_values_json: str = "{}"
+    days_ahead: int = 0
+    kelly_fraction_used: float = 0.0
 
 
 @dataclass
@@ -62,6 +71,15 @@ class Portfolio:
             cost=cost,
             timestamp=datetime.now(UTC),
             strategy=signal.get("strategy", ""),
+            forecast_prob=float(signal.get("forecast_prob", 0)),
+            market_prob=float(signal.get("market_prob", 0)),
+            edge=float(signal.get("edge", 0)),
+            ev_per_bet=float(signal.get("ev_per_bet", 0)),
+            spread_colour=str(signal.get("spread_colour", "")),
+            det_spread=float(signal.get("det_spread", 0)),
+            model_values_json=str(signal.get("model_values_json", "{}")),
+            days_ahead=int(signal.get("days_ahead", 0)),
+            kelly_fraction_used=float(signal.get("kelly_fraction_used", 0)),
         )
         self.positions.append(pos)
         self._save_positions()
@@ -162,6 +180,15 @@ class Portfolio:
                             cost=float(item["cost"]),
                             timestamp=datetime.fromisoformat(str(item["timestamp"])),
                             strategy=str(item.get("strategy", "")),
+                            forecast_prob=float(item.get("forecast_prob", 0)),
+                            market_prob=float(item.get("market_prob", 0)),
+                            edge=float(item.get("edge", 0)),
+                            ev_per_bet=float(item.get("ev_per_bet", 0)),
+                            spread_colour=str(item.get("spread_colour", "")),
+                            det_spread=float(item.get("det_spread", 0)),
+                            model_values_json=str(item.get("model_values_json", "{}")),
+                            days_ahead=int(item.get("days_ahead", 0)),
+                            kelly_fraction_used=float(item.get("kelly_fraction_used", 0)),
                         )
                     )
                 except (KeyError, TypeError, ValueError):
@@ -187,6 +214,15 @@ class Portfolio:
                     "cost": p.cost,
                     "timestamp": p.timestamp.isoformat(),
                     "strategy": p.strategy,
+                    "forecast_prob": p.forecast_prob,
+                    "market_prob": p.market_prob,
+                    "edge": p.edge,
+                    "ev_per_bet": p.ev_per_bet,
+                    "spread_colour": p.spread_colour,
+                    "det_spread": p.det_spread,
+                    "model_values_json": p.model_values_json,
+                    "days_ahead": p.days_ahead,
+                    "kelly_fraction_used": p.kelly_fraction_used,
                 }
                 for p in self.positions
             ]

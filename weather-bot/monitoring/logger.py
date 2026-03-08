@@ -44,6 +44,9 @@ class BotLogger:
                         "fill_price",
                         "outcome",
                         "pnl",
+                        "strategy",
+                        "station_icao",
+                        "model_values_json",
                     ]
                 )
         if not self.signals_file.exists():
@@ -135,17 +138,20 @@ class BotLogger:
             writer.writerow(
                 [
                     ts,
-                    trade["city"],
-                    trade["date"],
-                    trade["bucket"],
-                    trade["side"],
-                    trade["forecast_prob"],
-                    trade["market_prob"],
-                    trade["edge"],
-                    trade["size_usd"],
+                    trade.get("city", ""),
+                    trade.get("date", ""),
+                    trade.get("bucket", ""),
+                    trade.get("side", ""),
+                    trade.get("forecast_prob", ""),
+                    trade.get("market_prob", ""),
+                    trade.get("edge", ""),
+                    trade.get("size_usd", ""),
                     trade.get("fill_price", ""),
                     outcome,
                     pnl,
+                    trade.get("strategy", ""),
+                    trade.get("station_icao", ""),
+                    trade.get("model_values_json", "{}"),
                 ]
             )
 

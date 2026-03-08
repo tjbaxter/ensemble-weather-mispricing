@@ -55,6 +55,13 @@ async def startup_checks() -> None:
 
 async def run_live(bankroll: float) -> None:
     """Single-pass live trading run. Called by cron at 18:30 UTC."""
+    from datetime import date, timedelta
+    from execution.portfolio import Portfolio
+    from config.settings import (
+        MAX_DAILY_EXPOSURE, MAX_DRAWDOWN_PCT, MAX_POSITIONS_PER_MARKET,
+    )
+    from monitoring.logger import BotLogger
+
     pk = os.getenv("POLYMARKET_PK")
     funder = os.getenv("POLYMARKET_FUNDER")
     api_key = os.getenv("POLYMARKET_API_KEY")
@@ -64,12 +71,24 @@ async def run_live(bankroll: float) -> None:
             "Live trading requires POLYMARKET_PK and POLYMARKET_FUNDER in .env"
         )
 
+    _KILL_FILE = "data/.kill_switch"
+    if os.path.exists(_KILL_FILE):
+        print("KILL SWITCH ACTIVE — refusing to trade. Remove data/.kill_switch to resume.")
+        return
+
     order_manager = OrderManager(
         live_trading=True,
         api_key=api_key or pk,
         private_key=pk,
         wallet_address=funder,
     )
+
+    logger = BotLogger(output_dir="logs")
+    portfolio = Portfolio(initial_bankroll=bankroll, positions_path="data/positions_live.json")
+
+    if portfolio.max_drawdown_pct() >= MAX_DRAWDOWN_PCT:
+        print(f"DRAWDOWN LIMIT HIT ({portfolio.max_drawdown_pct():.1%} >= {MAX_DRAWDOWN_PCT:.1%}) — refusing to trade.")
+        return
 
     forecaster = StationForecaster(met_office_api_key=os.getenv("MET_OFFICE_API_KEY"))
     market_client = PolymarketDataClient()
@@ -81,7 +100,6 @@ async def run_live(bankroll: float) -> None:
         print(f"  Found {len(hydrated)} markets with prices.")
 
         print("Fetching forecasts for all cities...")
-        from datetime import date, timedelta
         target_date = date.today() + timedelta(days=1)
         forecasts: dict = {}
         for icao in STATIONS:
@@ -97,21 +115,57 @@ async def run_live(bankroll: float) -> None:
                 bundle = await forecaster.get_station_forecast(icao, target_date, list(bucket_labels))
                 forecasts.setdefault(icao, {})[target_date.isoformat()] = bundle
             except Exception as e:
-                print(f"  ⚠ Forecast error for {icao}: {e}")
+                print(f"  Forecast error for {icao}: {e}")
 
         signals = generate_signals(hydrated, forecasts, bankroll)
         print(f"  Generated {len(signals)} signals.")
 
         placed = 0
-        for signal in signals:
-            result = order_manager.place_order(signal.to_dict())
-            print(
-                f"  [{signal.city}] {signal.bucket} {signal.side} "
-                f"${signal.size_usd:.2f} @ {signal.market_prob:.2f} → {result.status}"
-            )
-            placed += 1
+        daily_deployed = 0.0
+        skipped_reasons: dict[str, int] = {}
 
-        print(f"Done. {placed} orders placed.")
+        for signal in signals:
+            sig = signal.to_dict() if hasattr(signal, "to_dict") else signal
+            size_usd = float(sig.get("size_usd", 0))
+
+            if os.path.exists(_KILL_FILE):
+                print("KILL SWITCH activated mid-run — stopping.")
+                break
+
+            market_id = sig.get("market_id", "")
+            bucket = sig.get("bucket", "")
+
+            if portfolio.holds_market_bucket(market_id, bucket):
+                skipped_reasons["duplicate"] = skipped_reasons.get("duplicate", 0) + 1
+                continue
+
+            existing = sum(1 for p in portfolio.positions if p.market_id == market_id)
+            if existing >= MAX_POSITIONS_PER_MARKET:
+                skipped_reasons["max_per_market"] = skipped_reasons.get("max_per_market", 0) + 1
+                continue
+
+            if daily_deployed + size_usd > MAX_DAILY_EXPOSURE:
+                skipped_reasons["daily_cap"] = skipped_reasons.get("daily_cap", 0) + 1
+                continue
+
+            result = order_manager.place_order(sig)
+
+            if result.status in ("filled", "submitted", "matched", "live"):
+                pos = portfolio.open_position(sig, result.fill_price)
+                daily_deployed += size_usd
+                logger.log_signal(sig, "live_trade")
+                print(
+                    f"  [{sig.get('city')}] {bucket} {sig.get('side')} "
+                    f"${size_usd:.2f} @ {result.fill_price:.3f} -> {result.status}"
+                )
+                placed += 1
+            else:
+                logger.log_signal(sig, f"live_rejected_{result.status}")
+                print(f"  [{sig.get('city')}] {bucket} REJECTED: {result.status}")
+
+        print(f"Done. {placed} orders placed, ${daily_deployed:.2f} deployed.")
+        if skipped_reasons:
+            print(f"  Skipped: {skipped_reasons}")
 
     finally:
         await forecaster.close()

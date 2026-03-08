@@ -3096,7 +3096,7 @@ def main() -> None:
         "🎯 PURDEY II",
         "🌿 CAVENDISH II",
         "🃏 ACE",
-        "📈 Props Kelly",
+        "🎲 Props Kelly",
         "📊 Accuracy",
     ])
 
@@ -3224,7 +3224,7 @@ def main() -> None:
 
     with tab_pk:
         _render_model_detail_tab(
-            "📈 Props Kelly", _strat_df("PROPS_KELLY"),
+            "🎲 Props Kelly", _strat_df("PROPS_KELLY"),
             positions=_shadow_props_kelly, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="props_kelly",
         )
@@ -4280,7 +4280,7 @@ def _render_overview_tab() -> None:
         ("🎯 PURDEY MK2",    "PURDEY_MK2",    _strat_slice("PURDEY_MK2"),    shadow_purdey2),
         ("🌿 CAVENDISH MK2", "CAVENDISH_MK2", _strat_slice("CAVENDISH_MK2"), shadow_cavendish2),
         ("🃏 ACE",           "ACE",           _strat_slice("ACE"),           shadow_ace),
-        ("📈 Props Kelly",   "PROPS_KELLY",   _strat_slice("PROPS_KELLY"),   shadow_props_kelly),
+        ("🎲 Props Kelly",   "PROPS_KELLY",   _strat_slice("PROPS_KELLY"),   shadow_props_kelly),
     ]
 
     all_stats = [
@@ -4467,7 +4467,11 @@ def _render_overview_tab() -> None:
 
 
 def _compute_live_stats(positions: list[dict], live_prices: dict[str, float]) -> dict:
-    """Compute live unrealized P&L stats for a set of open positions."""
+    """Compute live unrealized P&L stats for genuinely open positions only.
+
+    Positions whose target date has passed are excluded from the "open" count
+    and exposure — they belong in resolved.csv, not the live scoreboard.
+    """
     today_str = _date.today().isoformat()
     total_staked = unrealized_pnl = 0.0
     open_count = n_priced = 0
@@ -4475,13 +4479,15 @@ def _compute_live_stats(positions: list[dict], live_prices: dict[str, float]) ->
     best_pnl, worst_pnl = float("-inf"), float("inf")
 
     for p in positions:
+        target_date = p.get("date", "9999")
+        if target_date < today_str:
+            continue
+
         tid  = p.get("token_id")
         cur  = live_prices.get(tid) if tid else None
         fill = float(p.get("fill_price", 0) or 0)
         size = float(p.get("fill_size",  0) or 0)
         cost = float(p.get("cost",       0) or 0)
-        if p.get("date", "9999") < today_str and cur is None:
-            continue
         open_count    += 1
         total_staked  += cost
         if cur is not None:

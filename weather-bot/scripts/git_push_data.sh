@@ -17,6 +17,7 @@ git pull --rebase --autostash origin main 2>&1 | tail -3
 # Stage all data files that change during bot/cron runs
 git add \
   weather-bot/data/positions.json \
+  weather-bot/data/positions_live.json \
   weather-bot/data/positions_shadow_2a.json \
   weather-bot/data/positions_shadow_2b.json \
   weather-bot/data/positions_shadow_2c.json \

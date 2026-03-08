@@ -12,7 +12,11 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 
+import logging
+
 from config.settings import CLOB_API_URL, PRACTICAL_MIN_ORDER_USD
+
+_log = logging.getLogger("weather-bot.orders")
 
 try:
     from py_clob_client.client import ClobClient
@@ -23,10 +27,10 @@ except ImportError:  # pragma: no cover - dependency may be absent in dev.
     OrderType = None
 
 # "Sip, don't gulp" parameters
-# Each chunk is at most $2 on thin markets, $5 on deeper markets.
-# Default: $2 max chunk. Bot will place multiple small orders rather than one large one.
 SIP_MAX_CHUNK_USD = 2.00
-SIP_DELAY_SECONDS = 4.0    # pause between chunks to let book refresh
+SIP_DELAY_SECONDS = 4.0
+
+MAX_SLIPPAGE = 0.03  # reject if execution price is > 3pp worse than signal price
 
 
 @dataclass(frozen=True)
@@ -97,20 +101,29 @@ class OrderManager:
                 details={"mode": "paper"},
             )
 
-        order_args = OrderArgs(
-            token_id=token_id,
-            price=price,
-            size=size_usd / price,
-            side="BUY",
-        )
-        signed = self.client.create_order(order_args)
-        response = self.client.post_order(signed, OrderType.GTC)
-        return ExecutionResult(
-            status=response.get("status", "submitted"),
-            fill_price=price,
-            size_usd=size_usd,
-            details=response,
-        )
+        try:
+            order_args = OrderArgs(
+                token_id=token_id,
+                price=price,
+                size=size_usd / price,
+                side="BUY",
+            )
+            signed = self.client.create_order(order_args)
+            response = self.client.post_order(signed, OrderType.GTC)
+            return ExecutionResult(
+                status=response.get("status", "submitted"),
+                fill_price=price,
+                size_usd=size_usd,
+                details=response,
+            )
+        except Exception as exc:
+            _log.error("CLOB order failed: %s (token=%s, $%.2f @ %.3f)", exc, token_id, size_usd, price)
+            return ExecutionResult(
+                status="error",
+                fill_price=0.0,
+                size_usd=size_usd,
+                details={"error": str(exc)},
+            )
 
     def place_order(self, signal: dict) -> ExecutionResult:
         """Place an order, breaking it into SIP_MAX_CHUNK_USD chunks."""
@@ -125,6 +138,16 @@ class OrderManager:
 
         price = signal["market_prob"] if signal["side"] == "BUY_YES" else (1.0 - signal["market_prob"])
         price = min(max(price, 0.01), 0.99)
+
+        if price <= 0.01 or price >= 0.99:
+            _log.warning("Price sanity check failed: %.4f — skipping", price)
+            return ExecutionResult(
+                status="skipped_bad_price",
+                fill_price=0.0,
+                size_usd=total_usd,
+                details={"reason": "price_out_of_range", "price": price},
+            )
+
         token_id = signal["token_id"]
 
         # Build chunk sizes: floor-divide into chunks, last chunk gets the remainder

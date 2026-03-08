@@ -32,6 +32,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from config.cities import STATIONS
+from strategy.model_weights import log_actual_temperature
 
 SIGNALS_CSV    = ROOT / "logs" / "signals.csv"
 TRADES_CSV     = ROOT / "logs" / "trades.csv"
@@ -63,7 +64,12 @@ RESOLVED_HEADER = [
     "pnl_usd",
     "miss_distance",  # actual_temp - ensemble_mean (signed)
     "signal_timestamp",
-    "strategy",       # LADDER | CONVICTION | SINGLE
+    "strategy",       # LADDER | CONVICTION | SINGLE | TOP2_* | ACE | etc.
+    "forecast_prob",
+    "edge",
+    "roi_pct",
+    "days_ahead",
+    "kelly_fraction_used",
 ]
 
 
@@ -183,7 +189,6 @@ def _load_pending_trades() -> list[dict]:
                     "station_icao":       p.get("station_icao", ""),
                     "bucket":             bucket,
                     "side":               side,
-                    # Normalise field names
                     "market_prob":        p.get("fill_price", p.get("entry_price", 0.0)),
                     "size_usd":           p.get("cost",       p.get("size_usd",    0.0)),
                     "ev_per_bet":         p.get("ev_at_entry", p.get("ev_per_bet", 0.0)),
@@ -192,6 +197,10 @@ def _load_pending_trades() -> list[dict]:
                     "model_values_json":  p.get("model_values_json", "{}"),
                     "timestamp":          p.get("timestamp", ""),
                     "strategy":           strategy,
+                    "forecast_prob":      p.get("forecast_prob", 0.0),
+                    "edge":              p.get("edge", 0.0),
+                    "days_ahead":        p.get("days_ahead", ""),
+                    "kelly_fraction_used": p.get("kelly_fraction_used", ""),
                 }
     else:
         print("positions.json not found — will fall back to signals.csv only.")
@@ -271,6 +280,10 @@ def _load_pending_trades() -> list[dict]:
                     "model_values_json": p.get("model_values_json", "{}"),
                     "timestamp":         p.get("timestamp", ""),
                     "strategy":          shadow_strategy,
+                    "forecast_prob":     p.get("forecast_prob", 0.0),
+                    "edge":             p.get("edge", 0.0),
+                    "days_ahead":       p.get("days_ahead", ""),
+                    "kelly_fraction_used": p.get("kelly_fraction_used", ""),
                 }
 
     return list(pending.values())
@@ -421,6 +434,12 @@ async def resolve_all() -> dict:
                 print(f"  [{city}] IEM returned no data for {target_date_str} — will retry tomorrow.")
                 continue
 
+            if station_icao:
+                try:
+                    log_actual_temperature(station_icao, target_date_str, float(actual))
+                except Exception as exc:
+                    print(f"  [{city}] Failed to log actual temp for model weights: {exc}")
+
             won = _parse_bucket_win(bucket, actual)
             # For BUY_NO, invert the win condition
             if side == "BUY_NO":
@@ -446,6 +465,15 @@ async def resolve_all() -> dict:
             except (json.JSONDecodeError, ZeroDivisionError):
                 pass
 
+            forecast_prob = 0.0
+            edge = 0.0
+            try:
+                forecast_prob = float(row.get("forecast_prob") or 0.0)
+                edge = float(row.get("edge") or 0.0)
+            except (ValueError, TypeError):
+                pass
+            roi_pct = round(pnl / size_usd * 100, 2) if size_usd > 0 else 0.0
+
             result_row = {
                 "resolved_at": datetime.now(UTC).isoformat(),
                 "target_date": target_date_str,
@@ -465,6 +493,11 @@ async def resolve_all() -> dict:
                 "miss_distance": miss_distance,
                 "signal_timestamp": row.get("timestamp", ""),
                 "strategy": strategy,
+                "forecast_prob": forecast_prob,
+                "edge": edge,
+                "roi_pct": roi_pct,
+                "days_ahead": row.get("days_ahead", ""),
+                "kelly_fraction_used": row.get("kelly_fraction_used", ""),
             }
 
             with RESOLVED_CSV.open("a", newline="", encoding="utf-8") as f:
@@ -576,62 +609,101 @@ def print_summary(stats: dict) -> None:
                   f"{cw/len(rows)*100:.0f}%  P&L ${cp:+.2f}")
 
 
-def prune_expired_positions() -> int:
-    """Remove positions from positions.json whose target date is strictly before today,
-    BUT ONLY if they are already captured in resolved.csv.
+def _build_resolved_keys() -> tuple[
+    set[tuple[str, str, str, str]],
+    set[tuple[str, str, str, str, str]],
+]:
+    """Build resolved key sets from resolved.csv.
 
-    Positions not in resolved.csv are left in place so the dashboard can still
-    compute their live P&L until they are formally recovered/resolved.
-
-    Returns number of positions removed.
+    Returns (simple_keys, strategy_keys) where:
+      simple_keys   = (date, city, bucket, side)          — for main positions
+      strategy_keys = (date, city, bucket, side, strategy) — for shadow positions
     """
-    if not POSITIONS_JSON.exists():
+    simple: set[tuple[str, str, str, str]] = set()
+    strat: set[tuple[str, str, str, str, str]] = set()
+    if not RESOLVED_CSV.exists():
+        return simple, strat
+    try:
+        with RESOLVED_CSV.open(encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                d = row.get("target_date", "")
+                c = row.get("city", "")
+                b = row.get("bucket", "")
+                s = row.get("side", "BUY_YES")
+                simple.add((d, c, b, s))
+                strategy = row.get("strategy", "")
+                if strategy:
+                    strat.add((d, c, b, s, strategy))
+    except Exception:
+        pass
+    return simple, strat
+
+
+def _prune_file(path: Path, today_str: str, resolved_keys: set, use_strategy: str = "") -> int:
+    """Prune resolved positions from a single positions file. Returns count removed."""
+    if not path.exists():
         return 0
     try:
-        positions = json.loads(POSITIONS_JSON.read_text(encoding="utf-8"))
+        positions = json.loads(path.read_text(encoding="utf-8"))
     except Exception as exc:
-        print(f"  [prune] Could not load positions.json: {exc}")
+        print(f"  [prune] Could not load {path.name}: {exc}")
         return 0
 
-    # Build set of (target_date, city, bucket, side) already in resolved.csv
-    resolved_keys: set[tuple[str, str, str, str]] = set()
-    if RESOLVED_CSV.exists():
-        try:
-            import csv as _csv
-            with RESOLVED_CSV.open(encoding="utf-8") as f:
-                for row in _csv.DictReader(f):
-                    resolved_keys.add((
-                        row.get("target_date", ""),
-                        row.get("city", ""),
-                        row.get("bucket", ""),
-                        row.get("side", "BUY_YES"),
-                    ))
-        except Exception:
-            pass
+    if not isinstance(positions, list):
+        return 0
 
-    today_str = date.today().isoformat()
     before = len(positions)
 
     def _safe_to_prune(p: dict) -> bool:
         if p.get("date", "9999") >= today_str:
-            return False  # not expired yet
-        key = (p.get("date", ""), p.get("city", ""), p.get("bucket", ""), p.get("side", "BUY_YES"))
-        return key in resolved_keys  # only prune if resolved
+            return False
+        d = p.get("date", "")
+        c = p.get("city", "")
+        b = p.get("bucket", "")
+        s = p.get("side", "BUY_YES")
+        if use_strategy:
+            return (d, c, b, s, use_strategy) in resolved_keys
+        return (d, c, b, s) in resolved_keys
 
-    active  = [p for p in positions if not _safe_to_prune(p)]
+    active = [p for p in positions if not _safe_to_prune(p)]
     removed = before - len(active)
 
     if removed:
-        POSITIONS_JSON.write_text(
-            json.dumps(active, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        print(f"  [prune] Removed {removed} expired position(s) from positions.json "
-              f"(kept {len(active)} active).")
-    else:
-        print("  [prune] No expired positions to remove.")
+        path.write_text(json.dumps(active, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"  [prune] {path.name}: removed {removed} resolved (kept {len(active)} active).")
 
     return removed
+
+
+def prune_expired_positions() -> int:
+    """Remove resolved positions from ALL position files (main + shadows).
+
+    Returns total number of positions removed.
+    """
+    simple_keys, strat_keys = _build_resolved_keys()
+    today_str = date.today().isoformat()
+    total_removed = 0
+
+    total_removed += _prune_file(POSITIONS_JSON, today_str, simple_keys)
+
+    _SHADOW_PRUNE: list[tuple[Path, str]] = [
+        (ROOT / "data" / "positions_shadow_2a.json",        "TOP2_EQUAL"),
+        (ROOT / "data" / "positions_shadow_2b.json",        "TOP2_COND"),
+        (ROOT / "data" / "positions_shadow_2c.json",        "TOP2_PROP"),
+        (ROOT / "data" / "positions_shadow_purdey.json",    "PURDEY_MK1"),
+        (ROOT / "data" / "positions_shadow_cavendish.json", "CAVENDISH_MK1"),
+        (ROOT / "data" / "positions_shadow_purdey2.json",   "PURDEY_MK2"),
+        (ROOT / "data" / "positions_shadow_cavendish2.json","CAVENDISH_MK2"),
+        (ROOT / "data" / "positions_shadow_ace.json",       "ACE"),
+        (ROOT / "data" / "positions_shadow_props_kelly.json","PROPS_KELLY"),
+    ]
+    for shadow_path, shadow_strategy in _SHADOW_PRUNE:
+        total_removed += _prune_file(shadow_path, today_str, strat_keys, use_strategy=shadow_strategy)
+
+    if total_removed == 0:
+        print("  [prune] No expired positions to remove from any file.")
+
+    return total_removed
 
 
 if __name__ == "__main__":

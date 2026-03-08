@@ -135,9 +135,11 @@ class ShadowTrader:
             closed = self.portfolio.resolve_position(position, won)
             row = {
                 "city": closed.city, "date": closed.date, "bucket": closed.bucket,
-                "side": closed.side, "forecast_prob": 0.0,
-                "market_prob": closed.fill_price, "edge": 0.0,
+                "side": closed.side, "forecast_prob": closed.forecast_prob,
+                "market_prob": closed.market_prob, "edge": closed.edge,
                 "size_usd": closed.cost, "fill_price": closed.fill_price,
+                "strategy": closed.strategy, "station_icao": closed.station_icao,
+                "model_values_json": closed.model_values_json,
             }
             self.logger.log_trade(row, "won" if won else "lost", closed.pnl)
             self._log.info(
@@ -531,11 +533,14 @@ class PaperTrader:
                 "date": closed.date,
                 "bucket": closed.bucket,
                 "side": closed.side,
-                "forecast_prob": 0.0,
-                "market_prob": closed.fill_price if closed.side == "BUY_YES" else (1.0 - closed.fill_price),
-                "edge": 0.0,
+                "forecast_prob": closed.forecast_prob,
+                "market_prob": closed.market_prob,
+                "edge": closed.edge,
                 "size_usd": closed.cost,
                 "fill_price": closed.fill_price,
+                "strategy": closed.strategy,
+                "station_icao": closed.station_icao,
+                "model_values_json": closed.model_values_json,
             }
             self.logger.log_trade(row, "won" if won else "lost", closed.pnl)
             self.logger.info(
