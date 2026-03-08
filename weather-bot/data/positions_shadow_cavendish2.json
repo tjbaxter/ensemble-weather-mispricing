@@ -488,5 +488,19 @@
     "cost": 5.000000000000001,
     "timestamp": "2026-03-08T06:58:07.035400+00:00",
     "strategy": "CAVENDISH_MK2"
+  },
+  {
+    "market_id": "0x85d635a1efcca20aa66fa24a5eb3b4bf912754cd865d73f5d928bbfb4a2c105f",
+    "token_id": "77112513462587828992959355331478782516659191519527531422725353234624476546097",
+    "side": "BUY_YES",
+    "city": "NYC",
+    "station_icao": "KLGA",
+    "date": "2026-03-09",
+    "bucket": "66+",
+    "fill_price": 0.23499999999999996,
+    "fill_size": 21.276595744680854,
+    "cost": 5.0,
+    "timestamp": "2026-03-08T07:18:31.794663+00:00",
+    "strategy": "CAVENDISH_MK2"
   }
 ]
