@@ -1274,6 +1274,7 @@ ACCURACY_CITIES: dict[str, dict] = {
         "bucket_style": "range_2f",
         "temp_unit_display": "°F",
         "polymarket_slug": "highest-temperature-in-new-york-on",
+        "polymarket_alt_slugs": ["highest-temperature-in-nyc-on"],
         "models": {
             "ncep_nbm_conus":   ("NCEP NBM",      "🇺🇸"),
             "gfs_graphcast025": ("GFS GraphCast", "🌐"),
@@ -2327,21 +2328,27 @@ def _parse_pm_fahrenheit(markets: list) -> tuple | None:
 
 
 def _pm_fetch_new_resolutions(city: str, slug: str, bucket_style: str,
-                               from_date: _date, to_date: _date) -> dict:
+                               from_date: _date, to_date: _date,
+                               alt_slugs: list[str] | None = None) -> tuple[dict, dict]:
     """
     Fetch Polymarket resolutions for dates not yet in the disk cache.
-    Returns only newly resolved entries (permanent — written to disk by caller).
+
+    Returns (resolved, pending):
+        resolved — permanently resolved entries (safe to cache to disk)
+        pending  — markets that exist but haven't resolved yet (NOT cached)
     """
-    new: dict = {}
+    all_base_slugs = [slug] + (alt_slugs or [])
+    resolved: dict = {}
+    pending: dict = {}
     d = from_date
     while d <= to_date:
         ds = d.strftime("%Y-%m-%d")
         mn = _PM_MONTHS[d.month - 1]
-        slugs = [
-            f"{slug}-{mn}-{d.day}-{d.year}",  # year-specific first (unambiguous)
-            f"{slug}-{mn}-{d.day}",
-        ]
-        for sl in slugs:
+        candidate_slugs = []
+        for base in all_base_slugs:
+            candidate_slugs.append(f"{base}-{mn}-{d.day}-{d.year}")
+            candidate_slugs.append(f"{base}-{mn}-{d.day}")
+        for sl in candidate_slugs:
             try:
                 r = requests.get("https://gamma-api.polymarket.com/events",
                                  params={"slug": sl}, timeout=8)
@@ -2349,7 +2356,6 @@ def _pm_fetch_new_resolutions(city: str, slug: str, bucket_style: str,
                     continue
                 e = r.json()[0]
                 created = e.get("createdAt", "")[:10]
-                # Verify this market is for the right date (not a year-collision)
                 if created:
                     cdate = datetime.strptime(created, "%Y-%m-%d").date()
                     if not (0 <= (d - cdate).days <= 7):
@@ -2360,13 +2366,22 @@ def _pm_fetch_new_resolutions(city: str, slug: str, bucket_style: str,
                 else:
                     result = _parse_pm_fahrenheit(mkts)
                 if result:
-                    new[ds] = list(result)  # store as list for JSON serialisation
+                    resolved[ds] = list(result)
+                else:
+                    pending[ds] = list(_pm_pending_entry(mkts, bucket_style))
                 break
             except Exception:
                 pass
         _time.sleep(0.1)
         d += timedelta(days=1)
-    return new
+    return resolved, pending
+
+
+def _pm_pending_entry(mkts: list, bucket_style: str) -> tuple:
+    """Build a placeholder entry for a market that exists but hasn't resolved."""
+    if bucket_style == "range_2f":
+        return ("⏳ Pending", None, None, None, None)
+    return ("⏳ Pending", None, False)
 
 
 def get_polymarket_for_city(city: str) -> dict:
@@ -2409,6 +2424,7 @@ def get_polymarket_for_city(city: str) -> dict:
     today = datetime.now(UTC).date()
     fetch_start = last_seed + timedelta(days=1)
 
+    pending_markets: dict = {}
     if fetch_start <= today:
         missing = [
             d for d in (
@@ -2419,12 +2435,13 @@ def get_polymarket_for_city(city: str) -> dict:
         ]
         if missing:
             bucket_style = cfg.get("bucket_style", "exact_1c")
-            new = _pm_fetch_new_resolutions(
-                city, slug, bucket_style, missing[0], missing[-1]
+            alt_slugs = cfg.get("polymarket_alt_slugs")
+            resolved, pending_markets = _pm_fetch_new_resolutions(
+                city, slug, bucket_style, missing[0], missing[-1],
+                alt_slugs=alt_slugs,
             )
-            if new:
-                disk.update(new)
-                # Persist to disk — resolved markets never change
+            if resolved:
+                disk.update(resolved)
                 all_cache: dict = {}
                 if _PM_CACHE_PATH.exists():
                     try:
@@ -2438,6 +2455,11 @@ def get_polymarket_for_city(city: str) -> dict:
     merged = dict(hardcoded)
     for ds, entry in disk.items():
         merged[ds] = tuple(entry)  # JSON stored as list; convert back to tuple
+
+    # Include pending (unresolved) markets so accuracy tab can show model predictions
+    for ds, entry in pending_markets.items():
+        if ds not in merged:
+            merged[ds] = tuple(entry)
 
     return merged
 
@@ -2546,7 +2568,11 @@ def fetch_accuracy_data(city: str) -> dict:
             if pred is None:
                 return None
             if bucket_style == "range_2f":
+                if low is None and high is None:
+                    return None  # unresolved market — can't score
                 return _wins_nyc(pred, low, high, bottom_thresh, top_thresh)
+            if res_int is None:
+                return None  # unresolved market
             return _wins(pred, res_int, is_plus)  # type: ignore[name-defined]
 
         # Snapshot fallback: bot's 12Z prediction for this date (from model_snapshot_log.json)
