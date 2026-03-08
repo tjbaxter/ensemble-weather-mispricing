@@ -460,5 +460,19 @@
     "cost": 5.000000000000001,
     "timestamp": "2026-03-08T08:50:25.513989+00:00",
     "strategy": "PURDEY_MK2"
+  },
+  {
+    "market_id": "0x79fdc90d5b79fae94497606af1fe190adaf73d40af0e0875a346cd6fec2d9143",
+    "token_id": "55070188288473888548684984769683196897369312251813380455309860330794147403800",
+    "side": "BUY_YES",
+    "city": "Sao Paulo",
+    "station_icao": "SBGR",
+    "date": "2026-03-09",
+    "bucket": "25+",
+    "fill_price": 0.33999999999999997,
+    "fill_size": 14.705882352941178,
+    "cost": 5.0,
+    "timestamp": "2026-03-08T09:08:26.295911+00:00",
+    "strategy": "PURDEY_MK2"
   }
 ]
