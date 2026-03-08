@@ -44,10 +44,9 @@
   },
   "KMIA/2026-03-09": {
     "preds": {
-      "ncep_nbm_conus": 81.9,
-      "gfs_seamless": 83.0,
-      "ecmwf_ifs025": 80.9,
-      "icon_seamless": 84.2
+      "ncep_nbm_conus": 82.3,
+      "gfs_seamless": 82.7,
+      "ecmwf_ifs025": 80.7
     },
     "actual": null
   },
