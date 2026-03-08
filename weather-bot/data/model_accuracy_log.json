@@ -231,10 +231,8 @@
   },
   "CYYZ/2026-03-08": {
     "preds": {
-      "kma_gdps": 10.8,
-      "meteofrance_arpege_world": 9.3,
-      "gem_global": 8.6,
-      "dmi_seamless": 11.4
+      "kma_gdps": 12.4,
+      "meteofrance_arpege_world": 11.0
     },
     "actual": null
   },
