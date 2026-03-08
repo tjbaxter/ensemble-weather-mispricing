@@ -404,5 +404,19 @@
     "cost": 5.0,
     "timestamp": "2026-03-08T06:58:06.266585+00:00",
     "strategy": "PURDEY_MK1"
+  },
+  {
+    "market_id": "0x0e946ed7ad76f7cb0d5f642b95946504a0d1a6779100c107d929cf25f2a4e81e",
+    "token_id": "51599869172923033579629133215814702133569918768128207852861739244538677757908",
+    "side": "BUY_YES",
+    "city": "Chicago",
+    "station_icao": "KORD",
+    "date": "2026-03-09",
+    "bucket": "72-73",
+    "fill_price": 0.095,
+    "fill_size": 52.63157894736842,
+    "cost": 5.0,
+    "timestamp": "2026-03-08T07:44:13.768229+00:00",
+    "strategy": "PURDEY_MK1"
   }
 ]
