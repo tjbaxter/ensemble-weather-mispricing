@@ -446,5 +446,33 @@
     "cost": 5.8,
     "timestamp": "2026-03-08T00:05:36.870101+00:00",
     "strategy": "ACE"
+  },
+  {
+    "market_id": "0x023641a3c4fde22be45661072bcb7d7fb4b2ba5ef0271983d1045a9854915e69",
+    "token_id": "42312797798557618568527570566427488713945558379319422011145884846159360664525",
+    "side": "BUY_YES",
+    "city": "NYC",
+    "station_icao": "KLGA",
+    "date": "2026-03-09",
+    "bucket": "60-61",
+    "fill_price": 0.175,
+    "fill_size": 28.571428571428573,
+    "cost": 5.0,
+    "timestamp": "2026-03-08T06:58:07.289029+00:00",
+    "strategy": "ACE"
+  },
+  {
+    "market_id": "0x7cccb7fb55aa83cd7ad5fe7e8696a4266d0f0dad3ce04bfdba871e9b682fd91e",
+    "token_id": "88637858352913240402438084314067638920981556792584311277643983194466231510825",
+    "side": "BUY_YES",
+    "city": "Atlanta",
+    "station_icao": "KATL",
+    "date": "2026-03-09",
+    "bucket": "72-73",
+    "fill_price": 0.07400000000000001,
+    "fill_size": 67.56756756756756,
+    "cost": 5.000000000000001,
+    "timestamp": "2026-03-08T06:58:07.293082+00:00",
+    "strategy": "ACE"
   }
 ]
