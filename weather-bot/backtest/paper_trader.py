@@ -441,6 +441,221 @@ class PaperTrader:
             except Exception as exc:
                 self.logger.warning(f"Shadow {shadow.variant} failed: {exc}")
 
+    async def _continuous_resolver(self) -> None:
+        """Resolve matured positions as soon as actual temps become available.
+
+        Runs every 30 min, checking ALL position files (main + shadows) for
+        trades whose target date has passed. Uses IEM ASOS for actual temps —
+        the same source Polymarket uses to settle.
+
+        This replaces the old daily cron approach so resolution happens within
+        ~30 min of data availability, regardless of timezone.
+        """
+        import csv
+        import json
+        import subprocess
+        from scripts.daily_resolver import (
+            _fetch_iem_high, _parse_bucket_win, _compute_pnl,
+            RESOLVED_CSV, RESOLVED_HEADER, _ensure_resolved_csv,
+            _SHADOW_STRATEGIES,
+        )
+        from strategy.model_weights import log_actual_temperature
+
+        _RESOLVER_INTERVAL = 1800  # 30 min
+
+        await asyncio.sleep(120)  # let bot start up first
+
+        while True:
+            try:
+                _ensure_resolved_csv()
+                today_str = date.today().isoformat()
+
+                # Build set of already-resolved keys
+                resolved_keys: set[tuple[str, str, str, str, str]] = set()
+                if RESOLVED_CSV.exists():
+                    with RESOLVED_CSV.open(encoding="utf-8") as f:
+                        for row in csv.DictReader(f):
+                            strategy = row.get("strategy", "")
+                            sk = strategy if strategy in _SHADOW_STRATEGIES else ""
+                            resolved_keys.add((
+                                row.get("target_date", ""),
+                                row.get("city", ""),
+                                row.get("bucket", ""),
+                                row.get("side", "BUY_YES"),
+                                sk,
+                            ))
+
+                # Collect pending positions from all files
+                _ROOT = Path(__file__).resolve().parents[1]
+                _ALL_FILES: list[tuple[Path, str]] = [
+                    (_ROOT / "data" / "positions.json", ""),
+                    (_ROOT / "data" / "positions_shadow_2a.json", "TOP2_EQUAL"),
+                    (_ROOT / "data" / "positions_shadow_2b.json", "TOP2_COND"),
+                    (_ROOT / "data" / "positions_shadow_2c.json", "TOP2_PROP"),
+                    (_ROOT / "data" / "positions_shadow_purdey.json", "PURDEY_MK1"),
+                    (_ROOT / "data" / "positions_shadow_cavendish.json", "CAVENDISH_MK1"),
+                    (_ROOT / "data" / "positions_shadow_purdey2.json", "PURDEY_MK2"),
+                    (_ROOT / "data" / "positions_shadow_cavendish2.json", "CAVENDISH_MK2"),
+                    (_ROOT / "data" / "positions_shadow_ace.json", "ACE"),
+                    (_ROOT / "data" / "positions_shadow_props_kelly.json", "PROPS_KELLY"),
+                ]
+
+                pending: list[dict] = []
+                for pos_path, strat_override in _ALL_FILES:
+                    if not pos_path.exists():
+                        continue
+                    try:
+                        raw = json.loads(pos_path.read_text(encoding="utf-8"))
+                    except Exception:
+                        continue
+                    for p in raw:
+                        td = p.get("date", "")
+                        if not td or td >= today_str:
+                            continue
+                        strategy = strat_override or p.get("strategy", "PAPER")
+                        sk = strategy if strategy in _SHADOW_STRATEGIES else ""
+                        key = (td, p.get("city", ""), p.get("bucket", ""), p.get("side", "BUY_YES"), sk)
+                        if key in resolved_keys:
+                            continue
+                        pending.append({**p, "strategy": strategy})
+
+                if not pending:
+                    await asyncio.sleep(_RESOLVER_INTERVAL)
+                    continue
+
+                self.logger.info(f"AUTO_RESOLVER checking {len(pending)} pending positions")
+
+                # Fetch actuals from IEM
+                iem_cache: dict[tuple[str, str], int | None] = {}
+                resolved_count = 0
+                new_rows: list[dict] = []
+
+                async with httpx.AsyncClient() as http:
+                    for p in pending:
+                        td = p["date"]
+                        city = p.get("city", "")
+                        bucket = p.get("bucket", "")
+                        station_icao = p.get("station_icao", "")
+                        side = p.get("side", "BUY_YES")
+                        strategy = p.get("strategy", "")
+
+                        station_cfg = STATIONS.get(station_icao)
+                        if not station_cfg:
+                            for icao, cfg in STATIONS.items():
+                                if cfg.get("market_label", "").lower() == city.lower():
+                                    station_cfg = cfg
+                                    station_icao = icao
+                                    break
+                        if not station_cfg:
+                            continue
+
+                        iem_net = station_cfg.get("iem_network")
+                        iem_stn = station_cfg.get("iem_station")
+                        if not iem_net or not iem_stn:
+                            continue
+
+                        res_unit = station_cfg.get("resolution_unit", "F")
+                        cache_key = (iem_stn, td)
+
+                        if cache_key not in iem_cache:
+                            target_d = date.fromisoformat(td)
+                            actual = await _fetch_iem_high(http, iem_net, iem_stn, res_unit, target_d)
+                            iem_cache[cache_key] = actual
+                        else:
+                            actual = iem_cache[cache_key]
+
+                        if actual is None:
+                            continue
+
+                        try:
+                            log_actual_temperature(station_icao, td, float(actual))
+                        except Exception:
+                            pass
+
+                        won = _parse_bucket_win(bucket, actual)
+                        if side == "BUY_NO":
+                            won = not won
+
+                        entry_price = float(p.get("fill_price", p.get("entry_price", 0)) or 0)
+                        size_usd = float(p.get("cost", p.get("size_usd", 0)) or 0)
+                        ev_per_bet = float(p.get("ev_at_entry", p.get("ev_per_bet", 0)) or 0)
+
+                        pnl = _compute_pnl(side, entry_price, size_usd, won)
+                        outcome = "WIN" if won else "LOSS"
+
+                        miss_distance = ""
+                        try:
+                            mv = json.loads(p.get("model_values_json") or "{}")
+                            if mv:
+                                miss_distance = round(actual - sum(mv.values()) / len(mv), 2)
+                        except (json.JSONDecodeError, ZeroDivisionError):
+                            pass
+
+                        forecast_prob = float(p.get("forecast_prob", 0) or 0)
+                        edge = float(p.get("edge", 0) or 0)
+                        roi_pct = round(pnl / size_usd * 100, 2) if size_usd > 0 else 0.0
+
+                        result_row = {
+                            "resolved_at": datetime.now(UTC).isoformat(),
+                            "target_date": td,
+                            "city": city,
+                            "station_icao": station_icao,
+                            "bucket": bucket,
+                            "side": side,
+                            "entry_price": entry_price,
+                            "size_usd": size_usd,
+                            "ev_per_bet": ev_per_bet,
+                            "spread_colour": p.get("spread_colour", ""),
+                            "det_spread": p.get("det_spread", ""),
+                            "model_values_json": p.get("model_values_json", "{}"),
+                            "actual_temp": actual,
+                            "outcome": outcome,
+                            "pnl_usd": pnl,
+                            "miss_distance": miss_distance,
+                            "signal_timestamp": p.get("timestamp", ""),
+                            "strategy": strategy,
+                            "forecast_prob": forecast_prob,
+                            "edge": edge,
+                            "roi_pct": roi_pct,
+                            "days_ahead": p.get("days_ahead", ""),
+                            "kelly_fraction_used": p.get("kelly_fraction_used", ""),
+                        }
+
+                        with RESOLVED_CSV.open("a", newline="", encoding="utf-8") as f:
+                            csv.DictWriter(f, fieldnames=RESOLVED_HEADER).writerow(result_row)
+
+                        new_rows.append(result_row)
+                        resolved_count += 1
+                        emoji = "✅" if won else "❌"
+                        self.logger.info(
+                            f"AUTO_RESOLVED {emoji} [{strategy}] {city} {td} {bucket} "
+                            f"actual={actual} {outcome} pnl={pnl:+.2f}"
+                        )
+
+                if resolved_count > 0:
+                    self.logger.info(f"AUTO_RESOLVER resolved {resolved_count} positions")
+                    # Prune resolved positions from all files
+                    from scripts.daily_resolver import prune_expired_positions
+                    prune_expired_positions()
+                    # Push data to git so dashboard updates
+                    try:
+                        git_script = _ROOT / "scripts" / "git_push_data.sh"
+                        if git_script.exists():
+                            subprocess.run(
+                                ["bash", str(git_script)],
+                                cwd=str(_ROOT.parent),
+                                timeout=120,
+                                capture_output=True,
+                            )
+                            self.logger.info("AUTO_RESOLVER git push complete")
+                    except Exception as exc:
+                        self.logger.warning(f"AUTO_RESOLVER git push failed: {exc}")
+
+            except Exception as exc:
+                self.logger.error(f"AUTO_RESOLVER error: {exc}")
+
+            await asyncio.sleep(_RESOLVER_INTERVAL)
+
     async def _run_shadows_from_cache(self) -> None:
         """Independent shadow execution loop — runs every 5 min using cached data.
 
@@ -477,6 +692,7 @@ class PaperTrader:
         """
         self.logger.info("Starting paper trader — event-driven scheduler active.")
         asyncio.get_event_loop().create_task(self._run_shadows_from_cache())
+        asyncio.get_event_loop().create_task(self._continuous_resolver())
         try:
             # Immediate startup scan so the bot is live right away
             await self._trigger_run("STARTUP")
