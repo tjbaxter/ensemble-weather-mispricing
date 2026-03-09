@@ -1042,7 +1042,7 @@ def generate_mk2_ace_signals(
     forecasts: dict[str, dict[str, dict]],
     bankroll: float,
 ) -> list["Signal"]:
-    """Generate PURDEY_MK2, CAVENDISH_MK2, ACE, and PROPS_KELLY signals.
+    """Generate PURDEY_MK2, CAVENDISH_MK2/MK3, ACE, and PROPS_KELLY signals.
 
     These use recency-weighted model accuracy to pick buckets.  Models that
     nailed yesterday's temperature get higher weight, shifting the probability
@@ -1053,12 +1053,19 @@ def generate_mk2_ace_signals(
 
     CAVENDISH_MK2 — Hard cap of 3 bets per city-date.
         Peak by weighted probability + immediate temperature flanks.
+        (Legacy — flanks fire blindly regardless of model support.)
+
+    CAVENDISH_MK3 — Hard cap of 3 bets per city-date.
+        Peak + flanks, but flanks must EARN their place:
+        ≥5% weighted probability AND ≥1 model predicting that bucket.
+        Also applies the same price cap as the main bet.
+        This prevents betting on temperature ranges that no model supports.
 
     ACE — Smart 2-or-3 bets.
         Peak + runner-up.  Adds a 3rd bet when ≥ 2 models agree or price ≤ 11¢.
 
     PROPS_KELLY — Hard cap of 3 bets per city-date.
-        Peak + flanks (like CAVENDISH_MK2) but with PROPORTIONAL Kelly sizing:
+        Peak + earned flanks (MK3 rules) with PROPORTIONAL Kelly sizing:
         each bet sized independently by its own Kelly, then scaled proportional
         to weighted probability (higher weighted prob → bigger share of Kelly).
     """
@@ -1270,6 +1277,46 @@ def generate_mk2_ace_signals(
                     "CAVENDISH_MK2",
                 ))
 
+        # ── CAVENDISH_MK3: peak + EARNED flanks only ────────────────────
+        # Identical philosophy to MK2 but flanks must earn their place:
+        #   • weighted probability ≥ 5%  (real model signal, not noise)
+        #   • at least 1 model actually predicts a temp in that bucket
+        #   • passes the same _d_max price cap as main bets
+        # This prevents blindly betting on a flank just because it's adjacent
+        # when no model is actually pointing there.
+        CAVENDISH_MK3_FLANK_MIN_WP = 0.05
+        signals.append(_make_sig(top1, "CAVENDISH_MK3"))
+
+        if peak_idx >= 0:
+            for offset in (-1, +1):
+                idx = peak_idx + offset
+                if idx < 0 or idx >= len(sorted_buckets):
+                    continue
+                fk = sorted_buckets[idx]
+                fi = all_buckets[fk]
+                fp = float(fi.get("price", 0) or 0)
+                ft = fi.get("yes_token_id", "")
+                if not ft or fp < HARD_MIN_YES_ENTRY_PRICE or fp > _d_max:
+                    continue
+                fwp = w_probs.get(fk, 0.0) * temporal_discount
+                fn_models = models_in_bucket(det_model_values, fk)
+                # Hard gate: flank must have real model support
+                if fwp < CAVENDISH_MK3_FLANK_MIN_WP or fn_models < 1:
+                    _log.info(
+                        f"CAVENDISH_MK3 skipping flank {fk} for {city} {date_str}: "
+                        f"w_prob={fwp:.3f} n_models={fn_models} (below threshold)"
+                    )
+                    continue
+                signals.append(_make_sig(
+                    {"bucket": fk, "token_id": ft,
+                     "condition_id": bucket_to_condition[fk],
+                     "model_prob": fwp,
+                     "market_prob": fp,
+                     "edge": fwp - fp,
+                     "n_models": fn_models},
+                    "CAVENDISH_MK3",
+                ))
+
         # ── ACE: smart 2-or-3 bets (weighted peak + runner-up + conditional 3rd) ──
         # 1st: weighted peak (always)
         # 2nd: next best by weighted probability (always if available)
@@ -1317,9 +1364,9 @@ def generate_mk2_ace_signals(
             )
 
         # ── PROPS_KELLY: peak + flanks, proportional Kelly sizing ────────
-        # Like CAVENDISH_MK2 (peak + adjacent flanks, max 3) but each bet
-        # gets independent Kelly, then scaled proportionally by weighted prob
-        # so the peak (highest conviction) gets the largest share.
+        # Like CAVENDISH_MK3 (earned flanks only) + independent Kelly per bet,
+        # scaled proportionally by weighted prob so the peak gets biggest share.
+        PROPS_KELLY_FLANK_MIN_WP = 0.05
         pk_bets: list[dict] = [top1]
         if peak_idx >= 0:
             for off in (-1, +1):
@@ -1330,16 +1377,19 @@ def generate_mk2_ace_signals(
                 fi = all_buckets[fk]
                 fp = float(fi.get("price", 0) or 0)
                 ft = fi.get("yes_token_id", "")
-                if not ft or fp < HARD_MIN_YES_ENTRY_PRICE:
+                if not ft or fp < HARD_MIN_YES_ENTRY_PRICE or fp > _d_max:
                     continue
                 fwp = w_probs.get(fk, 0.0) * temporal_discount
+                fn_models = models_in_bucket(det_model_values, fk)
+                if fwp < PROPS_KELLY_FLANK_MIN_WP or fn_models < 1:
+                    continue
                 pk_bets.append({
                     "bucket": fk, "token_id": ft,
                     "condition_id": bucket_to_condition[fk],
-                    "model_prob": max(fwp, 0.01),
+                    "model_prob": fwp,
                     "market_prob": fp,
                     "edge": fwp - fp,
-                    "n_models": models_in_bucket(det_model_values, fk),
+                    "n_models": fn_models,
                 })
 
         total_wp = sum(b["model_prob"] for b in pk_bets)
@@ -1362,9 +1412,13 @@ def generate_mk2_ace_signals(
 
     n_p2 = sum(1 for s in signals if s.strategy == "PURDEY_MK2")
     n_c2 = sum(1 for s in signals if s.strategy == "CAVENDISH_MK2")
+    n_c3 = sum(1 for s in signals if s.strategy == "CAVENDISH_MK3")
     n_ace = sum(1 for s in signals if s.strategy == "ACE")
     n_pk = sum(1 for s in signals if s.strategy == "PROPS_KELLY")
-    _log.info(f"PURDEY_MK2={n_p2} | CAVENDISH_MK2={n_c2} | ACE={n_ace} | PROPS_KELLY={n_pk} signals")
+    _log.info(
+        f"PURDEY_MK2={n_p2} | CAVENDISH_MK2={n_c2} | CAVENDISH_MK3={n_c3} | "
+        f"ACE={n_ace} | PROPS_KELLY={n_pk} signals"
+    )
     return signals
 
 

@@ -99,7 +99,7 @@ def _ensure_resolved_csv() -> None:
 _SHADOW_STRATEGIES = {
     "CONVICTION", "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP",
     "PURDEY_MK1", "CAVENDISH_MK1",
-    "PURDEY_MK2", "CAVENDISH_MK2", "ACE", "PROPS_KELLY",
+    "PURDEY_MK2", "CAVENDISH_MK2", "CAVENDISH_MK3", "ACE", "PROPS_KELLY",
 }
 
 
@@ -559,6 +559,7 @@ def print_summary(stats: dict) -> None:
             "CAVENDISH_MK1": "CAVENDISH_MK1 (flank-3, cap 3, 50/25/25)",
             "PURDEY_MK2":    "PURDEY_MK2   (weighted top-2, cap 2)",
             "CAVENDISH_MK2": "CAVENDISH_MK2 (weighted flank-3, cap 3)",
+            "CAVENDISH_MK3": "CAVENDISH_MK3 (earned flanks only, ≥5% + ≥1 model)",
             "ACE":           "ACE           (smart 2-or-3, value bets)",
             "PROPS_KELLY":   "PROPS_KELLY   (weighted peak+flanks, prop Kelly)",
         }
