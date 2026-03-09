@@ -97,9 +97,8 @@ def _ensure_resolved_csv() -> None:
 
 
 _SHADOW_STRATEGIES = {
-    "CONVICTION", "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP",
-    "PURDEY_MK1", "CAVENDISH_MK1",
-    "PURDEY_MK2", "CAVENDISH_MK3", "TRUE_ALPHA", "PROPS_KELLY",
+    "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP",
+    "CAVENDISH_MK1", "CAVENDISH_MK3",
 }
 
 
@@ -551,16 +550,11 @@ def print_summary(stats: dict) -> None:
 
         # ── Shadow model comparison ────────────────────────────────────────────
         shadow_labels = {
-            "CONVICTION":    "CONVICTION   (single best)",
-            "TOP2_EQUAL":    "TOP2_EQUAL   (2A always-2 equal)",
-            "TOP2_COND":     "TOP2_COND    (2B split-only)",
-            "TOP2_PROP":     "TOP2_PROP    (2C proportional)",
-            "PURDEY_MK1":    "PURDEY_MK1   (top-2, cap 2, 60/40)",
-            "CAVENDISH_MK1": "CAVENDISH_MK1 (flank-3, cap 3, 50/25/25)",
-            "PURDEY_MK2":    "PURDEY_MK2   (weighted top-2, cap 2)",
-            "CAVENDISH_MK3": "CAVENDISH_MK3  (earned flanks, ≥5% + ≥1 model)",
-            "TRUE_ALPHA":    "TRUE_ALPHA     (strictest — ≥10% + ≥1 model, prop Kelly)",
-            "PROPS_KELLY":   "PROPS_KELLY    (weighted peak+flanks, prop Kelly)",
+            "TOP2_EQUAL":    "TOP2_EQUAL    (2A equal sizing)",
+            "TOP2_COND":     "TOP2_COND     (2B conditional)",
+            "TOP2_PROP":     "TOP2_PROP     (2C proportional)",
+            "CAVENDISH_MK1": "CAVENDISH_MK1 (peak + earned flanks, 50/25/25)",
+            "CAVENDISH_MK3": "CAVENDISH_MK3 (weighted peak + earned flanks)",
         }
 
         def _strat_summary(rows: list[dict], label: str) -> None:

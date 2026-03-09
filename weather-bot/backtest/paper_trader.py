@@ -54,12 +54,8 @@ class ShadowTrader:
         "TOP2_EQUAL":    "shadow_2a",
         "TOP2_COND":     "shadow_2b",
         "TOP2_PROP":     "shadow_2c",
-        "PURDEY_MK1":    "shadow_purdey",
         "CAVENDISH_MK1": "shadow_cavendish",
-        "PURDEY_MK2":    "shadow_purdey2",
         "CAVENDISH_MK3": "shadow_cavendish3",
-        "TRUE_ALPHA":    "shadow_true_alpha",
-        "PROPS_KELLY":   "shadow_props_kelly",
     }
 
     def __init__(self, variant: str) -> None:
@@ -75,8 +71,8 @@ class ShadowTrader:
         self.order_manager = OrderManager(live_trading=False)
         self._log = logging.getLogger(f"weather-bot.{slug}")
 
-    _PURDEY_CAVENDISH_VARIANTS = {"PURDEY_MK1", "CAVENDISH_MK1"}
-    _MK2_ACE_VARIANTS = {"PURDEY_MK2", "CAVENDISH_MK3", "TRUE_ALPHA", "PROPS_KELLY"}
+    _PURDEY_CAVENDISH_VARIANTS = {"CAVENDISH_MK1"}
+    _MK2_ACE_VARIANTS = {"CAVENDISH_MK3"}
 
     def run_once(self, markets: list[dict], forecasts: dict, bankroll: float) -> None:
         """Execute one scan using shared market + forecast data."""
@@ -492,11 +488,8 @@ class PaperTrader:
                     (_ROOT / "data" / "positions_shadow_2a.json", "TOP2_EQUAL"),
                     (_ROOT / "data" / "positions_shadow_2b.json", "TOP2_COND"),
                     (_ROOT / "data" / "positions_shadow_2c.json", "TOP2_PROP"),
-                    (_ROOT / "data" / "positions_shadow_purdey.json", "PURDEY_MK1"),
                     (_ROOT / "data" / "positions_shadow_cavendish.json", "CAVENDISH_MK1"),
-                    (_ROOT / "data" / "positions_shadow_purdey2.json", "PURDEY_MK2"),
                     (_ROOT / "data" / "positions_shadow_cavendish3.json", "CAVENDISH_MK3"),
-                    (_ROOT / "data" / "positions_shadow_true_alpha.json", "TRUE_ALPHA"),
                     (_ROOT / "data" / "positions_shadow_props_kelly.json", "PROPS_KELLY"),
                 ]
 
