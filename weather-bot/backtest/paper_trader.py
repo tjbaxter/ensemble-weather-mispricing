@@ -57,9 +57,8 @@ class ShadowTrader:
         "PURDEY_MK1":    "shadow_purdey",
         "CAVENDISH_MK1": "shadow_cavendish",
         "PURDEY_MK2":    "shadow_purdey2",
-        "CAVENDISH_MK2": "shadow_cavendish2",
         "CAVENDISH_MK3": "shadow_cavendish3",
-        "ACE":           "shadow_ace",
+        "TRUE_ALPHA":    "shadow_true_alpha",
         "PROPS_KELLY":   "shadow_props_kelly",
     }
 
@@ -77,7 +76,7 @@ class ShadowTrader:
         self._log = logging.getLogger(f"weather-bot.{slug}")
 
     _PURDEY_CAVENDISH_VARIANTS = {"PURDEY_MK1", "CAVENDISH_MK1"}
-    _MK2_ACE_VARIANTS = {"PURDEY_MK2", "CAVENDISH_MK2", "CAVENDISH_MK3", "ACE", "PROPS_KELLY"}
+    _MK2_ACE_VARIANTS = {"PURDEY_MK2", "CAVENDISH_MK3", "TRUE_ALPHA", "PROPS_KELLY"}
 
     def run_once(self, markets: list[dict], forecasts: dict, bankroll: float) -> None:
         """Execute one scan using shared market + forecast data."""
@@ -496,9 +495,8 @@ class PaperTrader:
                     (_ROOT / "data" / "positions_shadow_purdey.json", "PURDEY_MK1"),
                     (_ROOT / "data" / "positions_shadow_cavendish.json", "CAVENDISH_MK1"),
                     (_ROOT / "data" / "positions_shadow_purdey2.json", "PURDEY_MK2"),
-                    (_ROOT / "data" / "positions_shadow_cavendish2.json", "CAVENDISH_MK2"),
                     (_ROOT / "data" / "positions_shadow_cavendish3.json", "CAVENDISH_MK3"),
-                    (_ROOT / "data" / "positions_shadow_ace.json", "ACE"),
+                    (_ROOT / "data" / "positions_shadow_true_alpha.json", "TRUE_ALPHA"),
                     (_ROOT / "data" / "positions_shadow_props_kelly.json", "PROPS_KELLY"),
                 ]
 

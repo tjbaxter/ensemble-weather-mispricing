@@ -24,9 +24,8 @@ git add \
   weather-bot/data/positions_shadow_purdey.json \
   weather-bot/data/positions_shadow_cavendish.json \
   weather-bot/data/positions_shadow_purdey2.json \
-  weather-bot/data/positions_shadow_cavendish2.json \
   weather-bot/data/positions_shadow_cavendish3.json \
-  weather-bot/data/positions_shadow_ace.json \
+  weather-bot/data/positions_shadow_true_alpha.json \
   weather-bot/data/positions_shadow_props_kelly.json \
   weather-bot/data/model_accuracy_log.json \
   weather-bot/data/polymarket_cache.json \
@@ -49,9 +48,8 @@ git add -f \
   weather-bot/logs/shadow_purdey/resolved.csv \
   weather-bot/logs/shadow_cavendish/resolved.csv \
   weather-bot/logs/shadow_purdey2/resolved.csv \
-  weather-bot/logs/shadow_cavendish2/resolved.csv \
   weather-bot/logs/shadow_cavendish3/resolved.csv \
-  weather-bot/logs/shadow_ace/resolved.csv \
+  weather-bot/logs/shadow_true_alpha/resolved.csv \
   weather-bot/logs/shadow_props_kelly/resolved.csv \
   2>/dev/null || true
 
