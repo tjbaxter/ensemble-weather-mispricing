@@ -4362,7 +4362,7 @@ def _render_overview_tab() -> None:
         unsafe_allow_html=True,
     )
 
-    rank_emojis = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟", "1️⃣1️⃣", "1️⃣2️⃣"]
+    rank_emojis = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟", "1️⃣1️⃣", "1️⃣2️⃣", "1️⃣3️⃣", "1️⃣4️⃣", "1️⃣5️⃣"]
     for row_start in range(0, len(ranked), 3):
         cols = st.columns(3)
         for i, col in enumerate(cols):
