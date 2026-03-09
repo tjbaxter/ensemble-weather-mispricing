@@ -98,7 +98,8 @@ def _ensure_resolved_csv() -> None:
 
 _SHADOW_STRATEGIES = {
     "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP",
-    "CAVENDISH_MK1", "CAVENDISH_MK3",
+    "PURDEY_MK1", "CAVENDISH_MK1",
+    "PURDEY_MK2", "CAVENDISH_MK3", "TRUE_ALPHA", "PROPS_KELLY",
 }
 
 
@@ -553,8 +554,12 @@ def print_summary(stats: dict) -> None:
             "TOP2_EQUAL":    "TOP2_EQUAL    (2A equal sizing)",
             "TOP2_COND":     "TOP2_COND     (2B conditional)",
             "TOP2_PROP":     "TOP2_PROP     (2C proportional)",
+            "PURDEY_MK1":    "PURDEY_MK1    (top-2, 60/40)",
             "CAVENDISH_MK1": "CAVENDISH_MK1 (peak + earned flanks, 50/25/25)",
+            "PURDEY_MK2":    "PURDEY_MK2    (weighted top-2)",
             "CAVENDISH_MK3": "CAVENDISH_MK3 (weighted peak + earned flanks)",
+            "TRUE_ALPHA":    "TRUE_ALPHA    (≥10% + ≥1 model, prop Kelly)",
+            "PROPS_KELLY":   "PROPS_KELLY   (weighted flanks, prop Kelly)",
         }
 
         def _strat_summary(rows: list[dict], label: str) -> None:

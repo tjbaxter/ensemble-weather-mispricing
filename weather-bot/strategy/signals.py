@@ -978,6 +978,11 @@ def generate_purdey_cavendish_signals(
         )
         _base_sz = max(_base_sz, KELLY_MIN_BET_USD) if _base_sz > 0 else KELLY_MIN_BET_USD
 
+        # ── PURDEY_MK1: top-2 by model probability, hard cap 2, 60/40 split ────
+        signals.append(_make_pc(top1, "PURDEY_MK1", _base_sz * 0.60))
+        if top2 is not None:
+            signals.append(_make_pc(top2, "PURDEY_MK1", _base_sz * 0.40))
+
         # ── CAVENDISH_MK1: peak + adjacent flanks, hard cap 3, 50/25/25 split ─
         peak_bucket = top1["bucket"]
         try:
@@ -1044,8 +1049,9 @@ def generate_purdey_cavendish_signals(
             f"CAVENDISH peak={peak_bucket}[{peak_idx}] of {sorted_buckets}"
         )
 
+    n_purdey    = sum(1 for s in signals if s.strategy == "PURDEY_MK1")
     n_cavendish = sum(1 for s in signals if s.strategy == "CAVENDISH_MK1")
-    _log.info(f"CAVENDISH_MK1 generated {n_cavendish} signals")
+    _log.info(f"PURDEY_MK1={n_purdey} | CAVENDISH_MK1={n_cavendish} signals")
     return signals
 
 
@@ -1247,7 +1253,12 @@ def generate_mk2_ace_signals(
 
         peak_bucket = top1["bucket"]
 
-        # ── peak_idx for CAVENDISH_MK3 ──────────────────────────────────
+        # ── PURDEY_MK2: top-2 by weighted probability ───────────────────
+        signals.append(_make_sig(top1, "PURDEY_MK2"))
+        if top2 is not None:
+            signals.append(_make_sig(top2, "PURDEY_MK2"))
+
+        # ── peak_idx for CAVENDISH_MK3, TRUE_ALPHA, PROPS_KELLY ─────────
         try:
             peak_idx = sorted_buckets.index(peak_bucket)
         except ValueError:
@@ -1297,8 +1308,82 @@ def generate_mk2_ace_signals(
             f"CAVENDISH_MK3 {city} {date_str}: weighted_peak={peak_bucket}"
         )
 
+        # ── TRUE_ALPHA: strictest model, zero tolerance for 0-model bets ─
+        # Peak always. 2nd: ≥10% weighted prob + ≥1 model.
+        # 3rd: ≥10% + (≥2 models OR price ≤9¢ + ≥1 model).
+        # Not restricted to adjacent flanks. Proportional Kelly sizing.
+        TRUE_ALPHA_MIN_WP         = 0.10
+        TRUE_ALPHA_3RD_MIN_MODELS = 2
+        TRUE_ALPHA_VALUE_PRICE    = 0.09
+
+        ta_bets: list[dict] = [top1]
+        for cand in ranked[1:]:
+            if len(ta_bets) >= 3:
+                break
+            wp = cand["model_prob"]
+            nm = cand["n_models"]
+            mp = cand["market_prob"]
+            if wp < TRUE_ALPHA_MIN_WP:
+                continue
+            if len(ta_bets) == 1:
+                if nm >= 1:
+                    ta_bets.append(cand)
+                else:
+                    _log.info(f"TRUE_ALPHA skip 2nd {cand['bucket']} {city} {date_str}: 0 models (w={wp:.3f})")
+            elif len(ta_bets) == 2:
+                if (nm >= TRUE_ALPHA_3RD_MIN_MODELS) or (mp <= TRUE_ALPHA_VALUE_PRICE and nm >= 1):
+                    ta_bets.append(cand)
+                    _log.info(f"TRUE_ALPHA 3rd {cand['bucket']} {city} {date_str}: models={nm} price={mp:.3f}")
+                else:
+                    _log.info(f"TRUE_ALPHA skip 3rd {cand['bucket']} {city} {date_str}: models={nm} price={mp:.3f}")
+
+        ta_total_wp = sum(b["model_prob"] for b in ta_bets)
+        for bet in ta_bets:
+            prop  = bet["model_prob"] / ta_total_wp if ta_total_wp > 0 else 1.0 / len(ta_bets)
+            raw_k = _kelly_for(bet)
+            sz    = round(max(raw_k * prop * len(ta_bets), KELLY_MIN_BET_USD), 2)
+            signals.append(_make_sig(bet, "TRUE_ALPHA", _override_sz=sz))
+        _log.info(
+            f"TRUE_ALPHA {city} {date_str}: {len(ta_bets)} bets → "
+            + " | ".join(f"{b['bucket']}(w={b['model_prob']:.2f},nm={b['n_models']})" for b in ta_bets)
+        )
+
+        # ── PROPS_KELLY: peak + earned flanks, proportional Kelly sizing ─
+        PROPS_KELLY_FLANK_MIN_WP = 0.05
+        pk_bets: list[dict] = [top1]
+        if peak_idx >= 0:
+            for off in (-1, +1):
+                idx = peak_idx + off
+                if idx < 0 or idx >= len(sorted_buckets):
+                    continue
+                fk = sorted_buckets[idx]
+                fi = all_buckets[fk]
+                fp = float(fi.get("price", 0) or 0)
+                ft = fi.get("yes_token_id", "")
+                if not ft or fp < HARD_MIN_YES_ENTRY_PRICE or fp > _d_max:
+                    continue
+                fwp = w_probs.get(fk, 0.0) * temporal_discount
+                fn_models = models_in_bucket(det_model_values, fk)
+                if fwp < PROPS_KELLY_FLANK_MIN_WP or fn_models < 1:
+                    continue
+                pk_bets.append({
+                    "bucket": fk, "token_id": ft,
+                    "condition_id": bucket_to_condition[fk],
+                    "model_prob": fwp, "market_prob": fp,
+                    "edge": fwp - fp, "n_models": fn_models,
+                })
+        total_wp = sum(b["model_prob"] for b in pk_bets)
+        for bet in pk_bets:
+            prop = bet["model_prob"] / total_wp if total_wp > 0 else 1.0 / len(pk_bets)
+            raw_kelly = _kelly_for(bet)
+            sz = round(max(raw_kelly * prop * len(pk_bets), KELLY_MIN_BET_USD), 2)
+            signals.append(_make_sig(bet, "PROPS_KELLY", _override_sz=sz))
+
+    n_p2 = sum(1 for s in signals if s.strategy == "PURDEY_MK2")
     n_c3 = sum(1 for s in signals if s.strategy == "CAVENDISH_MK3")
-    _log.info(f"CAVENDISH_MK3={n_c3} signals")
+    n_ta = sum(1 for s in signals if s.strategy == "TRUE_ALPHA")
+    n_pk = sum(1 for s in signals if s.strategy == "PROPS_KELLY")
+    _log.info(f"PURDEY_MK2={n_p2} | CAVENDISH_MK3={n_c3} | TRUE_ALPHA={n_ta} | PROPS_KELLY={n_pk} signals")
     return signals
 
 

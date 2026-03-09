@@ -3132,7 +3132,7 @@ def main() -> None:
 
     (
         tab_ov, tab_single, tab_ladder, tab_conv,
-        tab_2a, tab_2b, tab_2c, tab_cavendish, tab_cavendish3, tab_acc,
+        tab_2a, tab_2b, tab_2c, tab_cavendish, tab_cavendish3, tab_true_alpha, tab_acc,
     ) = st.tabs([
         "🏆 Overview",
         "⚡ SINGLE",
@@ -3143,6 +3143,7 @@ def main() -> None:
         "2C Prop",
         "🌿 CAVENDISH",
         "🌱 CAVENDISH III",
+        "💎 True Alpha",
         "📊 Accuracy",
     ])
 
@@ -3154,11 +3155,15 @@ def main() -> None:
 
     # Fetch live positions + prices — main bot positions (SINGLE / LADDER)
     _all_positions      = load_positions()
-    _shadow_2a         = load_shadow_positions("shadow_2a")
-    _shadow_2b         = load_shadow_positions("shadow_2b")
-    _shadow_2c         = load_shadow_positions("shadow_2c")
-    _shadow_cavendish  = load_shadow_positions("shadow_cavendish")
-    _shadow_cavendish3 = load_shadow_positions("shadow_cavendish3")
+    _shadow_2a          = load_shadow_positions("shadow_2a")
+    _shadow_2b          = load_shadow_positions("shadow_2b")
+    _shadow_2c          = load_shadow_positions("shadow_2c")
+    _shadow_purdey      = load_shadow_positions("shadow_purdey")
+    _shadow_cavendish   = load_shadow_positions("shadow_cavendish")
+    _shadow_purdey2     = load_shadow_positions("shadow_purdey2")
+    _shadow_cavendish3  = load_shadow_positions("shadow_cavendish3")
+    _shadow_true_alpha  = load_shadow_positions("shadow_true_alpha")
+    _shadow_props_kelly = load_shadow_positions("shadow_props_kelly")
 
     # Filter main positions by strategy tag.
     # Legacy positions written before tagging was added have strategy="" or strategy="LADDER".
@@ -3178,7 +3183,7 @@ def main() -> None:
     _all_token_ids = tuple({
         p["token_id"]
         for p in (_all_positions + _shadow_2a + _shadow_2b + _shadow_2c
-                  + _shadow_cavendish + _shadow_cavendish3)
+                  + _shadow_cavendish + _shadow_cavendish3 + _shadow_true_alpha)
         if p.get("token_id")
     })
     _live_prices_main = fetch_live_position_prices(_all_token_ids) if _all_token_ids else {}
@@ -3241,6 +3246,13 @@ def main() -> None:
             "🌱 CAVENDISH MK3", _strat_df("CAVENDISH_MK3"),
             positions=_shadow_cavendish3, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="cavendish3",
+        )
+
+    with tab_true_alpha:
+        _render_model_detail_tab(
+            "💎 True Alpha", _strat_df("TRUE_ALPHA"),
+            positions=_shadow_true_alpha, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="true_alpha",
         )
 
     with tab_acc:
@@ -4240,6 +4252,7 @@ _MODEL_COLORS: dict[str, str] = {
     "2C Prop":       "#F1C40F",
     "🌿 CAVENDISH":  "#2ECC71",
     "CAVENDISH_MK3": "#1ABC9C",
+    "TRUE_ALPHA":    "#F0C040",
 }
 
 
@@ -4247,11 +4260,15 @@ def _render_overview_tab() -> None:
     """Comparison scoreboard: all strategies side-by-side, plus live open-book."""
     resolved_df = load_resolved_df()
     positions   = load_positions()
-    shadow_2a         = load_shadow_positions("shadow_2a")
-    shadow_2b         = load_shadow_positions("shadow_2b")
-    shadow_2c         = load_shadow_positions("shadow_2c")
-    shadow_cavendish  = load_shadow_positions("shadow_cavendish")
-    shadow_cavendish3 = load_shadow_positions("shadow_cavendish3")
+    shadow_2a          = load_shadow_positions("shadow_2a")
+    shadow_2b          = load_shadow_positions("shadow_2b")
+    shadow_2c          = load_shadow_positions("shadow_2c")
+    shadow_purdey      = load_shadow_positions("shadow_purdey")
+    shadow_cavendish   = load_shadow_positions("shadow_cavendish")
+    shadow_purdey2     = load_shadow_positions("shadow_purdey2")
+    shadow_cavendish3  = load_shadow_positions("shadow_cavendish3")
+    shadow_true_alpha  = load_shadow_positions("shadow_true_alpha")
+    shadow_props_kelly = load_shadow_positions("shadow_props_kelly")
 
     has_strat = not resolved_df.empty and "strategy" in resolved_df.columns
 
@@ -4269,7 +4286,7 @@ def _render_overview_tab() -> None:
     conviction_pos = _pos_tagged("CONVICTION")
 
     # Fetch all live prices in one batch
-    _all_pos = positions + shadow_2a + shadow_2b + shadow_2c + shadow_cavendish + shadow_cavendish3
+    _all_pos = positions + shadow_2a + shadow_2b + shadow_2c + shadow_purdey + shadow_cavendish + shadow_purdey2 + shadow_cavendish3 + shadow_true_alpha + shadow_props_kelly
     _all_tids = tuple({p["token_id"] for p in _all_pos if p.get("token_id")})
     _live_prices = fetch_live_position_prices(_all_tids) if _all_tids else {}
     _live_ts = datetime.now(UTC).strftime("%H:%M UTC")
@@ -4281,8 +4298,12 @@ def _render_overview_tab() -> None:
         ("2A Equal",         "TOP2_EQUAL",    _strat_slice("TOP2_EQUAL"),    shadow_2a),
         ("2B Cond",          "TOP2_COND",     _strat_slice("TOP2_COND"),     shadow_2b),
         ("2C Prop",          "TOP2_PROP",     _strat_slice("TOP2_PROP"),     shadow_2c),
+        ("🎯 PURDEY",        "PURDEY_MK1",    _strat_slice("PURDEY_MK1"),    shadow_purdey),
         ("🌿 CAVENDISH",     "CAVENDISH_MK1", _strat_slice("CAVENDISH_MK1"), shadow_cavendish),
+        ("🎯 PURDEY MK2",    "PURDEY_MK2",    _strat_slice("PURDEY_MK2"),    shadow_purdey2),
         ("🌱 CAVENDISH MK3", "CAVENDISH_MK3", _strat_slice("CAVENDISH_MK3"), shadow_cavendish3),
+        ("💎 True Alpha",    "TRUE_ALPHA",    _strat_slice("TRUE_ALPHA"),    shadow_true_alpha),
+        ("🎲 Props Kelly",   "PROPS_KELLY",   _strat_slice("PROPS_KELLY"),   shadow_props_kelly),
     ]
 
     all_stats = [
