@@ -836,10 +836,11 @@ def generate_purdey_cavendish_signals(
     CAVENDISH_MK1 — Hard cap of 3 bets per city-date.
         Bets on the peak bucket (50 %) and its immediate temperature
         neighbours: one cooler (25 %) and one warmer (25 %).
-        Flanks are included regardless of their own edge — the strategy
-        hedges the "off by one bucket" scenario.
+        Flanks must earn their place: ≥5% ensemble probability AND
+        at least 1 individual model predicting a temp in that bucket.
     """
     from config.settings import ENABLE_TOP2_SHADOWS
+    from strategy.model_weights import models_in_bucket
     _log = logging.getLogger("weather-bot.signals")
 
     if not ENABLE_TOP2_SHADOWS:
@@ -991,6 +992,9 @@ def generate_purdey_cavendish_signals(
 
         signals.append(_make_pc(top1, "CAVENDISH_MK1", _base_sz * 0.50))
 
+        # Flanks must earn their place: ≥5% ensemble probability AND
+        # ≥1 individual model predicting a temp in that bucket.
+        _CAVI_FLANK_MIN_PROB = 0.05
         if peak_idx >= 0:
             # Flank below (one cooler bucket in temperature order)
             if peak_idx > 0:
@@ -1000,13 +1004,20 @@ def generate_purdey_cavendish_signals(
                 flank_token = flank_info.get("yes_token_id", "")
                 if flank_token and HARD_MIN_YES_ENTRY_PRICE <= flank_price <= _d_max:
                     flank_model = forecast.get(flank_below_key, 0.0) * temporal_discount
-                    signals.append(_make_pc(
-                        {"bucket": flank_below_key, "token_id": flank_token,
-                         "condition_id": bucket_to_condition[flank_below_key],
-                         "model_prob": max(flank_model, 0.01),
-                         "market_prob": flank_price, "edge": max(flank_model - flank_price, 0.0)},
-                        "CAVENDISH_MK1", _base_sz * 0.25,
-                    ))
+                    fn_models = models_in_bucket(det_model_values, flank_below_key)
+                    if flank_model >= _CAVI_FLANK_MIN_PROB and fn_models >= 1:
+                        signals.append(_make_pc(
+                            {"bucket": flank_below_key, "token_id": flank_token,
+                             "condition_id": bucket_to_condition[flank_below_key],
+                             "model_prob": flank_model,
+                             "market_prob": flank_price, "edge": max(flank_model - flank_price, 0.0)},
+                            "CAVENDISH_MK1", _base_sz * 0.25,
+                        ))
+                    else:
+                        _log.info(
+                            f"CAVENDISH_MK1 skipping lower flank {flank_below_key} for {city} {date_str}: "
+                            f"prob={flank_model:.3f} n_models={fn_models}"
+                        )
 
             # Flank above (one warmer bucket in temperature order)
             if peak_idx < len(sorted_buckets) - 1:
@@ -1016,13 +1027,20 @@ def generate_purdey_cavendish_signals(
                 flank_token = flank_info.get("yes_token_id", "")
                 if flank_token and HARD_MIN_YES_ENTRY_PRICE <= flank_price <= _d_max:
                     flank_model = forecast.get(flank_above_key, 0.0) * temporal_discount
-                    signals.append(_make_pc(
-                        {"bucket": flank_above_key, "token_id": flank_token,
-                         "condition_id": bucket_to_condition[flank_above_key],
-                         "model_prob": max(flank_model, 0.01),
-                         "market_prob": flank_price, "edge": max(flank_model - flank_price, 0.0)},
-                        "CAVENDISH_MK1", _base_sz * 0.25,
-                    ))
+                    fn_models = models_in_bucket(det_model_values, flank_above_key)
+                    if flank_model >= _CAVI_FLANK_MIN_PROB and fn_models >= 1:
+                        signals.append(_make_pc(
+                            {"bucket": flank_above_key, "token_id": flank_token,
+                             "condition_id": bucket_to_condition[flank_above_key],
+                             "model_prob": flank_model,
+                             "market_prob": flank_price, "edge": max(flank_model - flank_price, 0.0)},
+                            "CAVENDISH_MK1", _base_sz * 0.25,
+                        ))
+                    else:
+                        _log.info(
+                            f"CAVENDISH_MK1 skipping upper flank {flank_above_key} for {city} {date_str}: "
+                            f"prob={flank_model:.3f} n_models={fn_models}"
+                        )
 
         _log.info(
             f"PC signals for {city} {date_str}: "
