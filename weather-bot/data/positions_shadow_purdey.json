@@ -1194,5 +1194,28 @@
     "model_values_json": "{\"icon_seamless\":53.8,\"gem_seamless\":58.0,\"ncep_nbm_conus\":56.4}",
     "days_ahead": 2,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x79fa2a9fe061d1e36c030540f7def4c775aa1dd19f85734a98fa69c3df00e2dd",
+    "token_id": "58296363771109280022371271801078133272909002047147864944675382055941782896484",
+    "side": "BUY_YES",
+    "city": "Ankara",
+    "station_icao": "LTAC",
+    "date": "2026-03-19",
+    "bucket": "12+",
+    "fill_price": 0.11000000000000001,
+    "fill_size": 45.454545454545446,
+    "cost": 5.0,
+    "timestamp": "2026-03-17T16:15:38.713920+00:00",
+    "strategy": "PURDEY_MK1",
+    "forecast_prob": 0.48400000000000004,
+    "market_prob": 0.11,
+    "edge": 0.37400000000000005,
+    "ev_per_bet": 17.0,
+    "spread_colour": "RED",
+    "det_spread": 4.7,
+    "model_values_json": "{\"icon_global\":13.0,\"meteofrance_arpege_world\":12.4,\"jma_seamless\":11.4,\"icon_seamless\":12.7,\"ecmwf_ifs025\":8.3,\"gfs_graphcast025\":12.1}",
+    "days_ahead": 2,
+    "kelly_fraction_used": 0.35
   }
 ]

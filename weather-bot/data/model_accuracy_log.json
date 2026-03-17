@@ -1351,9 +1351,9 @@
   },
   "EGLC/2026-03-18": {
     "preds": {
-      "meteofrance_arome_france": 15.7,
-      "meteofrance_seamless": 16.1,
-      "meteofrance_arome_france_hd": 16.1,
+      "meteofrance_arome_france": 15.9,
+      "meteofrance_seamless": 16.3,
+      "meteofrance_arome_france_hd": 16.3,
       "icon_seamless": 16.6,
       "dmi_seamless": 17.1
     },
@@ -1407,7 +1407,7 @@
   "LTAC/2026-03-18": {
     "preds": {
       "icon_global": 15.1,
-      "meteofrance_arpege_world": 13.7,
+      "meteofrance_arpege_world": 15.2,
       "jma_seamless": 14.3,
       "icon_seamless": 15.2,
       "ecmwf_ifs025": 14.8,
@@ -1418,7 +1418,7 @@
   "CYYZ/2026-03-18": {
     "preds": {
       "kma_gdps": 0.4,
-      "meteofrance_arpege_world": 1.2,
+      "meteofrance_arpege_world": 2.0,
       "gem_global": -1.8,
       "dmi_seamless": -0.9
     },
@@ -1481,7 +1481,7 @@
   },
   "EGLC/2026-03-19": {
     "preds": {
-      "meteofrance_seamless": 14.7,
+      "meteofrance_seamless": 15.0,
       "icon_seamless": 15.7,
       "dmi_seamless": 16.7
     },
@@ -1534,7 +1534,7 @@
   "CYYZ/2026-03-19": {
     "preds": {
       "kma_gdps": 3.8,
-      "meteofrance_arpege_world": 6.5,
+      "meteofrance_arpege_world": 7.6,
       "gem_global": 5.3,
       "dmi_seamless": 7.8
     },
@@ -1543,7 +1543,7 @@
   "LTAC/2026-03-19": {
     "preds": {
       "icon_global": 13.0,
-      "meteofrance_arpege_world": 12.6,
+      "meteofrance_arpege_world": 12.4,
       "jma_seamless": 11.4,
       "icon_seamless": 12.7,
       "ecmwf_ifs025": 8.3,
