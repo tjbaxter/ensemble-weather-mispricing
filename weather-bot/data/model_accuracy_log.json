@@ -1179,7 +1179,7 @@
       "ncep_nbm_conus": 23.5,
       "ncep_aigfs025": 21.8,
       "gem_seamless": 24.6,
-      "best_match": 25.0,
+      "best_match": 25.2,
       "icon_seamless": 21.6
     },
     "actual": null
@@ -1204,7 +1204,7 @@
   "KDFW/2026-03-17": {
     "preds": {
       "ncep_nbm_conus": 64.7,
-      "gfs_seamless": 62.8,
+      "gfs_seamless": 62.9,
       "ecmwf_ifs025": 60.2,
       "icon_seamless": 60.9
     },
@@ -1213,7 +1213,7 @@
   "KATL/2026-03-17": {
     "preds": {
       "ncep_nbm_conus": 45.4,
-      "gfs_seamless": 41.8,
+      "gfs_seamless": 41.7,
       "ecmwf_ifs025": 43.7,
       "icon_seamless": 44.5
     },
