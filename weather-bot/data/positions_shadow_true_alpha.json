@@ -826,5 +826,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":41.3,\"ncep_aigfs025\":34.7,\"gem_seamless\":42.9,\"best_match\":44.1,\"icon_seamless\":39.8}",
     "days_ahead": 1,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x8b8f6f0dd20394662e738934f62593ea5c558eb7befe96371fccac001c5e6f51",
+    "token_id": "100933068907403267108224780847349670152760545869132655742869888431131901926109",
+    "side": "BUY_YES",
+    "city": "Seattle",
+    "station_icao": "KSEA",
+    "date": "2026-03-18",
+    "bucket": "50-51",
+    "fill_price": 0.05450000000000001,
+    "fill_size": 91.74311926605503,
+    "cost": 5.0,
+    "timestamp": "2026-03-17T06:40:24.016585+00:00",
+    "strategy": "TRUE_ALPHA",
+    "forecast_prob": 0.47684647753929055,
+    "market_prob": 0.0545,
+    "edge": 0.42234647753929055,
+    "ev_per_bet": 38.747,
+    "spread_colour": "GREEN",
+    "det_spread": 2.4,
+    "model_values_json": "{\"icon_seamless\":54.0,\"gem_seamless\":51.6,\"ncep_nbm_conus\":53.9}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]
