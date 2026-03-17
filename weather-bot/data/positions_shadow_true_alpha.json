@@ -757,5 +757,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":76.8,\"gfs_seamless\":77.6,\"ecmwf_ifs025\":73.9,\"icon_seamless\":74.6}",
     "days_ahead": 1,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0xe4a9a3aa9fec8e9f8c1bf11007e3a9453bda1b1b9714b66fb16db3d38419f9b6",
+    "token_id": "74130305807179454580311691636463281220339522374940703729420922019653501614696",
+    "side": "BUY_YES",
+    "city": "Sao Paulo",
+    "station_icao": "SBGR",
+    "date": "2026-03-17",
+    "bucket": "33+",
+    "fill_price": 0.056499999999999995,
+    "fill_size": 88.49557522123895,
+    "cost": 5.0,
+    "timestamp": "2026-03-17T03:05:28.573157+00:00",
+    "strategy": "TRUE_ALPHA",
+    "forecast_prob": 1.0,
+    "market_prob": 0.056499999999999995,
+    "edge": 0.9435,
+    "ev_per_bet": 83.496,
+    "spread_colour": "RED",
+    "det_spread": 2.3,
+    "model_values_json": "{\"ecmwf_ifs025\":32.5,\"gem_global\":31.5,\"icon_seamless\":30.9,\"gfs_seamless\":30.2}",
+    "days_ahead": 0,
+    "kelly_fraction_used": 0.25
   }
 ]
