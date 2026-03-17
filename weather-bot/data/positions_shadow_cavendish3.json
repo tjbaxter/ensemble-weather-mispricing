@@ -1102,5 +1102,28 @@
     "model_values_json": "{\"kma_gdps\":3.6,\"meteofrance_arpege_world\":6.5,\"gem_global\":5.3,\"dmi_seamless\":7.8}",
     "days_ahead": 2,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x04647342c2824c4e92482c4efa450b93922f424586a0ef277cc48f9876097b3d",
+    "token_id": "13871177191390554848498865411675395683894519761503091241896128463581207383380",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-19",
+    "bucket": "78-79",
+    "fill_price": 0.14500000000000002,
+    "fill_size": 34.48275862068965,
+    "cost": 5.0,
+    "timestamp": "2026-03-17T15:15:26.179571+00:00",
+    "strategy": "CAVENDISH_MK3",
+    "forecast_prob": 0.07572559959707156,
+    "market_prob": 0.14500000000000002,
+    "edge": -0.06927440040292845,
+    "ev_per_bet": -2.389,
+    "spread_colour": "RED",
+    "det_spread": 3.9,
+    "model_values_json": "{\"ncep_nbm_conus\":72.8,\"gfs_seamless\":76.4,\"ecmwf_ifs025\":73.7,\"icon_seamless\":76.7}",
+    "days_ahead": 2,
+    "kelly_fraction_used": 0.25
   }
 ]
