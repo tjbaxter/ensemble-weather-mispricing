@@ -1355,7 +1355,7 @@
       "meteofrance_seamless": 16.4,
       "meteofrance_arome_france_hd": 16.4,
       "icon_seamless": 16.9,
-      "dmi_seamless": 17.1
+      "dmi_seamless": 17.3
     },
     "actual": null
   },
@@ -1373,7 +1373,7 @@
       "ncep_aigfs025": 8.0,
       "gfs_graphcast025": 7.6,
       "ecmwf_ifs025": 7.3,
-      "kma_gdps": 8.3,
+      "kma_gdps": 7.6,
       "kma_seamless": 7.3
     },
     "actual": null
@@ -1429,7 +1429,7 @@
       "ncep_nbm_conus": 44.3,
       "icon_seamless": 42.4,
       "gfs_graphcast025": 43.2,
-      "kma_seamless": 42.1,
+      "kma_seamless": 42.6,
       "gem_seamless": 39.9
     },
     "actual": null
@@ -1483,7 +1483,7 @@
     "preds": {
       "meteofrance_seamless": 15.4,
       "icon_seamless": 15.8,
-      "dmi_seamless": 17.1
+      "dmi_seamless": 17.0
     },
     "actual": null
   },
@@ -1500,7 +1500,7 @@
       "ncep_aigfs025": 9.1,
       "gfs_graphcast025": 7.9,
       "ecmwf_ifs025": 6.7,
-      "kma_gdps": 6.6,
+      "kma_gdps": 6.4,
       "kma_seamless": 6.9
     },
     "actual": null
@@ -1533,7 +1533,7 @@
   },
   "CYYZ/2026-03-19": {
     "preds": {
-      "kma_gdps": 3.8,
+      "kma_gdps": 3.2,
       "meteofrance_arpege_world": 7.6,
       "gem_global": 5.3,
       "dmi_seamless": 7.1
