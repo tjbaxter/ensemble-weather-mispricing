@@ -1125,5 +1125,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":65.6,\"gfs_seamless\":64.8,\"ecmwf_ifs025\":65.9,\"icon_seamless\":63.6}",
     "days_ahead": 2,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x41ca134136541e5b4e6105c6d37d7cfc3fcc680ba15ac1d60e8f10dba867e19b",
+    "token_id": "103878923693899269923975253701555794912644030610735477252191603984539113524469",
+    "side": "BUY_YES",
+    "city": "Dallas",
+    "station_icao": "KDFW",
+    "date": "2026-03-19",
+    "bucket": "84-85",
+    "fill_price": 0.12,
+    "fill_size": 41.66666666666667,
+    "cost": 5.0,
+    "timestamp": "2026-03-17T12:30:23.450588+00:00",
+    "strategy": "TOP2_PROP",
+    "forecast_prob": 0.20187469482477197,
+    "market_prob": 0.12,
+    "edge": 0.08187469482477197,
+    "ev_per_bet": 3.411,
+    "spread_colour": "GREEN",
+    "det_spread": 2.7,
+    "model_values_json": "{\"ncep_nbm_conus\":87.2,\"gfs_seamless\":85.5,\"ecmwf_ifs025\":86.1,\"icon_seamless\":84.5}",
+    "days_ahead": 2,
+    "kelly_fraction_used": 0.25
   }
 ]

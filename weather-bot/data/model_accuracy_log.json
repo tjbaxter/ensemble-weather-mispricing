@@ -1306,7 +1306,7 @@
   },
   "KORD/2026-03-18": {
     "preds": {
-      "ncep_nbm_conus": 40.8,
+      "ncep_nbm_conus": 41.5,
       "ncep_aigfs025": 35.6,
       "gem_seamless": 40.2,
       "best_match": 45.3,
@@ -1327,7 +1327,7 @@
     "preds": {
       "icon_seamless": 53.7,
       "gem_seamless": 52.8,
-      "ncep_nbm_conus": 54.3
+      "ncep_nbm_conus": 54.8
     },
     "actual": null
   },
@@ -1342,7 +1342,7 @@
   },
   "KATL/2026-03-18": {
     "preds": {
-      "ncep_nbm_conus": 53.6,
+      "ncep_nbm_conus": 54.2,
       "gfs_seamless": 50.1,
       "ecmwf_ifs025": 50.6,
       "icon_seamless": 52.9
@@ -1457,7 +1457,7 @@
     "preds": {
       "icon_seamless": 53.8,
       "gem_seamless": 58.0,
-      "ncep_nbm_conus": 56.7
+      "ncep_nbm_conus": 56.4
     },
     "actual": null
   },
