@@ -1255,6 +1255,22 @@
         "ukmo_uk_deterministic_2km": 14.4
       },
       "spread": 0.6
+    },
+    "2026-03-18": {
+      "preds": {
+        "meteofrance_arome_france": 15.7,
+        "meteofrance_seamless": 16.1,
+        "meteofrance_arome_france_hd": 16.1,
+        "icon_seamless": 16.6,
+        "dmi_seamless": 17.3,
+        "ecmwf_ifs025": 16.4,
+        "kma_seamless": 16.3,
+        "ukmo_uk_deterministic_2km": 17.1,
+        "ukmo_seamless": 17.1,
+        "ukmo_global_deterministic_10km": 16.5,
+        "ncep_aigfs025": 16.1
+      },
+      "logged_at": "2026-03-17T14:32:48.517561+00:00"
     }
   },
   "Miami": {
