@@ -1409,7 +1409,7 @@
       "icon_global": 15.1,
       "meteofrance_arpege_world": 15.2,
       "jma_seamless": 14.3,
-      "icon_seamless": 15.2,
+      "icon_seamless": 16.8,
       "ecmwf_ifs025": 14.8,
       "gfs_graphcast025": 14.1
     },
@@ -1483,7 +1483,7 @@
     "preds": {
       "meteofrance_seamless": 15.0,
       "icon_seamless": 15.7,
-      "dmi_seamless": 16.7
+      "dmi_seamless": 17.1
     },
     "actual": null
   },
