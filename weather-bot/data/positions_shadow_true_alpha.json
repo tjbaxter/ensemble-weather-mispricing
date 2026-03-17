@@ -1240,5 +1240,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":49.8,\"ncep_aigfs025\":48.0,\"gem_seamless\":45.5,\"best_match\":51.8,\"icon_seamless\":53.7}",
     "days_ahead": 2,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0xbcb9bcedce9548a9461de5afedb8b19794d861958370e6494fc7630dfb347849",
+    "token_id": "26434300960152650601717811026735994403798214329761418509926645006903972604623",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-18",
+    "bucket": "74-75",
+    "fill_price": 0.08,
+    "fill_size": 62.5,
+    "cost": 5.0,
+    "timestamp": "2026-03-17T23:00:41.965525+00:00",
+    "strategy": "TRUE_ALPHA",
+    "forecast_prob": 0.23039948142780947,
+    "market_prob": 0.08,
+    "edge": 0.15039948142780946,
+    "ev_per_bet": 9.4,
+    "spread_colour": "RED",
+    "det_spread": 8.5,
+    "model_values_json": "{\"ncep_nbm_conus\":68.2,\"gfs_seamless\":62.6,\"ecmwf_ifs025\":70.8,\"icon_seamless\":71.1}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]

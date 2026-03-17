@@ -1907,5 +1907,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":49.8,\"ncep_aigfs025\":48.0,\"gem_seamless\":45.5,\"best_match\":51.8,\"icon_seamless\":53.7}",
     "days_ahead": 2,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0xeaface54b3b15ee50bb8c91b309864fe3ad780e4bbf17d960f63397bfd01be7e",
+    "token_id": "21583357811508905375538788684438318426772048449722583767477539845999355555288",
+    "side": "BUY_YES",
+    "city": "Dallas",
+    "station_icao": "KDFW",
+    "date": "2026-03-18",
+    "bucket": "78-79",
+    "fill_price": 0.225,
+    "fill_size": 22.22222222222222,
+    "cost": 5.0,
+    "timestamp": "2026-03-17T23:05:42.157762+00:00",
+    "strategy": "PURDEY_MK2",
+    "forecast_prob": 0.07452941465533239,
+    "market_prob": 0.225,
+    "edge": -0.15047058534466762,
+    "ev_per_bet": -3.344,
+    "spread_colour": "RED",
+    "det_spread": 4.0,
+    "model_values_json": "{\"ncep_nbm_conus\":76.7,\"gfs_seamless\":75.9,\"ecmwf_ifs025\":72.7,\"icon_seamless\":73.8}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]
