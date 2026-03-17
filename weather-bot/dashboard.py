@@ -3132,7 +3132,7 @@ def main() -> None:
 
     (
         tab_ov, tab_single, tab_ladder, tab_conv,
-        tab_2a, tab_2b, tab_2c, tab_cavendish, tab_cavendish3, tab_true_alpha, tab_acc,
+        tab_2a, tab_2b, tab_2c, tab_purdey, tab_cavendish, tab_purdey2, tab_cavendish3, tab_true_alpha, tab_pk, tab_acc,
     ) = st.tabs([
         "🏆 Overview",
         "⚡ SINGLE",
@@ -3141,9 +3141,12 @@ def main() -> None:
         "2A Equal",
         "2B Cond",
         "2C Prop",
+        "🎯 PURDEY",
         "🌿 CAVENDISH",
+        "🎯 PURDEY MK2",
         "🌱 CAVENDISH III",
         "💎 True Alpha",
+        "🎲 Props Kelly",
         "📊 Accuracy",
     ])
 
@@ -3183,7 +3186,8 @@ def main() -> None:
     _all_token_ids = tuple({
         p["token_id"]
         for p in (_all_positions + _shadow_2a + _shadow_2b + _shadow_2c
-                  + _shadow_cavendish + _shadow_cavendish3 + _shadow_true_alpha)
+                  + _shadow_purdey + _shadow_cavendish + _shadow_purdey2
+                  + _shadow_cavendish3 + _shadow_true_alpha + _shadow_props_kelly)
         if p.get("token_id")
     })
     _live_prices_main = fetch_live_position_prices(_all_token_ids) if _all_token_ids else {}
@@ -3234,11 +3238,25 @@ def main() -> None:
             live_ts=_live_ts_main, key_prefix="2c",
         )
 
+    with tab_purdey:
+        _render_model_detail_tab(
+            "🎯 PURDEY MK1", _strat_df("PURDEY_MK1"),
+            positions=_shadow_purdey, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="purdey",
+        )
+
     with tab_cavendish:
         _render_model_detail_tab(
             "🌿 CAVENDISH MK1", _strat_df("CAVENDISH_MK1"),
             positions=_shadow_cavendish, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="cavendish",
+        )
+
+    with tab_purdey2:
+        _render_model_detail_tab(
+            "🎯 PURDEY MK2", _strat_df("PURDEY_MK2"),
+            positions=_shadow_purdey2, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="purdey2",
         )
 
     with tab_cavendish3:
@@ -3253,6 +3271,13 @@ def main() -> None:
             "💎 True Alpha", _strat_df("TRUE_ALPHA"),
             positions=_shadow_true_alpha, live_prices=_live_prices_main,
             live_ts=_live_ts_main, key_prefix="true_alpha",
+        )
+
+    with tab_pk:
+        _render_model_detail_tab(
+            "🎲 Props Kelly", _strat_df("PROPS_KELLY"),
+            positions=_shadow_props_kelly, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="props_kelly",
         )
 
     with tab_acc:
@@ -4378,7 +4403,15 @@ def _render_overview_tab() -> None:
         ls    = _compute_live_stats(pos, _live_prices)
 
         if not df.empty:
-            df_s = df.sort_values("target_date_dt")
+            # Canonicalize to one settled point per day per strategy.
+            # Without this, multiple trades on the same target_date create
+            # intra-day hover points that can look inconsistent vs card totals.
+            df_s = (
+                df.sort_values("target_date_dt")
+                  .groupby("target_date_dt", as_index=False)["pnl_usd"]
+                  .sum()
+                  .sort_values("target_date_dt")
+            )
             df_s["_cum"] = df_s["pnl_usd"].cumsum()
             fig_all.add_trace(go.Scatter(
                 x=df_s["target_date_dt"],

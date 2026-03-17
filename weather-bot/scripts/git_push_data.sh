@@ -14,8 +14,21 @@ cd "$REPO_DIR"
 # Pull first to avoid conflicts (cron jobs on VM are the only writer, but be safe)
 git pull --rebase --autostash origin main 2>&1 | tail -3
 
-# Stage all data files that change during bot/cron runs
-git add \
+# Stage files defensively: missing files should not abort staging.
+add_if_exists() {
+  local flags=()
+  if [[ "${1:-}" == "-f" ]]; then
+    flags+=("-f")
+    shift
+  fi
+  for rel in "$@"; do
+    if [[ -f "$rel" ]]; then
+      git add "${flags[@]}" "$rel"
+    fi
+  done
+}
+
+add_if_exists \
   weather-bot/data/positions.json \
   weather-bot/data/positions_live.json \
   weather-bot/data/positions_shadow_2a.json \
@@ -27,7 +40,6 @@ git add \
   weather-bot/data/positions_shadow_cavendish3.json \
   weather-bot/data/positions_shadow_true_alpha.json \
   weather-bot/data/positions_shadow_props_kelly.json \
-  weather-bot/data/positions_shadow_props_kelly.json \
   weather-bot/data/model_accuracy_log.json \
   weather-bot/data/polymarket_cache.json \
   weather-bot/data/commercial_forecast_log.json \
@@ -35,11 +47,10 @@ git add \
   weather-bot/data/accuracy_rows_cache.json \
   weather-bot/data/morning_obs_cache.json \
   weather-bot/backtest/data/resolved_markets.json \
-  weather-bot/backtest/data/resolved_markets.csv \
-  2>/dev/null || true
+  weather-bot/backtest/data/resolved_markets.csv
 
 # Log files need -f because logs/ is gitignored (exceptions added in .gitignore)
-git add -f \
+add_if_exists -f \
   weather-bot/logs/resolved.csv \
   weather-bot/logs/signals.csv \
   weather-bot/logs/trades.csv \
@@ -51,9 +62,7 @@ git add -f \
   weather-bot/logs/shadow_purdey2/resolved.csv \
   weather-bot/logs/shadow_cavendish3/resolved.csv \
   weather-bot/logs/shadow_true_alpha/resolved.csv \
-  weather-bot/logs/shadow_props_kelly/resolved.csv \
-  weather-bot/logs/shadow_props_kelly/resolved.csv \
-  2>/dev/null || true
+  weather-bot/logs/shadow_props_kelly/resolved.csv
 
 # Only commit if there are actual changes
 if git diff --cached --quiet; then
