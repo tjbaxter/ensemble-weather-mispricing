@@ -1179,7 +1179,7 @@
       "ncep_nbm_conus": 23.6,
       "ncep_aigfs025": 21.8,
       "gem_seamless": 24.6,
-      "best_match": 24.5,
+      "best_match": 24.7,
       "icon_seamless": 21.6
     },
     "actual": null
@@ -1221,9 +1221,9 @@
   },
   "EGLC/2026-03-17": {
     "preds": {
-      "meteofrance_arome_france": 14.2,
-      "meteofrance_seamless": 14.7,
-      "meteofrance_arome_france_hd": 14.7,
+      "meteofrance_arome_france": 14.1,
+      "meteofrance_seamless": 14.6,
+      "meteofrance_arome_france_hd": 14.6,
       "icon_seamless": 14.4,
       "dmi_seamless": 14.8
     },
@@ -1260,7 +1260,7 @@
       "icon_global": 14.2,
       "meteofrance_arpege_world": 13.4,
       "jma_seamless": 13.4,
-      "icon_seamless": 14.4,
+      "icon_seamless": 14.6,
       "ecmwf_ifs025": 13.7,
       "gfs_graphcast025": 12.9
     },
@@ -1351,9 +1351,9 @@
   },
   "EGLC/2026-03-18": {
     "preds": {
-      "meteofrance_arome_france": 15.7,
-      "meteofrance_seamless": 15.8,
-      "meteofrance_arome_france_hd": 15.8,
+      "meteofrance_arome_france": 15.2,
+      "meteofrance_seamless": 15.6,
+      "meteofrance_arome_france_hd": 15.6,
       "icon_seamless": 17.0,
       "dmi_seamless": 17.2
     },
