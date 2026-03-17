@@ -175,8 +175,8 @@ class PaperTrader:
             ShadowTrader("PURDEY_MK1"),
             ShadowTrader("CAVENDISH_MK1"),
             ShadowTrader("PURDEY_MK2"),
-            ShadowTrader("CAVENDISH_MK2"),
-            ShadowTrader("ACE"),
+            ShadowTrader("CAVENDISH_MK3"),
+            ShadowTrader("TRUE_ALPHA"),
             ShadowTrader("PROPS_KELLY"),
         ]
 
