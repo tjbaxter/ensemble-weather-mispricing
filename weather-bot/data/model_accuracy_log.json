@@ -1362,7 +1362,7 @@
   "LFPG/2026-03-18": {
     "preds": {
       "ukmo_uk_deterministic_2km": 15.4,
-      "metno_seamless": 14.2,
+      "metno_seamless": 14.1,
       "ukmo_seamless": 15.4,
       "ecmwf_ifs025": 14.0
     },
@@ -1420,7 +1420,7 @@
       "kma_gdps": 0.4,
       "meteofrance_arpege_world": 2.0,
       "gem_global": -1.8,
-      "dmi_seamless": -0.9
+      "dmi_seamless": -0.4
     },
     "actual": null
   },
@@ -1536,7 +1536,7 @@
       "kma_gdps": 3.8,
       "meteofrance_arpege_world": 7.6,
       "gem_global": 5.3,
-      "dmi_seamless": 7.8
+      "dmi_seamless": 7.1
     },
     "actual": null
   },
