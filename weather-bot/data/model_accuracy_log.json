@@ -1318,7 +1318,7 @@
     "preds": {
       "ncep_nbm_conus": 68.8,
       "gfs_seamless": 62.6,
-      "ecmwf_ifs025": 72.3,
+      "ecmwf_ifs025": 70.8,
       "icon_seamless": 72.5
     },
     "actual": null
@@ -1335,7 +1335,7 @@
     "preds": {
       "ncep_nbm_conus": 77.2,
       "gfs_seamless": 75.9,
-      "ecmwf_ifs025": 73.6,
+      "ecmwf_ifs025": 72.7,
       "icon_seamless": 72.7
     },
     "actual": null
@@ -1344,7 +1344,7 @@
     "preds": {
       "ncep_nbm_conus": 54.9,
       "gfs_seamless": 54.1,
-      "ecmwf_ifs025": 51.8,
+      "ecmwf_ifs025": 50.5,
       "icon_seamless": 53.1
     },
     "actual": null
@@ -1372,7 +1372,7 @@
     "preds": {
       "ncep_aigfs025": 8.0,
       "gfs_graphcast025": 7.6,
-      "ecmwf_ifs025": 5.9,
+      "ecmwf_ifs025": 7.3,
       "kma_gdps": 8.3,
       "kma_seamless": 7.3
     },
@@ -1380,7 +1380,7 @@
   },
   "SBGR/2026-03-18": {
     "preds": {
-      "ecmwf_ifs025": 31.8,
+      "ecmwf_ifs025": 31.2,
       "gem_global": 31.8,
       "icon_seamless": 31.2,
       "gfs_seamless": 29.8
@@ -1390,7 +1390,7 @@
   "SAEZ/2026-03-18": {
     "preds": {
       "ukmo_seamless": 27.2,
-      "ecmwf_ifs025": 25.4,
+      "ecmwf_ifs025": 25.6,
       "icon_seamless": 27.5,
       "gem_global": 26.4
     },
@@ -1399,7 +1399,7 @@
   "NZWN/2026-03-18": {
     "preds": {
       "ukmo_seamless": 19.0,
-      "ecmwf_ifs025": 19.0,
+      "ecmwf_ifs025": 19.1,
       "icon_seamless": 18.9
     },
     "actual": null
@@ -1410,7 +1410,7 @@
       "meteofrance_arpege_world": 15.2,
       "jma_seamless": 14.3,
       "icon_seamless": 16.8,
-      "ecmwf_ifs025": 14.8,
+      "ecmwf_ifs025": 14.9,
       "gfs_graphcast025": 14.1
     },
     "actual": null
@@ -1448,7 +1448,7 @@
     "preds": {
       "ncep_nbm_conus": 73.4,
       "gfs_seamless": 76.4,
-      "ecmwf_ifs025": 73.7,
+      "ecmwf_ifs025": 74.2,
       "icon_seamless": 78.1
     },
     "actual": null
@@ -1465,7 +1465,7 @@
     "preds": {
       "ncep_nbm_conus": 86.7,
       "gfs_seamless": 84.6,
-      "ecmwf_ifs025": 85.7,
+      "ecmwf_ifs025": 84.9,
       "icon_seamless": 83.6
     },
     "actual": null
@@ -1474,7 +1474,7 @@
     "preds": {
       "ncep_nbm_conus": 65.8,
       "gfs_seamless": 65.4,
-      "ecmwf_ifs025": 64.4,
+      "ecmwf_ifs025": 65.3,
       "icon_seamless": 62.7
     },
     "actual": null
@@ -1491,7 +1491,7 @@
     "preds": {
       "metno_seamless": 15.6,
       "ukmo_seamless": 16.2,
-      "ecmwf_ifs025": 15.5
+      "ecmwf_ifs025": 15.6
     },
     "actual": null
   },
@@ -1499,7 +1499,7 @@
     "preds": {
       "ncep_aigfs025": 9.1,
       "gfs_graphcast025": 7.9,
-      "ecmwf_ifs025": 6.4,
+      "ecmwf_ifs025": 6.7,
       "kma_gdps": 6.6,
       "kma_seamless": 6.9
     },
@@ -1507,7 +1507,7 @@
   },
   "SBGR/2026-03-19": {
     "preds": {
-      "ecmwf_ifs025": 27.1,
+      "ecmwf_ifs025": 28.3,
       "gem_global": 29.2,
       "icon_seamless": 29.8,
       "gfs_seamless": 24.1
@@ -1517,7 +1517,7 @@
   "SAEZ/2026-03-19": {
     "preds": {
       "ukmo_seamless": 27.7,
-      "ecmwf_ifs025": 25.5,
+      "ecmwf_ifs025": 25.6,
       "icon_seamless": 28.4,
       "gem_global": 26.8
     },
@@ -1526,7 +1526,7 @@
   "NZWN/2026-03-19": {
     "preds": {
       "ukmo_seamless": 18.7,
-      "ecmwf_ifs025": 18.0,
+      "ecmwf_ifs025": 18.6,
       "icon_seamless": 16.2
     },
     "actual": null
@@ -1546,7 +1546,7 @@
       "meteofrance_arpege_world": 12.4,
       "jma_seamless": 11.4,
       "icon_seamless": 12.7,
-      "ecmwf_ifs025": 8.3,
+      "ecmwf_ifs025": 8.4,
       "gfs_graphcast025": 12.1
     },
     "actual": null
