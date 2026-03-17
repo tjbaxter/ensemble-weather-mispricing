@@ -2183,5 +2183,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":76.8,\"gfs_seamless\":77.6,\"ecmwf_ifs025\":73.9,\"icon_seamless\":74.6}",
     "days_ahead": 1,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x987fadee13741a331deba3148602b322e0612020c042b0eb1b9be1f178e99441",
+    "token_id": "25341808076403698584363966371884206773158437072886153597113676482203116092886",
+    "side": "BUY_YES",
+    "city": "Seattle",
+    "station_icao": "KSEA",
+    "date": "2026-03-18",
+    "bucket": "56-57",
+    "fill_price": 0.26,
+    "fill_size": 19.23076923076923,
+    "cost": 5.0,
+    "timestamp": "2026-03-17T04:35:22.474124+00:00",
+    "strategy": "PURDEY_MK2",
+    "forecast_prob": 0.0297025142298186,
+    "market_prob": 0.26,
+    "edge": -0.23029748577018141,
+    "ev_per_bet": -4.429,
+    "spread_colour": "GREEN",
+    "det_spread": 2.0,
+    "model_values_json": "{\"icon_seamless\":54.0,\"gem_seamless\":52.6,\"ncep_nbm_conus\":54.6}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]
