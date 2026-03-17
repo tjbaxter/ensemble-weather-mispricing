@@ -1259,7 +1259,7 @@
     "preds": {
       "icon_global": 14.3,
       "meteofrance_arpege_world": 13.4,
-      "jma_seamless": 13.4,
+      "jma_seamless": 13.3,
       "icon_seamless": 14.6,
       "ecmwf_ifs025": 13.6,
       "gfs_graphcast025": 13.1
@@ -1281,7 +1281,7 @@
       "gfs_graphcast025": 11.9,
       "ecmwf_ifs025": 9.6,
       "kma_gdps": 10.0,
-      "kma_seamless": 10.6
+      "kma_seamless": 10.3
     },
     "actual": null
   },
@@ -1374,7 +1374,7 @@
       "gfs_graphcast025": 6.7,
       "ecmwf_ifs025": 6.1,
       "kma_gdps": 7.4,
-      "kma_seamless": 6.9
+      "kma_seamless": 7.4
     },
     "actual": null
   },
@@ -1408,7 +1408,7 @@
     "preds": {
       "icon_global": 15.2,
       "meteofrance_arpege_world": 14.1,
-      "jma_seamless": 14.5,
+      "jma_seamless": 14.2,
       "icon_seamless": 15.5,
       "ecmwf_ifs025": 14.5,
       "gfs_graphcast025": 14.3
