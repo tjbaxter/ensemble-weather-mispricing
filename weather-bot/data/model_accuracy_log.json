@@ -1490,7 +1490,7 @@
   "LFPG/2026-03-19": {
     "preds": {
       "metno_seamless": 15.6,
-      "ukmo_seamless": 15.1,
+      "ukmo_seamless": 15.9,
       "ecmwf_ifs025": 15.5
     },
     "actual": null
