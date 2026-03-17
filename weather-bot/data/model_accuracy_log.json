@@ -1170,16 +1170,16 @@
       "icon_seamless": 54.8,
       "gfs_graphcast025": 47.1,
       "kma_seamless": 54.0,
-      "gem_seamless": 52.3
+      "gem_seamless": 53.0
     },
     "actual": null
   },
   "KORD/2026-03-17": {
     "preds": {
       "ncep_nbm_conus": 23.0,
-      "ncep_aigfs025": 22.7,
-      "gem_seamless": 24.9,
-      "best_match": 23.6,
+      "ncep_aigfs025": 21.8,
+      "gem_seamless": 24.6,
+      "best_match": 24.1,
       "icon_seamless": 21.6
     },
     "actual": null
@@ -1196,7 +1196,7 @@
   "KSEA/2026-03-17": {
     "preds": {
       "icon_seamless": 51.7,
-      "gem_seamless": 52.3,
+      "gem_seamless": 52.8,
       "ncep_nbm_conus": 53.3
     },
     "actual": null
@@ -1213,7 +1213,7 @@
   "KATL/2026-03-17": {
     "preds": {
       "ncep_nbm_conus": 45.3,
-      "gfs_seamless": 41.8,
+      "gfs_seamless": 42.0,
       "ecmwf_ifs025": 43.0,
       "icon_seamless": 44.5
     },
@@ -1231,9 +1231,9 @@
   },
   "LFPG/2026-03-17": {
     "preds": {
-      "ukmo_uk_deterministic_2km": 16.2,
+      "ukmo_uk_deterministic_2km": 15.9,
       "metno_seamless": 15.1,
-      "ukmo_seamless": 16.2,
+      "ukmo_seamless": 15.9,
       "ecmwf_ifs025": 15.0
     },
     "actual": null
@@ -1258,7 +1258,7 @@
   "LTAC/2026-03-17": {
     "preds": {
       "icon_global": 14.2,
-      "meteofrance_arpege_world": 13.6,
+      "meteofrance_arpege_world": 13.4,
       "jma_seamless": 13.4,
       "icon_seamless": 14.4,
       "ecmwf_ifs025": 13.7,
@@ -1269,7 +1269,7 @@
   "CYYZ/2026-03-17": {
     "preds": {
       "kma_gdps": -4.0,
-      "meteofrance_arpege_world": -2.2,
+      "meteofrance_arpege_world": -2.4,
       "gem_global": -5.1,
       "dmi_seamless": -3.2
     },
@@ -1277,7 +1277,7 @@
   },
   "RKSI/2026-03-17": {
     "preds": {
-      "ncep_aigfs025": 13.0,
+      "ncep_aigfs025": 13.3,
       "gfs_graphcast025": 12.1,
       "ecmwf_ifs025": 10.5,
       "kma_gdps": 10.0,
@@ -1300,15 +1300,15 @@
       "icon_seamless": 35.7,
       "gfs_graphcast025": 34.4,
       "kma_seamless": 38.4,
-      "gem_seamless": 36.9
+      "gem_seamless": 37.5
     },
     "actual": null
   },
   "KORD/2026-03-18": {
     "preds": {
       "ncep_nbm_conus": 41.3,
-      "ncep_aigfs025": 36.4,
-      "gem_seamless": 39.8,
+      "ncep_aigfs025": 34.7,
+      "gem_seamless": 42.9,
       "best_match": 44.1,
       "icon_seamless": 39.8
     },
@@ -1326,7 +1326,7 @@
   "KSEA/2026-03-18": {
     "preds": {
       "icon_seamless": 54.0,
-      "gem_seamless": 52.6,
+      "gem_seamless": 51.6,
       "ncep_nbm_conus": 54.5
     },
     "actual": null
@@ -1370,7 +1370,7 @@
   },
   "RKSI/2026-03-18": {
     "preds": {
-      "ncep_aigfs025": 8.1,
+      "ncep_aigfs025": 8.3,
       "gfs_graphcast025": 6.4,
       "ecmwf_ifs025": 6.8,
       "kma_gdps": 7.4,
@@ -1407,7 +1407,7 @@
   "LTAC/2026-03-18": {
     "preds": {
       "icon_global": 16.4,
-      "meteofrance_arpege_world": 14.3,
+      "meteofrance_arpege_world": 14.1,
       "jma_seamless": 14.5,
       "icon_seamless": 16.6,
       "ecmwf_ifs025": 15.0,
@@ -1418,7 +1418,7 @@
   "CYYZ/2026-03-18": {
     "preds": {
       "kma_gdps": 1.0,
-      "meteofrance_arpege_world": 0.9,
+      "meteofrance_arpege_world": 1.3,
       "gem_global": -2.2,
       "dmi_seamless": -1.0
     },
