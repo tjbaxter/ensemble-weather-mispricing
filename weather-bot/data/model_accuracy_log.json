@@ -1309,15 +1309,15 @@
       "ncep_nbm_conus": 41.8,
       "ncep_aigfs025": 36.6,
       "gem_seamless": 40.2,
-      "best_match": 44.4,
+      "best_match": 44.0,
       "icon_seamless": 37.8
     },
     "actual": null
   },
   "KMIA/2026-03-18": {
     "preds": {
-      "ncep_nbm_conus": 68.3,
-      "gfs_seamless": 62.6,
+      "ncep_nbm_conus": 68.4,
+      "gfs_seamless": 64.0,
       "ecmwf_ifs025": 70.5,
       "icon_seamless": 71.1
     },
@@ -1327,14 +1327,14 @@
     "preds": {
       "icon_seamless": 53.6,
       "gem_seamless": 52.8,
-      "ncep_nbm_conus": 55.1
+      "ncep_nbm_conus": 55.0
     },
     "actual": null
   },
   "KDFW/2026-03-18": {
     "preds": {
       "ncep_nbm_conus": 76.5,
-      "gfs_seamless": 75.9,
+      "gfs_seamless": 74.6,
       "ecmwf_ifs025": 72.9,
       "icon_seamless": 73.8
     },
@@ -1343,7 +1343,7 @@
   "KATL/2026-03-18": {
     "preds": {
       "ncep_nbm_conus": 55.6,
-      "gfs_seamless": 54.1,
+      "gfs_seamless": 56.6,
       "ecmwf_ifs025": 51.8,
       "icon_seamless": 53.4
     },
@@ -1361,9 +1361,9 @@
   },
   "LFPG/2026-03-18": {
     "preds": {
-      "ukmo_uk_deterministic_2km": 15.5,
+      "ukmo_uk_deterministic_2km": 15.4,
       "metno_seamless": 14.1,
-      "ukmo_seamless": 15.5,
+      "ukmo_seamless": 15.4,
       "ecmwf_ifs025": 14.0
     },
     "actual": null
@@ -1436,18 +1436,18 @@
   },
   "KORD/2026-03-19": {
     "preds": {
-      "ncep_nbm_conus": 49.3,
+      "ncep_nbm_conus": 48.7,
       "ncep_aigfs025": 48.0,
       "gem_seamless": 45.5,
-      "best_match": 50.9,
+      "best_match": 44.6,
       "icon_seamless": 53.7
     },
     "actual": null
   },
   "KMIA/2026-03-19": {
     "preds": {
-      "ncep_nbm_conus": 73.9,
-      "gfs_seamless": 77.0,
+      "ncep_nbm_conus": 74.0,
+      "gfs_seamless": 76.3,
       "ecmwf_ifs025": 74.3,
       "icon_seamless": 78.8
     },
@@ -1457,14 +1457,14 @@
     "preds": {
       "icon_seamless": 53.9,
       "gem_seamless": 53.8,
-      "ncep_nbm_conus": 55.2
+      "ncep_nbm_conus": 54.7
     },
     "actual": null
   },
   "KDFW/2026-03-19": {
     "preds": {
-      "ncep_nbm_conus": 86.0,
-      "gfs_seamless": 83.9,
+      "ncep_nbm_conus": 86.2,
+      "gfs_seamless": 87.3,
       "ecmwf_ifs025": 85.5,
       "icon_seamless": 85.2
     },
@@ -1472,8 +1472,8 @@
   },
   "KATL/2026-03-19": {
     "preds": {
-      "ncep_nbm_conus": 65.8,
-      "gfs_seamless": 64.1,
+      "ncep_nbm_conus": 65.9,
+      "gfs_seamless": 67.1,
       "ecmwf_ifs025": 65.0,
       "icon_seamless": 63.4
     },
@@ -1491,9 +1491,9 @@
   },
   "LFPG/2026-03-19": {
     "preds": {
-      "ukmo_uk_deterministic_2km": 16.1,
+      "ukmo_uk_deterministic_2km": 16.5,
       "metno_seamless": 15.9,
-      "ukmo_seamless": 16.1,
+      "ukmo_seamless": 16.5,
       "ecmwf_ifs025": 15.8
     },
     "actual": null

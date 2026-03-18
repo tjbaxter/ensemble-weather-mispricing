@@ -2022,5 +2022,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":49.3,\"ncep_aigfs025\":48.0,\"gem_seamless\":45.5,\"best_match\":50.9,\"icon_seamless\":53.7}",
     "days_ahead": 1,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0xd42b5b3c113c1ac0bc9b922fc943b79d0e2dae1609f616c64a20505e82af3d7b",
+    "token_id": "69791459164346959778759422588258796192712737433571675992496010777196771512376",
+    "side": "BUY_YES",
+    "city": "Atlanta",
+    "station_icao": "KATL",
+    "date": "2026-03-19",
+    "bucket": "66-67",
+    "fill_price": 0.24,
+    "fill_size": 20.833333333333336,
+    "cost": 5.0,
+    "timestamp": "2026-03-18T02:05:38.467439+00:00",
+    "strategy": "PROPS_KELLY",
+    "forecast_prob": 0.36482915926634496,
+    "market_prob": 0.24,
+    "edge": 0.12482915926634497,
+    "ev_per_bet": 2.601,
+    "spread_colour": "RED",
+    "det_spread": 3.7,
+    "model_values_json": "{\"ncep_nbm_conus\":65.9,\"gfs_seamless\":67.1,\"ecmwf_ifs025\":65.0,\"icon_seamless\":63.4}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]

@@ -2091,5 +2091,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":44.3,\"icon_seamless\":40.6,\"gfs_graphcast025\":41.6,\"kma_seamless\":41.5,\"gem_seamless\":39.9}",
     "days_ahead": 1,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x21170f85214cb1b776a8db31a9b2f424cb2463a91deee04614c56c2cef658485",
+    "token_id": "104350067696650117988135605075090184299841082401550335949950171440520914998443",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-19",
+    "bucket": "74-75",
+    "fill_price": 0.25,
+    "fill_size": 20.0,
+    "cost": 5.0,
+    "timestamp": "2026-03-18T02:05:38.267977+00:00",
+    "strategy": "PURDEY_MK2",
+    "forecast_prob": 0.23720841803509016,
+    "market_prob": 0.25,
+    "edge": -0.012791581964909843,
+    "ev_per_bet": -0.256,
+    "spread_colour": "RED",
+    "det_spread": 4.8,
+    "model_values_json": "{\"ncep_nbm_conus\":74.0,\"gfs_seamless\":76.3,\"ecmwf_ifs025\":74.3,\"icon_seamless\":78.8}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]
