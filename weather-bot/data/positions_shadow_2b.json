@@ -872,5 +872,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":44.0,\"icon_seamless\":40.6,\"gfs_graphcast025\":41.6,\"kma_seamless\":41.5,\"gem_seamless\":39.9}",
     "days_ahead": 1,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x3212d5617b017eb921705f7efac850f042cf2079c921b0b197b04fe8704a4f68",
+    "token_id": "77516717179166702867453411922993341118931972638855132848282643700312679096235",
+    "side": "BUY_YES",
+    "city": "Atlanta",
+    "station_icao": "KATL",
+    "date": "2026-03-18",
+    "bucket": "54-55",
+    "fill_price": 0.265,
+    "fill_size": 19.62264150943396,
+    "cost": 5.2,
+    "timestamp": "2026-03-18T01:45:37.836103+00:00",
+    "strategy": "TOP2_COND",
+    "forecast_prob": 0.52,
+    "market_prob": 0.265,
+    "edge": 0.255,
+    "ev_per_bet": 5.004,
+    "spread_colour": "RED",
+    "det_spread": 3.8,
+    "model_values_json": "{\"ncep_nbm_conus\":55.6,\"gfs_seamless\":54.1,\"ecmwf_ifs025\":51.8,\"icon_seamless\":53.4}",
+    "days_ahead": 0,
+    "kelly_fraction_used": 0.25
   }
 ]
