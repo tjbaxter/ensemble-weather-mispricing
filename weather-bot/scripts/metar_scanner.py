@@ -61,6 +61,8 @@ load_dotenv(_ROOT / ".env")
 
 from config.cities import STATIONS
 from config.settings import (
+    DYNAMIC_RISK_SIZING_ENABLED,
+    EQUITY_MAX_POSITION_PCT,
     INITIAL_BANKROLL,
     KELLY_MAX_BET_USD,
     KELLY_MIN_BET_USD,
@@ -110,11 +112,24 @@ _METAR_BANKROLL_PCT = {
 }
 
 
+def _metar_cash_proxy() -> float:
+    positions = _load_positions()
+    exposure = sum(float(p.get("cost", 0) or 0) for p in positions if isinstance(p, dict))
+    return max(INITIAL_BANKROLL - exposure, KELLY_MIN_BET_USD)
+
+
+def _metar_position_cap(bankroll: float) -> float:
+    if DYNAMIC_RISK_SIZING_ENABLED:
+        return max(KELLY_MIN_BET_USD, bankroll * EQUITY_MAX_POSITION_PCT)
+    return KELLY_MAX_BET_USD
+
+
 def _metar_fixed_size(action: str) -> float:
     """Return USD bet size as a fixed fraction of bankroll, clamped to guardrails."""
     pct  = _METAR_BANKROLL_PCT.get(action, 0.04)
-    size = INITIAL_BANKROLL * pct
-    return float(min(max(size, KELLY_MIN_BET_USD), KELLY_MAX_BET_USD))
+    bankroll = _metar_cash_proxy()
+    size = bankroll * pct
+    return float(min(max(size, KELLY_MIN_BET_USD), _metar_position_cap(bankroll)))
 METAR_MAX_LIVE_PRICE        = 0.90              # don't paper-trade above 90¢
 PAPER_TRADING               = os.getenv("PAPER_TRADING",  "false").lower() in ("1", "true", "yes")
 METAR_SCANNER_ENABLED       = os.getenv("METAR_SCANNER_ENABLED", "true").lower() in ("1", "true", "yes")

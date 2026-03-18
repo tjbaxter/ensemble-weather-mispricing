@@ -32,6 +32,28 @@ KELLY_MIN_BET_USD = 5.00    # floor: Kelly below this still fires at minimum via
 MAX_DRAWDOWN_PCT = 0.15
 INITIAL_BANKROLL = 250.00
 
+# Dynamic risk engine (production sizing)
+# If enabled, per-bet and per-cycle deployment are capped as a percentage of
+# current equity proxy (cash + cost-basis exposure), not fixed dollars.
+# Defaults match legacy behaviour at the $250 initial bankroll:
+#   10% per-position -> $25
+#   20% daily budget -> $50
+DYNAMIC_RISK_SIZING_ENABLED = True
+EQUITY_MAX_POSITION_PCT = 0.10
+EQUITY_DAILY_EXPOSURE_PCT = 0.20
+
+# Quality multipliers for adaptive capital allocation
+QUALITY_MULT_CONF_HIGH = 1.15
+QUALITY_MULT_CONF_MEDIUM = 1.00
+QUALITY_MULT_CONF_LOW = 0.80
+QUALITY_D2_MULT = 0.95
+QUALITY_D3_MULT = 0.90
+QUALITY_RED_SPREAD_MULT = 0.85
+QUALITY_EDGE_REF = 0.05      # edge level where full edge boost is reached
+QUALITY_EDGE_SLOPE = 0.15    # additional multiplier at/above EDGE_REF
+QUALITY_MIN_MULT = 0.60
+QUALITY_MAX_MULT = 1.35
+
 # Timing
 SCAN_INTERVAL_SECONDS = 120
 FORECAST_REFRESH_SECONDS = 1800

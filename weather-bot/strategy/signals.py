@@ -22,6 +22,8 @@ from config.settings import (
     HIGH_DELTA_SIZE_MULTIPLIER,
     KELLY_MAX_BET_USD,
     KELLY_MIN_BET_USD,
+    DYNAMIC_RISK_SIZING_ENABLED,
+    EQUITY_MAX_POSITION_PCT,
     TOP2_SHADOW_MIN_PROB,
     TOP2_SHADOW_SPLIT_THRESHOLD,
     HIGH_DELTA_THRESHOLD_DEG,
@@ -89,6 +91,13 @@ class Signal:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+
+def _kelly_position_cap(bankroll: float) -> float:
+    """Per-bet cap used inside Kelly sizing before execution-time overlays."""
+    if DYNAMIC_RISK_SIZING_ENABLED:
+        return max(KELLY_MIN_BET_USD, float(bankroll) * EQUITY_MAX_POSITION_PCT)
+    return KELLY_MAX_BET_USD
 
 
 def calculate_hours_to_resolution(end_date_iso: str) -> float:
@@ -441,11 +450,11 @@ def _compute_size(
         bankroll=bankroll,
         edge=edge,
         kelly_fraction=city_kelly,
-        max_position=KELLY_MAX_BET_USD,
+        max_position=_kelly_position_cap(bankroll),
         rounding_confidence=rounding_confidence,
     )
     if high_delta:
-        size = min(size * HIGH_DELTA_SIZE_MULTIPLIER, KELLY_MAX_BET_USD)
+        size = min(size * HIGH_DELTA_SIZE_MULTIPLIER, _kelly_position_cap(bankroll))
 
     # Minimum viable trade — Kelly output below this floor still fires but at
     # minimum size.  Signals too small even at minimum are filtered upstream.
@@ -575,7 +584,7 @@ def summarize_top_missed_edges(
                 bankroll=bankroll,
                 edge=effective_edge,
                 kelly_fraction=KELLY_FRACTION,
-                max_position=KELLY_MAX_BET_USD,
+                max_position=_kelly_position_cap(bankroll),
                 rounding_confidence=rounding_confidence,
             )
             size = max(size, KELLY_MIN_BET_USD) if size > 0 else 0.0
@@ -730,7 +739,7 @@ def generate_top2_shadow_signals(
             bankroll=bankroll,
             edge=top1["edge"],
             kelly_fraction=city_kelly,
-            max_position=KELLY_MAX_BET_USD,
+            max_position=_kelly_position_cap(bankroll),
             rounding_confidence="MEDIUM",
         )
         _base_sz = max(_base_sz, KELLY_MIN_BET_USD) if _base_sz > 0 else KELLY_MIN_BET_USD
@@ -973,7 +982,7 @@ def generate_purdey_cavendish_signals(
             bankroll=bankroll,
             edge=top1["edge"],
             kelly_fraction=city_kelly,
-            max_position=KELLY_MAX_BET_USD,
+            max_position=_kelly_position_cap(bankroll),
             rounding_confidence="MEDIUM",
         )
         _base_sz = max(_base_sz, KELLY_MIN_BET_USD) if _base_sz > 0 else KELLY_MIN_BET_USD
@@ -1214,7 +1223,7 @@ def generate_mk2_ace_signals(
                         bankroll=bankroll,
                         edge=edge_,
                         kelly_fraction=city_kelly,
-                        max_position=KELLY_MAX_BET_USD,
+                        max_position=_kelly_position_cap(bankroll),
                         rounding_confidence=conf,
                     ),
                     KELLY_MIN_BET_USD,

@@ -61,6 +61,7 @@ async def run_live(bankroll: float) -> None:
         MAX_DAILY_EXPOSURE, MAX_DRAWDOWN_PCT, MAX_POSITIONS_PER_MARKET,
     )
     from monitoring.logger import BotLogger
+    from execution.risk_engine import apply_risk_controls
 
     pk = os.getenv("POLYMARKET_PK")
     funder = os.getenv("POLYMARKET_FUNDER")
@@ -117,7 +118,7 @@ async def run_live(bankroll: float) -> None:
             except Exception as e:
                 print(f"  Forecast error for {icao}: {e}")
 
-        signals = generate_signals(hydrated, forecasts, bankroll)
+        signals = generate_signals(hydrated, forecasts, portfolio.current_cash)
         print(f"  Generated {len(signals)} signals.")
 
         placed = 0
@@ -144,19 +145,31 @@ async def run_live(bankroll: float) -> None:
                 skipped_reasons["max_per_market"] = skipped_reasons.get("max_per_market", 0) + 1
                 continue
 
-            if daily_deployed + size_usd > MAX_DAILY_EXPOSURE:
+            decision = apply_risk_controls(
+                requested_size_usd=size_usd,
+                signal=sig,
+                cash_usd=portfolio.current_cash,
+                active_exposure_usd=portfolio.active_exposure(),
+                deployed_today_usd=daily_deployed,
+            )
+            if decision.skipped:
+                skipped_reasons[decision.reason] = skipped_reasons.get(decision.reason, 0) + 1
+                continue
+            if decision.daily_budget_usd <= 0 and daily_deployed + decision.size_usd > MAX_DAILY_EXPOSURE:
                 skipped_reasons["daily_cap"] = skipped_reasons.get("daily_cap", 0) + 1
                 continue
 
+            sig["size_usd"] = decision.size_usd
             result = order_manager.place_order(sig)
 
             if result.status in ("filled", "submitted", "matched", "live"):
                 pos = portfolio.open_position(sig, result.fill_price)
-                daily_deployed += size_usd
+                daily_deployed += decision.size_usd
                 logger.log_signal(sig, "live_trade")
                 print(
                     f"  [{sig.get('city')}] {bucket} {sig.get('side')} "
-                    f"${size_usd:.2f} @ {result.fill_price:.3f} -> {result.status}"
+                    f"${decision.size_usd:.2f} @ {result.fill_price:.3f} -> {result.status} "
+                    f"(q={decision.quality_mult:.2f} cap={decision.position_cap_usd:.2f} day={decision.daily_budget_usd:.2f})"
                 )
                 placed += 1
             else:

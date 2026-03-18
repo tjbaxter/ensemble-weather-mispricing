@@ -244,8 +244,8 @@ def _load_pending_trades() -> list[dict]:
         (ROOT / "data" / "positions_shadow_purdey.json",    "PURDEY_MK1"),
         (ROOT / "data" / "positions_shadow_cavendish.json", "CAVENDISH_MK1"),
         (ROOT / "data" / "positions_shadow_purdey2.json",   "PURDEY_MK2"),
-        (ROOT / "data" / "positions_shadow_cavendish2.json","CAVENDISH_MK2"),
-        (ROOT / "data" / "positions_shadow_ace.json",       "ACE"),
+        (ROOT / "data" / "positions_shadow_cavendish3.json","CAVENDISH_MK3"),
+        (ROOT / "data" / "positions_shadow_true_alpha.json","TRUE_ALPHA"),
         (ROOT / "data" / "positions_shadow_props_kelly.json", "PROPS_KELLY"),
     ]
     for shadow_path, shadow_strategy in _SHADOW_FILES:
@@ -692,8 +692,8 @@ def prune_expired_positions() -> int:
         (ROOT / "data" / "positions_shadow_purdey.json",    "PURDEY_MK1"),
         (ROOT / "data" / "positions_shadow_cavendish.json", "CAVENDISH_MK1"),
         (ROOT / "data" / "positions_shadow_purdey2.json",   "PURDEY_MK2"),
-        (ROOT / "data" / "positions_shadow_cavendish2.json","CAVENDISH_MK2"),
-        (ROOT / "data" / "positions_shadow_ace.json",       "ACE"),
+        (ROOT / "data" / "positions_shadow_cavendish3.json","CAVENDISH_MK3"),
+        (ROOT / "data" / "positions_shadow_true_alpha.json","TRUE_ALPHA"),
         (ROOT / "data" / "positions_shadow_props_kelly.json","PROPS_KELLY"),
     ]
     for shadow_path, shadow_strategy in _SHADOW_PRUNE:

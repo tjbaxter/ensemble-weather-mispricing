@@ -42,6 +42,8 @@ load_dotenv(_ROOT / ".env")
 
 from config.settings import (
     ALPHA_THRESHOLD,
+    DYNAMIC_RISK_SIZING_ENABLED,
+    EQUITY_MAX_POSITION_PCT,
     HARD_MAX_YES_ENTRY_PRICE,
     HARD_MIN_YES_ENTRY_PRICE,
     INITIAL_BANKROLL,
@@ -153,6 +155,18 @@ def _already_holding(token_id: str) -> bool:
     return any(p.get("token_id") == token_id for p in _load_positions())
 
 
+def _ws_cash_proxy(positions: list[dict]) -> float:
+    # Conservative proxy while WS monitor runs independently from Portfolio class.
+    exposure = sum(float(p.get("cost", 0) or 0) for p in positions if isinstance(p, dict))
+    return max(INITIAL_BANKROLL - exposure, KELLY_MIN_BET_USD)
+
+
+def _ws_position_cap(bankroll: float) -> float:
+    if DYNAMIC_RISK_SIZING_ENABLED:
+        return max(KELLY_MIN_BET_USD, bankroll * EQUITY_MAX_POSITION_PCT)
+    return KELLY_MAX_BET_USD
+
+
 # ── Telegram ───────────────────────────────────────────────────────────────────
 
 def _send_telegram(text: str) -> None:
@@ -170,7 +184,7 @@ def _send_telegram(text: str) -> None:
 
 # ── Trade placement ────────────────────────────────────────────────────────────
 
-def _kelly_size_ws(model_prob: float, ask: float) -> float:
+def _kelly_size_ws(model_prob: float, ask: float, bankroll: float) -> float:
     """Fractional Kelly for WS dip trades — MEDIUM confidence by default.
 
     WS trades use the same model probability from the morning forecast scan
@@ -181,10 +195,10 @@ def _kelly_size_ws(model_prob: float, ask: float) -> float:
     size = kelly_size(
         market_price=ask,
         win_prob=model_prob,
-        bankroll=INITIAL_BANKROLL,
+        bankroll=bankroll,
         edge=model_prob - ask,
         kelly_fraction=KELLY_FRACTION,
-        max_position=KELLY_MAX_BET_USD,
+        max_position=_ws_position_cap(bankroll),
         rounding_confidence="MEDIUM",
     )
     return max(size, KELLY_MIN_BET_USD) if size > 0 else KELLY_MIN_BET_USD
@@ -200,8 +214,10 @@ def _place_paper_trade(sig: dict, live_ask: float, ev: float) -> None:
         )
         return
 
+    positions = _load_positions()
+    bankroll = _ws_cash_proxy(positions)
     model_prob = float(sig.get("model_prob", 0.5))
-    cost      = _kelly_size_ws(model_prob, live_ask)
+    cost      = _kelly_size_ws(model_prob, live_ask, bankroll)
     fill_size = round(cost / live_ask, 4) if live_ask > 0 else 0.0
 
     position = {
@@ -223,7 +239,6 @@ def _place_paper_trade(sig: dict, live_ask: float, ev: float) -> None:
         "model_values_json": sig.get("model_values_json", "{}"),
     }
 
-    positions = _load_positions()
     positions.append(position)
     _save_positions(positions)
 

@@ -30,6 +30,7 @@ from data.polymarket import PolymarketDataClient
 from data.weather_underground import WeatherUndergroundClient
 from execution.order_manager import OrderManager
 from execution.portfolio import Portfolio
+from execution.risk_engine import apply_risk_controls
 from monitoring.dashboard import render_dashboard
 from monitoring.logger import BotLogger
 from strategy.signals import (
@@ -95,18 +96,30 @@ class ShadowTrader:
                 continue
             if self._existing_positions(signal.market_id) >= MAX_POSITIONS_PER_MARKET:
                 continue
-            if deployed + signal.size_usd > MAX_DAILY_EXPOSURE:
+            sig = signal.to_dict()
+            decision = apply_risk_controls(
+                requested_size_usd=float(sig.get("size_usd", 0.0) or 0.0),
+                signal=sig,
+                cash_usd=self.portfolio.current_cash,
+                active_exposure_usd=self.portfolio.active_exposure(),
+                deployed_today_usd=deployed,
+            )
+            if decision.skipped:
                 continue
-            result = self.order_manager.place_order(signal.to_dict())
+            if decision.daily_budget_usd <= 0 and deployed + decision.size_usd > MAX_DAILY_EXPOSURE:
+                continue
+            sig["size_usd"] = decision.size_usd
+            result = self.order_manager.place_order(sig)
             if result.status.startswith("skipped"):
                 continue
-            self.portfolio.open_position(signal.to_dict(), result.fill_price)
-            deployed += signal.size_usd
+            self.portfolio.open_position(sig, result.fill_price)
+            deployed += decision.size_usd
             executed += 1
-            self.logger.log_signal(signal.to_dict(), "trade")
+            self.logger.log_signal(sig, "trade")
             self._log.info(
                 f"SHADOW_TRADE {self.variant} {signal.city} {signal.date} "
-                f"{signal.bucket} {signal.side} ${signal.size_usd:.2f} @ {result.fill_price:.3f}"
+                f"{signal.bucket} {signal.side} ${decision.size_usd:.2f} @ {result.fill_price:.3f} "
+                f"(q={decision.quality_mult:.2f} cap={decision.position_cap_usd:.2f} day={decision.daily_budget_usd:.2f})"
             )
 
         self._log.info(
@@ -257,22 +270,36 @@ class PaperTrader:
                 self.logger.log_signal(signal.to_dict(), "skip_position_limit")
                 skipped_position_limit += 1
                 continue
-            if deployed + signal.size_usd > MAX_DAILY_EXPOSURE:
-                self.logger.log_signal(signal.to_dict(), "skip_daily_exposure")
+            sig = signal.to_dict()
+            decision = apply_risk_controls(
+                requested_size_usd=float(sig.get("size_usd", 0.0) or 0.0),
+                signal=sig,
+                cash_usd=self.portfolio.current_cash,
+                active_exposure_usd=self.portfolio.active_exposure(),
+                deployed_today_usd=deployed,
+            )
+            if decision.skipped:
+                self.logger.log_signal(sig, f"skip_{decision.reason}")
                 skipped_daily_exposure += 1
                 continue
-            result = self.order_manager.place_order(signal.to_dict())
+            if decision.daily_budget_usd <= 0 and deployed + decision.size_usd > MAX_DAILY_EXPOSURE:
+                self.logger.log_signal(sig, "skip_daily_exposure")
+                skipped_daily_exposure += 1
+                continue
+            sig["size_usd"] = decision.size_usd
+            result = self.order_manager.place_order(sig)
             if result.status.startswith("skipped"):
-                self.logger.log_signal(signal.to_dict(), result.status)
+                self.logger.log_signal(sig, result.status)
                 skipped_execution += 1
                 continue
-            position = self.portfolio.open_position(signal.to_dict(), result.fill_price)
-            deployed += signal.size_usd
+            position = self.portfolio.open_position(sig, result.fill_price)
+            deployed += decision.size_usd
             trades_executed += 1
-            self.logger.log_signal(signal.to_dict(), "trade")
+            self.logger.log_signal(sig, "trade")
             self.logger.info(
                 f"PAPER TRADE {signal.city} {signal.date} {signal.bucket} "
-                f"{signal.side} ${signal.size_usd:.2f} @ {result.fill_price:.3f}"
+                f"{signal.side} ${decision.size_usd:.2f} @ {result.fill_price:.3f} "
+                f"(q={decision.quality_mult:.2f} cap={decision.position_cap_usd:.2f} day={decision.daily_budget_usd:.2f})"
             )
             # Keep unresolved in paper mode until external resolver marks outcome.
             _ = position
