@@ -1088,6 +1088,57 @@ def sync_from_vm() -> tuple[bool, str]:
     return True, "\n".join(messages)
 
 
+def sync_from_vm_live() -> tuple[bool, str]:
+    """Lightweight sync for live dashboard refreshes.
+
+    Pull only files that affect real-time cards/tables, avoiding archive history
+    fetches on every refresh cycle.
+    """
+    files = [
+        ("logs/resolved.csv",                  f"{VM_WORKDIR}/logs/resolved.csv"),
+        ("logs/trades.csv",                    f"{VM_WORKDIR}/logs/trades.csv"),
+        ("logs/signals.csv",                   f"{VM_WORKDIR}/logs/signals.csv"),
+        ("data/positions.json",                f"{VM_WORKDIR}/data/positions.json"),
+        ("data/positions_shadow_2a.json",      f"{VM_WORKDIR}/data/positions_shadow_2a.json"),
+        ("data/positions_shadow_2b.json",      f"{VM_WORKDIR}/data/positions_shadow_2b.json"),
+        ("data/positions_shadow_2c.json",      f"{VM_WORKDIR}/data/positions_shadow_2c.json"),
+        ("data/positions_shadow_purdey.json",  f"{VM_WORKDIR}/data/positions_shadow_purdey.json"),
+        ("data/positions_shadow_purdey2.json", f"{VM_WORKDIR}/data/positions_shadow_purdey2.json"),
+        ("data/positions_shadow_cavendish.json",  f"{VM_WORKDIR}/data/positions_shadow_cavendish.json"),
+        ("data/positions_shadow_cavendish3.json", f"{VM_WORKDIR}/data/positions_shadow_cavendish3.json"),
+        ("data/positions_shadow_true_alpha.json", f"{VM_WORKDIR}/data/positions_shadow_true_alpha.json"),
+        ("data/positions_shadow_props_kelly.json", f"{VM_WORKDIR}/data/positions_shadow_props_kelly.json"),
+    ]
+    # Shadow-model resolved logs (used by strategy scoreboard settled lines)
+    shadow_slugs = [
+        "shadow_2a", "shadow_2b", "shadow_2c",
+        "shadow_purdey", "shadow_purdey2",
+        "shadow_cavendish", "shadow_cavendish3",
+        "shadow_true_alpha", "shadow_props_kelly",
+    ]
+    for slug in shadow_slugs:
+        files.append((f"logs/{slug}/resolved.csv", f"{VM_WORKDIR}/logs/{slug}/resolved.csv"))
+
+    ok_count = 0
+    for local_rel, remote_path in files:
+        local_abs = ROOT / local_rel
+        local_abs.parent.mkdir(parents=True, exist_ok=True)
+        src = f"{VM_NAME}:{remote_path}"
+        result = subprocess.run(
+            [
+                "gcloud", "compute", "scp", src, str(local_abs),
+                "--zone", VM_ZONE, "--project", VM_PROJECT,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=45,
+        )
+        if result.returncode == 0:
+            ok_count += 1
+
+    return True, f"Live sync complete: {ok_count}/{len(files)} files"
+
+
 # ---------------------------------------------------------------------------
 # Model Accuracy — data layer
 # ---------------------------------------------------------------------------
@@ -3106,6 +3157,43 @@ def main() -> None:
         interval_ms = {"30s": 30_000, "60s": 60_000, "5m": 300_000}[refresh_opt]
         st_autorefresh(interval=interval_ms, key="dashboard-refresh")
     st.sidebar.caption("Live position prices refresh every 5 min regardless of page interval.")
+
+    # Optional auto-sync from VM (refresh alone only rerenders local files).
+    auto_sync_enabled = st.sidebar.checkbox(
+        "Auto-sync from VM",
+        value=True,
+        help="Pull latest VM logs automatically so settled stats update without manual sync.",
+    )
+    auto_sync_opt = st.sidebar.selectbox(
+        "Auto-sync cadence",
+        options=["30s", "60s", "5m"],
+        index=1,
+    )
+    auto_sync_sec = {"30s": 30, "60s": 60, "5m": 300}[auto_sync_opt]
+    now_epoch = _time.time()
+    last_sync_epoch = float(st.session_state.get("_last_vm_live_sync_epoch", 0.0))
+    did_auto_sync = False
+    if auto_sync_enabled and (now_epoch - last_sync_epoch >= auto_sync_sec):
+        st.session_state["_last_vm_live_sync_epoch"] = now_epoch
+        try:
+            _, live_msg = sync_from_vm_live()
+            st.session_state["_last_vm_live_sync_msg"] = live_msg
+            st.session_state["_last_vm_live_sync_ok"] = True
+            st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
+            # Ensure cached readers pick up freshly synced files immediately.
+            st.cache_data.clear()
+            did_auto_sync = True
+        except Exception as exc:
+            st.session_state["_last_vm_live_sync_ok"] = False
+            st.session_state["_last_vm_live_sync_msg"] = f"Auto-sync failed: {exc}"
+            st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    last_sync_at = st.session_state.get("_last_vm_live_sync_at", "never")
+    last_sync_msg = st.session_state.get("_last_vm_live_sync_msg", "")
+    if auto_sync_enabled:
+        st.sidebar.caption(f"Last VM auto-sync: {last_sync_at}")
+        if did_auto_sync and last_sync_msg:
+            st.sidebar.caption(last_sync_msg)
 
     now_stamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
 
