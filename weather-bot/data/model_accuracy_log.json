@@ -1569,7 +1569,7 @@
       "ncep_nbm_conus": 64.5,
       "ncep_aigfs025": 69.1,
       "gem_seamless": 67.0,
-      "best_match": 68.8,
+      "best_match": 69.5,
       "icon_seamless": 63.0
     },
     "actual": null
@@ -1577,7 +1577,7 @@
   "KMIA/2026-03-20": {
     "preds": {
       "ncep_nbm_conus": 73.8,
-      "gfs_seamless": 75.6,
+      "gfs_seamless": 74.2,
       "ecmwf_ifs025": 72.3,
       "icon_seamless": 75.3
     },
@@ -1603,7 +1603,7 @@
   "KATL/2026-03-20": {
     "preds": {
       "ncep_nbm_conus": 74.8,
-      "gfs_seamless": 74.4,
+      "gfs_seamless": 74.8,
       "ecmwf_ifs025": 73.5,
       "icon_seamless": 74.6
     },
@@ -1612,7 +1612,7 @@
   "EGLC/2026-03-20": {
     "preds": {
       "meteofrance_arome_france": 13.9,
-      "meteofrance_seamless": 14.3,
+      "meteofrance_seamless": 14.1,
       "meteofrance_arome_france_hd": 14.3,
       "icon_seamless": 13.3,
       "dmi_seamless": 15.4
