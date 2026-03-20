@@ -1779,7 +1779,7 @@
   },
   "SAEZ/2026-03-21": {
     "preds": {
-      "ukmo_seamless": 24.3,
+      "ukmo_seamless": 25.0,
       "ecmwf_ifs025": 25.4,
       "icon_seamless": 24.6,
       "gem_global": 26.2
@@ -1788,7 +1788,7 @@
   },
   "NZWN/2026-03-21": {
     "preds": {
-      "ukmo_seamless": 16.2,
+      "ukmo_seamless": 16.1,
       "ecmwf_ifs025": 16.3,
       "icon_seamless": 15.7
     },
@@ -1880,7 +1880,7 @@
   "LFPG/2026-03-22": {
     "preds": {
       "metno_seamless": 14.2,
-      "ukmo_seamless": 12.8,
+      "ukmo_seamless": 12.6,
       "ecmwf_ifs025": 13.6
     },
     "actual": null
@@ -1915,7 +1915,7 @@
   },
   "NZWN/2026-03-22": {
     "preds": {
-      "ukmo_seamless": 19.6,
+      "ukmo_seamless": 19.8,
       "ecmwf_ifs025": 18.7,
       "icon_seamless": 18.1
     },
