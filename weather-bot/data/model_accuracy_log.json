@@ -1745,14 +1745,14 @@
       "meteofrance_seamless": 13.2,
       "meteofrance_arome_france_hd": 13.2,
       "icon_seamless": 12.8,
-      "dmi_seamless": 14.5
+      "dmi_seamless": 14.6
     },
     "actual": null
   },
   "LFPG/2026-03-21": {
     "preds": {
       "ukmo_uk_deterministic_2km": 15.8,
-      "metno_seamless": 15.1,
+      "metno_seamless": 15.2,
       "ukmo_seamless": 15.8,
       "ecmwf_ifs025": 15.1
     },
@@ -1810,7 +1810,7 @@
       "kma_gdps": 4.0,
       "meteofrance_arpege_world": 5.4,
       "gem_global": 3.8,
-      "dmi_seamless": 5.7
+      "dmi_seamless": 5.1
     },
     "actual": null
   },
@@ -1873,13 +1873,13 @@
     "preds": {
       "meteofrance_seamless": 11.7,
       "icon_seamless": 13.1,
-      "dmi_seamless": 14.9
+      "dmi_seamless": 14.7
     },
     "actual": null
   },
   "LFPG/2026-03-22": {
     "preds": {
-      "metno_seamless": 14.2,
+      "metno_seamless": 13.9,
       "ukmo_seamless": 14.3,
       "ecmwf_ifs025": 14.2
     },
@@ -1937,7 +1937,7 @@
       "kma_gdps": 6.7,
       "meteofrance_arpege_world": 4.2,
       "gem_global": 6.3,
-      "dmi_seamless": 8.1
+      "dmi_seamless": 7.6
     },
     "actual": null
   }
