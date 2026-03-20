@@ -1631,5 +1631,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":81.0,\"gfs_seamless\":83.1,\"ecmwf_ifs025\":79.1,\"icon_seamless\":81.3}",
     "days_ahead": 1,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x210b13feedc70adfef1937e6686afbfdfabfa45aeba3b8a5abb0637aa7871259",
+    "token_id": "93891827602196594548211873954394752928096746561887646349139215904216605255351",
+    "side": "BUY_YES",
+    "city": "Dallas",
+    "station_icao": "KDFW",
+    "date": "2026-03-22",
+    "bucket": "98+",
+    "fill_price": 0.10500000000000001,
+    "fill_size": 47.61904761904761,
+    "cost": 5.0,
+    "timestamp": "2026-03-20T23:00:06.249606+00:00",
+    "strategy": "CAVENDISH_MK3",
+    "forecast_prob": 0.15488171875528875,
+    "market_prob": 0.10500000000000001,
+    "edge": 0.04988171875528874,
+    "ev_per_bet": 2.375,
+    "spread_colour": "RED",
+    "det_spread": 3.1,
+    "model_values_json": "{\"ecmwf_ifs025\":94.1,\"icon_seamless\":97.2}",
+    "days_ahead": 2,
+    "kelly_fraction_used": 0.25
   }
 ]
