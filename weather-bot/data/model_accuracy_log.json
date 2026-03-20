@@ -1696,18 +1696,18 @@
   },
   "KORD/2026-03-21": {
     "preds": {
-      "ncep_nbm_conus": 67.3,
+      "ncep_nbm_conus": 67.5,
       "ncep_aigfs025": 64.9,
       "gem_seamless": 76.2,
-      "best_match": 72.2,
+      "best_match": 74.4,
       "icon_seamless": 72.0
     },
     "actual": null
   },
   "KMIA/2026-03-21": {
     "preds": {
-      "ncep_nbm_conus": 77.9,
-      "gfs_seamless": 79.1,
+      "ncep_nbm_conus": 77.4,
+      "gfs_seamless": 77.0,
       "ecmwf_ifs025": 76.7,
       "icon_seamless": 78.9
     },
@@ -1717,14 +1717,14 @@
     "preds": {
       "icon_seamless": 48.6,
       "gem_seamless": 52.3,
-      "ncep_nbm_conus": 48.1
+      "ncep_nbm_conus": 48.4
     },
     "actual": null
   },
   "KDFW/2026-03-21": {
     "preds": {
-      "ncep_nbm_conus": 93.9,
-      "gfs_seamless": 93.7,
+      "ncep_nbm_conus": 93.3,
+      "gfs_seamless": 92.9,
       "ecmwf_ifs025": 91.7,
       "icon_seamless": 91.2
     },
@@ -1733,7 +1733,7 @@
   "KATL/2026-03-21": {
     "preds": {
       "ncep_nbm_conus": 81.5,
-      "gfs_seamless": 82.5,
+      "gfs_seamless": 82.1,
       "ecmwf_ifs025": 78.9,
       "icon_seamless": 81.6
     },
@@ -1751,9 +1751,9 @@
   },
   "LFPG/2026-03-21": {
     "preds": {
-      "ukmo_uk_deterministic_2km": 15.4,
+      "ukmo_uk_deterministic_2km": 15.8,
       "metno_seamless": 15.1,
-      "ukmo_seamless": 15.4,
+      "ukmo_seamless": 15.8,
       "ecmwf_ifs025": 15.1
     },
     "actual": null
@@ -1816,7 +1816,7 @@
   },
   "KLGA/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 59.5,
+      "ncep_nbm_conus": 60.2,
       "icon_seamless": 65.4,
       "gfs_graphcast025": 60.3,
       "kma_seamless": 66.1,
@@ -1826,10 +1826,10 @@
   },
   "KORD/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 60.4,
+      "ncep_nbm_conus": 60.2,
       "ncep_aigfs025": 63.3,
       "gem_seamless": 67.7,
-      "best_match": 61.8,
+      "best_match": 58.3,
       "icon_seamless": 62.5
     },
     "actual": null
@@ -1880,7 +1880,7 @@
   "LFPG/2026-03-22": {
     "preds": {
       "metno_seamless": 14.2,
-      "ukmo_seamless": 12.6,
+      "ukmo_seamless": 13.4,
       "ecmwf_ifs025": 14.2
     },
     "actual": null
