@@ -1686,6 +1686,7 @@
   },
   "KLGA/2026-03-21": {
     "preds": {
+      "ncep_nbm_conus": 55.9,
       "icon_seamless": 55.6,
       "gfs_graphcast025": 54.9,
       "kma_seamless": 56.8,
@@ -1761,8 +1762,8 @@
     "preds": {
       "ncep_aigfs025": 12.5,
       "gfs_graphcast025": 10.8,
-      "ecmwf_ifs025": 9.0,
-      "kma_gdps": 9.6,
+      "ecmwf_ifs025": 9.1,
+      "kma_gdps": 9.4,
       "kma_seamless": 9.9
     },
     "actual": null
