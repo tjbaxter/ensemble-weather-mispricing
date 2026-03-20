@@ -1723,5 +1723,28 @@
     "model_values_json": "{\"icon_seamless\":52.0,\"gem_seamless\":49.9,\"ncep_nbm_conus\":51.3}",
     "days_ahead": 2,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0xefa93bc8426b55e311fba8bff7747baabbeece95d459881f2f907b95e0bc617f",
+    "token_id": "41312121700035915898131629871942153823497978327926286949933623676589488536368",
+    "side": "BUY_YES",
+    "city": "NYC",
+    "station_icao": "KLGA",
+    "date": "2026-03-21",
+    "bucket": "56-57",
+    "fill_price": 0.33499999999999996,
+    "fill_size": 14.92537313432836,
+    "cost": 5.0,
+    "timestamp": "2026-03-20T17:05:36.558698+00:00",
+    "strategy": "PURDEY_MK2",
+    "forecast_prob": 0.19564275452380595,
+    "market_prob": 0.33499999999999996,
+    "edge": -0.13935724547619402,
+    "ev_per_bet": -2.08,
+    "spread_colour": "RED",
+    "det_spread": 5.8,
+    "model_values_json": "{\"ncep_nbm_conus\":55.7,\"icon_seamless\":55.6,\"gfs_graphcast025\":54.9,\"kma_seamless\":55.0,\"gem_seamless\":49.9}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]
