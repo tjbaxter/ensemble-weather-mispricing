@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import io
+import base64
 import re
 import subprocess
 import time as _time
@@ -65,6 +66,17 @@ def _fetch_github_text(rel_path: str) -> str | None:
             return r.text
     except Exception:
         pass
+    # Fallback: GitHub Contents API (base64 payload), useful when raw CDN is stale/unreachable.
+    api_url = f"{GITHUB_API_BASE}/{rel_path}?ref={GITHUB_BRANCH}"
+    try:
+        r = requests.get(api_url, timeout=12)
+        if r.status_code == 200:
+            payload = r.json()
+            content = payload.get("content", "")
+            if isinstance(content, str) and content:
+                return base64.b64decode(content).decode("utf-8")
+    except Exception:
+        pass
     return None
 
 
@@ -78,6 +90,12 @@ def _list_github_log_files() -> list[str]:
             items = r.json()
             if isinstance(items, list):
                 return [it.get("name", "") for it in items if isinstance(it, dict) and it.get("name")]
+    except Exception:
+        pass
+    # Fallback: use local checked-out repo contents (works on Streamlit deploy checkout).
+    try:
+        logs_dir = ROOT / "logs"
+        return sorted([p.name for p in logs_dir.glob("*") if p.is_file()])
     except Exception:
         pass
     return []
@@ -676,21 +694,33 @@ def load_resolved_df() -> pd.DataFrame:
     full historical record.
     """
     frames: list[pd.DataFrame] = []
+    logs_dir = ROOT / "logs"
+    # current file + any archives, sorted so data is roughly chronological
+    csv_paths = sorted(logs_dir.glob("resolved*.csv"))
+
     if _prefer_github_data():
-        for name in sorted([n for n in _list_github_log_files() if n.startswith("resolved") and n.endswith(".csv")]):
+        names = sorted([n for n in _list_github_log_files() if n.startswith("resolved") and n.endswith(".csv")])
+        for name in names:
+            df_part = None
             txt = _fetch_github_text(f"logs/{name}")
-            if not txt:
-                continue
-            try:
-                df_part = pd.read_csv(io.StringIO(txt), index_col=False)
-                if not df_part.empty:
-                    frames.append(df_part)
-            except Exception:
-                pass
-    else:
-        logs_dir = ROOT / "logs"
-        # current file + any archives, sorted so data is roughly chronological
-        csv_paths = sorted(logs_dir.glob("resolved*.csv"))
+            if txt:
+                try:
+                    df_part = pd.read_csv(io.StringIO(txt), index_col=False)
+                except Exception:
+                    df_part = None
+            # If GitHub fetch failed or returned malformed data, fall back to local checkout copy.
+            if df_part is None:
+                path = logs_dir / name
+                if path.exists():
+                    try:
+                        df_part = pd.read_csv(path, index_col=False)
+                    except Exception:
+                        df_part = None
+            if df_part is not None and not df_part.empty:
+                frames.append(df_part)
+
+    # Final safety net: if cloud-mode GitHub/API failed, load from local files.
+    if not frames:
         for path in csv_paths:
             try:
                 df_part = pd.read_csv(path, index_col=False)
@@ -4656,18 +4686,20 @@ def _render_overview_tab() -> None:
 
     # ── Live open-book positions ───────────────────────────────────────────────
     if positions:
+        today_str = _date.today().isoformat()
+        open_positions = [p for p in positions if str(p.get("date", "9999")) >= today_str]
         st.markdown('<div class="panel">', unsafe_allow_html=True)
         st.markdown(
             '<div style="font-size:0.95rem;font-weight:700;color:#aaa;'
             'letter-spacing:.05em;margin-bottom:10px;">LIVE BOOK — OPEN POSITIONS</div>',
             unsafe_allow_html=True,
         )
-        _token_ids   = tuple(p["token_id"] for p in positions if p.get("token_id"))
+        _token_ids   = tuple(p["token_id"] for p in open_positions if p.get("token_id"))
         _live_prices = fetch_live_position_prices(_token_ids) if _token_ids else {}
         _live_ts     = datetime.now(UTC).strftime("%H:%M UTC")
 
         rows = []
-        for p in positions:
+        for p in open_positions:
             tid   = p.get("token_id")
             cur   = _live_prices.get(tid)
             fill  = float(p.get("fill_price", 0) or 0)
@@ -4686,7 +4718,14 @@ def _render_overview_tab() -> None:
             })
         pos_df = pd.DataFrame(rows)
         st.dataframe(pos_df, use_container_width=True, hide_index=True)
-        st.caption(f"Live prices as of {_live_ts} · {len(positions)} open positions")
+        stale_count = max(0, len(positions) - len(open_positions))
+        if stale_count:
+            st.caption(
+                f"Live prices as of {_live_ts} · {len(open_positions)} genuinely open positions "
+                f"({stale_count} past-date rows excluded)"
+            )
+        else:
+            st.caption(f"Live prices as of {_live_ts} · {len(open_positions)} open positions")
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Trading mode ──────────────────────────────────────────────────────────
