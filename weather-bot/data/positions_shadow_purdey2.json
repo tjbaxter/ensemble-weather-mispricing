@@ -1746,5 +1746,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":55.7,\"icon_seamless\":55.6,\"gfs_graphcast025\":54.9,\"kma_seamless\":55.0,\"gem_seamless\":49.9}",
     "days_ahead": 1,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x0de8efa9170c697dd21dd8363884a452b4793fc162016cb045079d386e5201e6",
+    "token_id": "12448654730336217282621926138279885611018406642782781546211054842378677236822",
+    "side": "BUY_YES",
+    "city": "Atlanta",
+    "station_icao": "KATL",
+    "date": "2026-03-21",
+    "bucket": "84-85",
+    "fill_price": 0.33999999999999997,
+    "fill_size": 14.705882352941178,
+    "cost": 5.0,
+    "timestamp": "2026-03-20T20:25:50.033409+00:00",
+    "strategy": "PURDEY_MK2",
+    "forecast_prob": 0.08827514635410463,
+    "market_prob": 0.33999999999999997,
+    "edge": -0.25172485364589536,
+    "ev_per_bet": -3.702,
+    "spread_colour": "RED",
+    "det_spread": 4.0,
+    "model_values_json": "{\"ncep_nbm_conus\":80.9,\"gfs_seamless\":83.1,\"ecmwf_ifs025\":79.1,\"icon_seamless\":79.9}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]
