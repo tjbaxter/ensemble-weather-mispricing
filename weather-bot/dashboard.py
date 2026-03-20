@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import io
 import re
 import subprocess
 import time as _time
+import shutil
 from collections import defaultdict
 from datetime import UTC, date as _date, datetime, timedelta
 from pathlib import Path
@@ -24,6 +26,11 @@ VM_ZONE = "us-east1-b"
 VM_PROJECT = "weather-488111"
 VM_REMOTE_USER = "tombaxter"
 VM_WORKDIR = f"/home/{VM_REMOTE_USER}/weather-bot"
+GITHUB_OWNER = "tjbaxter"
+GITHUB_REPO = "ensemble-weather-mispricing"
+GITHUB_BRANCH = "main"
+GITHUB_RAW_BASE = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/{GITHUB_BRANCH}/weather-bot"
+GITHUB_API_BASE = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/weather-bot"
 
 # Mirror of settings.py MODEL_RUN_TRIGGER_TIMES_UTC — kept in sync manually
 _TRIGGER_SCHEDULE: list[tuple[int, int, str]] = [
@@ -42,6 +49,60 @@ RESOLVED_CSV = ROOT / "logs" / "resolved.csv"
 POSITIONS_JSON = ROOT / "data" / "positions.json"
 DEFAULT_ENV = ROOT / ".env"
 VM_ENV = Path("/etc/weather-bot.env")
+
+
+def _prefer_github_data() -> bool:
+    """When gcloud isn't available (typical on Streamlit Cloud), prefer GitHub raw/API data."""
+    return shutil.which("gcloud") is None
+
+
+@st.cache_data(ttl=30, show_spinner=False)
+def _fetch_github_text(rel_path: str) -> str | None:
+    url = f"{GITHUB_RAW_BASE}/{rel_path}"
+    try:
+        r = requests.get(url, timeout=12)
+        if r.status_code == 200:
+            return r.text
+    except Exception:
+        pass
+    return None
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def _list_github_log_files() -> list[str]:
+    """Return log filenames from GitHub logs/ directory."""
+    url = f"{GITHUB_API_BASE}/logs?ref={GITHUB_BRANCH}"
+    try:
+        r = requests.get(url, timeout=12)
+        if r.status_code == 200:
+            items = r.json()
+            if isinstance(items, list):
+                return [it.get("name", "") for it in items if isinstance(it, dict) and it.get("name")]
+    except Exception:
+        pass
+    return []
+
+
+def _read_json_data(rel_path: str, local_path: Path) -> list[dict]:
+    """Load JSON list/dict payload as list[dict], preferring GitHub in cloud mode."""
+    payload = None
+    if _prefer_github_data():
+        txt = _fetch_github_text(rel_path)
+        if txt:
+            try:
+                payload = json.loads(txt)
+            except Exception:
+                payload = None
+    if payload is None:
+        try:
+            payload = json.loads(local_path.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+    if isinstance(payload, list):
+        return [p for p in payload if isinstance(p, dict)]
+    if isinstance(payload, dict):
+        return [p for p in payload.values() if isinstance(p, dict)]
+    return []
 
 BG = "#0E1117"
 GREEN = "#00FF88"
@@ -560,10 +621,19 @@ def _empty_signals_df() -> pd.DataFrame:
 
 @st.cache_data(ttl=15)
 def load_trades_df() -> pd.DataFrame:
-    try:
-        df = pd.read_csv(TRADES_CSV)
-    except Exception:
-        return _empty_trades_df()
+    df = None
+    if _prefer_github_data():
+        txt = _fetch_github_text("logs/trades.csv")
+        if txt:
+            try:
+                df = pd.read_csv(io.StringIO(txt))
+            except Exception:
+                df = None
+    if df is None:
+        try:
+            df = pd.read_csv(TRADES_CSV)
+        except Exception:
+            return _empty_trades_df()
     for col in ("timestamp", "date", "city", "bucket", "side", "outcome"):
         if col not in df.columns:
             df[col] = ""
@@ -577,10 +647,19 @@ def load_trades_df() -> pd.DataFrame:
 
 @st.cache_data(ttl=15)
 def load_signals_df() -> pd.DataFrame:
-    try:
-        df = pd.read_csv(SIGNALS_CSV)
-    except Exception:
-        return _empty_signals_df()
+    df = None
+    if _prefer_github_data():
+        txt = _fetch_github_text("logs/signals.csv")
+        if txt:
+            try:
+                df = pd.read_csv(io.StringIO(txt))
+            except Exception:
+                df = None
+    if df is None:
+        try:
+            df = pd.read_csv(SIGNALS_CSV)
+        except Exception:
+            return _empty_signals_df()
     for col in ("timestamp", "city", "date", "bucket", "action_taken"):
         if col not in df.columns:
             df[col] = ""
@@ -596,17 +675,29 @@ def load_resolved_df() -> pd.DataFrame:
     and resets resolved.csv to an empty header — so we must merge all files to get the
     full historical record.
     """
-    logs_dir = ROOT / "logs"
-    # current file + any archives, sorted so data is roughly chronological
-    csv_paths = sorted(logs_dir.glob("resolved*.csv"))
     frames: list[pd.DataFrame] = []
-    for path in csv_paths:
-        try:
-            df_part = pd.read_csv(path, index_col=False)
-            if not df_part.empty:
-                frames.append(df_part)
-        except Exception:
-            pass
+    if _prefer_github_data():
+        for name in sorted([n for n in _list_github_log_files() if n.startswith("resolved") and n.endswith(".csv")]):
+            txt = _fetch_github_text(f"logs/{name}")
+            if not txt:
+                continue
+            try:
+                df_part = pd.read_csv(io.StringIO(txt), index_col=False)
+                if not df_part.empty:
+                    frames.append(df_part)
+            except Exception:
+                pass
+    else:
+        logs_dir = ROOT / "logs"
+        # current file + any archives, sorted so data is roughly chronological
+        csv_paths = sorted(logs_dir.glob("resolved*.csv"))
+        for path in csv_paths:
+            try:
+                df_part = pd.read_csv(path, index_col=False)
+                if not df_part.empty:
+                    frames.append(df_part)
+            except Exception:
+                pass
     if not frames:
         return pd.DataFrame()
     df = pd.concat(frames, ignore_index=True)
@@ -642,11 +733,20 @@ def load_resolved_df() -> pd.DataFrame:
 @st.cache_data(ttl=30)
 def load_shadow_resolved_df(slug: str) -> pd.DataFrame:
     """Load resolved.csv for a shadow model (shadow_2a / shadow_2b / shadow_2c)."""
-    path = ROOT / "logs" / slug / "resolved.csv"
-    try:
-        df = pd.read_csv(path, index_col=False)
-    except Exception:
-        return pd.DataFrame()
+    df = None
+    if _prefer_github_data():
+        txt = _fetch_github_text(f"logs/{slug}/resolved.csv")
+        if txt:
+            try:
+                df = pd.read_csv(io.StringIO(txt), index_col=False)
+            except Exception:
+                df = None
+    if df is None:
+        path = ROOT / "logs" / slug / "resolved.csv"
+        try:
+            df = pd.read_csv(path, index_col=False)
+        except Exception:
+            return pd.DataFrame()
     for col in ("resolved_at", "target_date", "city", "bucket", "outcome", "side"):
         if col not in df.columns:
             df[col] = ""
@@ -667,15 +767,7 @@ def load_shadow_resolved_df(slug: str) -> pd.DataFrame:
 def load_shadow_positions(slug: str) -> list[dict]:
     """Load open positions for a shadow model."""
     path = ROOT / "data" / f"positions_{slug}.json"
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        if isinstance(payload, list):
-            return [p for p in payload if isinstance(p, dict)]
-        if isinstance(payload, dict):
-            return [p for p in payload.values() if isinstance(p, dict)]
-    except Exception:
-        pass
-    return []
+    return _read_json_data(f"data/positions_{slug}.json", path)
 
 
 def _strat_stats(df: pd.DataFrame) -> dict:
@@ -851,15 +943,7 @@ html,body{{background:#080D12;overflow:hidden;width:100%;height:{height+4}px}}
 
 
 def load_positions() -> list[dict]:
-    try:
-        payload = json.loads(POSITIONS_JSON.read_text(encoding="utf-8"))
-    except Exception:
-        return []
-    if isinstance(payload, list):
-        return [p for p in payload if isinstance(p, dict)]
-    if isinstance(payload, dict):
-        return [p for p in payload.values() if isinstance(p, dict)]
-    return []
+    return _read_json_data("data/positions.json", POSITIONS_JSON)
 
 
 def load_mode_from_env(path: Path) -> tuple[bool, bool]:
@@ -3139,8 +3223,14 @@ def main() -> None:
         st.divider()
         st.markdown("### Data Sync")
         st.caption(f"Bot runs on `{VM_NAME}` ({VM_PROJECT}).")
-        if st.button("🔄 Sync from VM + Refresh", use_container_width=True,
-                     help="Pull latest logs/trades from VM, then clear all caches and reload"):
+        _gcloud_ok = shutil.which("gcloud") is not None
+        if st.button(
+            "🔄 Sync from VM + Refresh",
+            use_container_width=True,
+            disabled=not _gcloud_ok,
+            help=("Pull latest logs/trades from VM, then clear all caches and reload"
+                  if _gcloud_ok else "gcloud CLI unavailable in this runtime"),
+        ):
             with st.spinner("Syncing from VM..."):
                 try:
                     _, msg = sync_from_vm()
@@ -3158,7 +3248,7 @@ def main() -> None:
         st_autorefresh(interval=interval_ms, key="dashboard-refresh")
     st.sidebar.caption("Live position prices refresh every 5 min regardless of page interval.")
 
-    # Optional auto-sync from VM (refresh alone only rerenders local files).
+    # Optional auto-sync from VM when available; otherwise use GitHub-backed live reads.
     auto_sync_enabled = st.sidebar.checkbox(
         "Auto-sync from VM",
         value=True,
@@ -3170,10 +3260,11 @@ def main() -> None:
         index=1,
     )
     auto_sync_sec = {"30s": 30, "60s": 60, "5m": 300}[auto_sync_opt]
+    gcloud_available = shutil.which("gcloud") is not None
     now_epoch = _time.time()
     last_sync_epoch = float(st.session_state.get("_last_vm_live_sync_epoch", 0.0))
     did_auto_sync = False
-    if auto_sync_enabled and (now_epoch - last_sync_epoch >= auto_sync_sec):
+    if auto_sync_enabled and gcloud_available and (now_epoch - last_sync_epoch >= auto_sync_sec):
         st.session_state["_last_vm_live_sync_epoch"] = now_epoch
         try:
             _, live_msg = sync_from_vm_live()
@@ -3187,13 +3278,23 @@ def main() -> None:
             st.session_state["_last_vm_live_sync_ok"] = False
             st.session_state["_last_vm_live_sync_msg"] = f"Auto-sync failed: {exc}"
             st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
+    elif auto_sync_enabled and not gcloud_available:
+        st.session_state["_last_vm_live_sync_ok"] = True
+        st.session_state["_last_vm_live_sync_msg"] = (
+            "Cloud mode: reading latest logs/data directly from GitHub (no VM auth required)."
+        )
+        st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     last_sync_at = st.session_state.get("_last_vm_live_sync_at", "never")
     last_sync_msg = st.session_state.get("_last_vm_live_sync_msg", "")
+    last_sync_ok = bool(st.session_state.get("_last_vm_live_sync_ok", False))
     if auto_sync_enabled:
-        st.sidebar.caption(f"Last VM auto-sync: {last_sync_at}")
-        if did_auto_sync and last_sync_msg:
-            st.sidebar.caption(last_sync_msg)
+        st.sidebar.caption(f"Data refresh mode timestamp: {last_sync_at}")
+        if last_sync_msg:
+            if last_sync_ok:
+                st.sidebar.caption(last_sync_msg)
+            else:
+                st.sidebar.warning(last_sync_msg)
 
     now_stamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
 
