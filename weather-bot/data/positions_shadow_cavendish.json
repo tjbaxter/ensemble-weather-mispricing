@@ -1148,5 +1148,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":71.6,\"gem_seamless\":75.3,\"best_match\":78.3,\"icon_seamless\":73.6}",
     "days_ahead": 0,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0xa02a2a35ceebec2c9854ad595e1cc2b5611c40f8a945d6d76e1f4109338f7b1e",
+    "token_id": "66178610569785821952188326193078215003164104692469581950252190343849275579970",
+    "side": "BUY_YES",
+    "city": "Chicago",
+    "station_icao": "KORD",
+    "date": "2026-03-21",
+    "bucket": "76-77",
+    "fill_price": 0.08399999999999999,
+    "fill_size": 59.52380952380953,
+    "cost": 5.0,
+    "timestamp": "2026-03-21T05:43:26.749943+00:00",
+    "strategy": "CAVENDISH_MK1",
+    "forecast_prob": 0.16575730951756065,
+    "market_prob": 0.08399999999999999,
+    "edge": 0.08175730951756066,
+    "ev_per_bet": 4.867,
+    "spread_colour": "RED",
+    "det_spread": 9.0,
+    "model_values_json": "{\"ncep_nbm_conus\":71.6,\"ncep_aigfs025\":68.4,\"gem_seamless\":75.3,\"best_match\":77.4,\"icon_seamless\":73.6}",
+    "days_ahead": 0,
+    "kelly_fraction_used": 0.25
   }
 ]

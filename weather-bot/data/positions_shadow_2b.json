@@ -1056,5 +1056,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":71.6,\"gem_seamless\":75.3,\"best_match\":78.3,\"icon_seamless\":73.6}",
     "days_ahead": 0,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0xbfb82674289b2edff32eea01f90d0a0502f0f4b286534950f39dd16c101ab335",
+    "token_id": "9183101014167977857743647338227811162004686595517652258048168965056637834077",
+    "side": "BUY_YES",
+    "city": "Chicago",
+    "station_icao": "KORD",
+    "date": "2026-03-21",
+    "bucket": "78+",
+    "fill_price": 0.083,
+    "fill_size": 60.24096385542168,
+    "cost": 5.0,
+    "timestamp": "2026-03-21T05:43:26.735857+00:00",
+    "strategy": "TOP2_COND",
+    "forecast_prob": 0.12621919515461483,
+    "market_prob": 0.083,
+    "edge": 0.04321919515461482,
+    "ev_per_bet": 2.604,
+    "spread_colour": "RED",
+    "det_spread": 9.0,
+    "model_values_json": "{\"ncep_nbm_conus\":71.6,\"ncep_aigfs025\":68.4,\"gem_seamless\":75.3,\"best_match\":77.4,\"icon_seamless\":73.6}",
+    "days_ahead": 0,
+    "kelly_fraction_used": 0.25
   }
 ]
