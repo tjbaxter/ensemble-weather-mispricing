@@ -1539,5 +1539,28 @@
     "model_values_json": "{\"ukmo_seamless\":22.9,\"ecmwf_ifs025\":20.9,\"icon_seamless\":18.6}",
     "days_ahead": 2,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x50458573e26229cdf244bcd86a2d814db7ae638a7a01ac9e1ba734508f1731dc",
+    "token_id": "83983890975752307678710476953148484548024459612327417519640986769895962437607",
+    "side": "BUY_YES",
+    "city": "Seattle",
+    "station_icao": "KSEA",
+    "date": "2026-03-23",
+    "bucket": "46-47",
+    "fill_price": 0.0555,
+    "fill_size": 121.62162162162161,
+    "cost": 6.75,
+    "timestamp": "2026-03-21T21:40:34.872647+00:00",
+    "strategy": "CAVENDISH_MK3",
+    "forecast_prob": 0.8773813807141968,
+    "market_prob": 0.0555,
+    "edge": 0.8218813807141968,
+    "ev_per_bet": 74.043,
+    "spread_colour": "GREEN",
+    "det_spread": 2.3,
+    "model_values_json": "{\"icon_seamless\":49.3,\"gem_seamless\":49.4,\"ncep_nbm_conus\":51.6}",
+    "days_ahead": 2,
+    "kelly_fraction_used": 0.25
   }
 ]
