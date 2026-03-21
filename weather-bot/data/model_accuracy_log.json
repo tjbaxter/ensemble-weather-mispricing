@@ -1871,9 +1871,9 @@
   },
   "EGLC/2026-03-22": {
     "preds": {
-      "meteofrance_arome_france": 12.9,
-      "meteofrance_seamless": 13.2,
-      "meteofrance_arome_france_hd": 13.2,
+      "meteofrance_arome_france": 13.1,
+      "meteofrance_seamless": 13.4,
+      "meteofrance_arome_france_hd": 13.4,
       "icon_seamless": 12.9,
       "dmi_seamless": 14.3
     },
@@ -2001,7 +2001,7 @@
   },
   "EGLC/2026-03-23": {
     "preds": {
-      "meteofrance_seamless": 15.1,
+      "meteofrance_seamless": 14.9,
       "icon_seamless": 16.0,
       "dmi_seamless": 15.4
     },
