@@ -1854,8 +1854,8 @@
   "KDFW/2026-03-22": {
     "preds": {
       "ncep_nbm_conus": 93.8,
-      "gfs_seamless": 92.6,
-      "ecmwf_ifs025": 94.6,
+      "gfs_seamless": 91.9,
+      "ecmwf_ifs025": 93.1,
       "icon_seamless": 94.5
     },
     "actual": null
@@ -1863,9 +1863,7 @@
   "KATL/2026-03-22": {
     "preds": {
       "ncep_nbm_conus": 83.0,
-      "gfs_seamless": 82.8,
-      "ecmwf_ifs025": 80.4,
-      "icon_seamless": 81.8
+      "ecmwf_ifs025": 80.4
     },
     "actual": null
   },
@@ -1967,6 +1965,7 @@
     "preds": {
       "ncep_nbm_conus": 80.5,
       "gfs_seamless": 82.7,
+      "ecmwf_ifs025": 80.5,
       "icon_seamless": 84.3
     },
     "actual": null
@@ -1983,7 +1982,7 @@
     "preds": {
       "ncep_nbm_conus": 82.7,
       "gfs_seamless": 80.5,
-      "ecmwf_ifs025": 78.9,
+      "ecmwf_ifs025": 79.1,
       "icon_seamless": 77.2
     },
     "actual": null
