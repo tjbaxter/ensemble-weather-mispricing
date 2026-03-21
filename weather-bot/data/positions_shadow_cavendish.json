@@ -1562,5 +1562,28 @@
     "model_values_json": "{\"icon_seamless\":49.3,\"gem_seamless\":49.4,\"ncep_nbm_conus\":51.6}",
     "days_ahead": 2,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x9b6333fc198c624c6c9a5b22ca3cb521430a784bb21b00408180ead74a6abfc4",
+    "token_id": "37896566244925378843640761630577854260638272553228211341559678366603092164197",
+    "side": "BUY_YES",
+    "city": "Toronto",
+    "station_icao": "CYYZ",
+    "date": "2026-03-23",
+    "bucket": "5+",
+    "fill_price": 0.08,
+    "fill_size": 77.125,
+    "cost": 6.17,
+    "timestamp": "2026-03-21T22:35:27.341562+00:00",
+    "strategy": "CAVENDISH_MK1",
+    "forecast_prob": 0.5720000000000001,
+    "market_prob": 0.08,
+    "edge": 0.49200000000000005,
+    "ev_per_bet": 30.75,
+    "spread_colour": "GREEN",
+    "det_spread": 1.4,
+    "model_values_json": "{\"kma_gdps\":2.9,\"meteofrance_arpege_world\":3.2,\"gem_global\":2.1,\"dmi_seamless\":1.8}",
+    "days_ahead": 2,
+    "kelly_fraction_used": 0.25
   }
 ]
