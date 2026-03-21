@@ -28,22 +28,19 @@ add_if_exists() {
   done
 }
 
+for rel in weather-bot/data/positions*.json; do
+  if [[ -f "$rel" ]]; then
+    git add "$rel"
+  fi
+done
+
 add_if_exists \
-  weather-bot/data/positions.json \
-  weather-bot/data/positions_live.json \
-  weather-bot/data/positions_shadow_2a.json \
-  weather-bot/data/positions_shadow_2b.json \
-  weather-bot/data/positions_shadow_2c.json \
-  weather-bot/data/positions_shadow_purdey.json \
-  weather-bot/data/positions_shadow_cavendish.json \
-  weather-bot/data/positions_shadow_purdey2.json \
-  weather-bot/data/positions_shadow_cavendish3.json \
-  weather-bot/data/positions_shadow_true_alpha.json \
-  weather-bot/data/positions_shadow_props_kelly.json \
+  weather-bot/data/dashboard_sync_status.json \
   weather-bot/data/model_accuracy_log.json \
   weather-bot/data/polymarket_cache.json \
   weather-bot/data/commercial_forecast_log.json \
   weather-bot/data/model_snapshot_log.json \
+  weather-bot/data/trade_observability.jsonl \
   weather-bot/data/accuracy_rows_cache.json \
   weather-bot/data/morning_obs_cache.json \
   weather-bot/backtest/data/resolved_markets.json \
@@ -51,18 +48,21 @@ add_if_exists \
 
 # Log files need -f because logs/ is gitignored (exceptions added in .gitignore)
 add_if_exists -f \
-  weather-bot/logs/resolved.csv \
   weather-bot/logs/signals.csv \
-  weather-bot/logs/trades.csv \
-  weather-bot/logs/shadow_2a/resolved.csv \
-  weather-bot/logs/shadow_2b/resolved.csv \
-  weather-bot/logs/shadow_2c/resolved.csv \
-  weather-bot/logs/shadow_purdey/resolved.csv \
-  weather-bot/logs/shadow_cavendish/resolved.csv \
-  weather-bot/logs/shadow_purdey2/resolved.csv \
-  weather-bot/logs/shadow_cavendish3/resolved.csv \
-  weather-bot/logs/shadow_true_alpha/resolved.csv \
-  weather-bot/logs/shadow_props_kelly/resolved.csv
+  weather-bot/logs/trades.csv
+
+for rel in weather-bot/logs/resolved*.csv weather-bot/logs/shadow_*/resolved*.csv; do
+  if [[ -f "$rel" ]]; then
+    git add -f "$rel"
+  fi
+done
+
+# Deep observability logs (append-only JSONL, gitignored logs/ path needs -f)
+for rel in weather-bot/logs/deep/*.jsonl; do
+  if [[ -f "$rel" ]]; then
+    git add -f "$rel"
+  fi
+done
 
 # Only commit if there are actual changes
 if git diff --cached --quiet; then

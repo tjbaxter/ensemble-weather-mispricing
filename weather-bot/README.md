@@ -66,8 +66,23 @@ What it shows:
 
 Notes:
 
+- `DASHBOARD_DATA_SOURCE=local|github|auto` controls whether the dashboard reads authoritative local files or the GitHub mirror. `auto` preserves the old behavior.
+- `DASHBOARD_READ_ONLY=true` disables mode/config writes. Use this for production dashboards.
 - To edit VM mode flags directly, select `/etc/weather-bot.env` in the dashboard (requires sudo/root write permission).
 - After changing mode flags, restart the bot process/service manually.
+
+### Private VM Dashboard
+
+For an authoritative read-only production dashboard on the VM itself:
+
+1. SSH to the VM and install the service:
+   - `bash deploy/install_dashboard_service.sh`
+2. Open a private SSH tunnel from your Mac:
+   - `bash deploy/open_dashboard_tunnel.sh`
+3. Visit:
+   - `http://localhost:8501`
+
+This VM-hosted dashboard reads local runtime files directly (`DASHBOARD_DATA_SOURCE=local`) and is intended to be the source of truth. The public Streamlit Cloud app remains a mirror fed by GitHub sync.
 
 ## Quick Market Check
 

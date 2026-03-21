@@ -1,0 +1,30 @@
+[Unit]
+Description=Weather Dashboard (authoritative local Streamlit UI)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__WORKDIR__
+EnvironmentFile=-/etc/weather-bot.env
+Environment=PYTHONUNBUFFERED=1
+Environment=STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+Environment=DASHBOARD_DATA_SOURCE=local
+Environment=DASHBOARD_READ_ONLY=true
+ExecStartPre=/usr/bin/mkdir -p __WORKDIR__/logs
+ExecStart=__WORKDIR__/venv/bin/streamlit run __WORKDIR__/dashboard.py --server.address 127.0.0.1 --server.port __PORT__ --server.headless true --browser.gatherUsageStats false
+Restart=always
+RestartSec=15
+TimeoutStopSec=20
+StandardOutput=append:__WORKDIR__/logs/dashboard.log
+StandardError=append:__WORKDIR__/logs/dashboard_error.log
+
+# Keep the dashboard lightweight so it can never starve the trading bot.
+MemoryMax=512M
+CPUQuota=35%
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

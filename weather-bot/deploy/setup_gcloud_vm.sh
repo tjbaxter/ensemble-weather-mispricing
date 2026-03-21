@@ -61,12 +61,13 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   pip install --upgrade pip && \
   pip install -r requirements.txt"
 
-echo "==> Installing systemd service + healthcheck + logrotate"
+echo "==> Installing systemd services + healthcheck + logrotate"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   set -euo pipefail && \
   mkdir -p '${REMOTE_WORKDIR}/logs' && \
-  chmod +x '${REMOTE_WORKDIR}/deploy/healthcheck.sh' '${REMOTE_WORKDIR}/deploy/redeploy.sh' '${REMOTE_WORKDIR}/deploy/setup_gcloud_vm.sh' || true && \
+  chmod +x '${REMOTE_WORKDIR}/deploy/healthcheck.sh' '${REMOTE_WORKDIR}/deploy/redeploy.sh' '${REMOTE_WORKDIR}/deploy/setup_gcloud_vm.sh' '${REMOTE_WORKDIR}/deploy/install_cron_jobs.sh' '${REMOTE_WORKDIR}/deploy/install_dashboard_service.sh' || true && \
   sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-bot.service.template' | sudo tee /etc/systemd/system/weather-bot.service >/dev/null && \
+  sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' -e 's#__PORT__#8501#g' '${REMOTE_WORKDIR}/deploy/weather-dashboard.service.template' | sudo tee /etc/systemd/system/weather-dashboard.service >/dev/null && \
   sed -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-bot-logrotate' | sudo tee /etc/logrotate.d/weather-bot >/dev/null"
 
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
@@ -86,11 +87,13 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   sudo chown root:root /etc/weather-bot.env && \
   sudo systemctl daemon-reload && \
   sudo systemctl enable weather-bot && \
-  sudo systemctl restart weather-bot"
+  sudo systemctl enable weather-dashboard && \
+  sudo systemctl restart weather-bot && \
+  sudo systemctl restart weather-dashboard"
 
-echo "==> Installing healthcheck cron (every 5 minutes)"
+echo "==> Installing cron suite"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
-  (crontab -l 2>/dev/null | grep -v 'deploy/healthcheck.sh' || true; echo '*/5 * * * * ${REMOTE_WORKDIR}/deploy/healthcheck.sh') | crontab -"
+  bash '${REMOTE_WORKDIR}/deploy/install_cron_jobs.sh'"
 
 echo "==> Installing commercial forecast logger cron (daily 19:05 UTC)"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
@@ -100,6 +103,7 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
 echo "==> Verifying service status"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   sudo systemctl status weather-bot --no-pager && \
+  sudo systemctl status weather-dashboard --no-pager && \
   grep HEARTBEAT '${REMOTE_WORKDIR}/logs/bot.log' | tail -5 || true"
 
 cat <<EOF
@@ -110,4 +114,6 @@ Next:
    gcloud compute ssh ${VM_NAME} --zone ${ZONE} --command 'sudo nano /etc/weather-bot.env'
 2) Restart after editing:
    gcloud compute ssh ${VM_NAME} --zone ${ZONE} --command 'sudo systemctl restart weather-bot'
+3) Open the private dashboard tunnel:
+   gcloud compute ssh ${VM_NAME} --zone ${ZONE} --project weather-488111 -- -N -L 8501:127.0.0.1:8501
 EOF

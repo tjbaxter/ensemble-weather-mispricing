@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import io
 import base64
+import os
 import re
 import subprocess
 import time as _time
@@ -48,13 +49,59 @@ TRADES_CSV = ROOT / "logs" / "trades.csv"
 SIGNALS_CSV = ROOT / "logs" / "signals.csv"
 RESOLVED_CSV = ROOT / "logs" / "resolved.csv"
 POSITIONS_JSON = ROOT / "data" / "positions.json"
+DASHBOARD_SYNC_STATUS_JSON = ROOT / "data" / "dashboard_sync_status.json"
 DEFAULT_ENV = ROOT / ".env"
 VM_ENV = Path("/etc/weather-bot.env")
 
+_TRUTHY_VALUES = {"1", "true", "yes", "on"}
+_DASHBOARD_DATA_SOURCE_VALUES = {"auto", "local", "github"}
+
+
+def _parse_truthy(raw: str | None, default: bool = False) -> bool:
+    if raw is None:
+        return default
+    return raw.strip().lower() in _TRUTHY_VALUES
+
+
+def _dashboard_data_source_config() -> str:
+    raw = os.getenv("DASHBOARD_DATA_SOURCE", "auto").strip().lower()
+    return raw if raw in _DASHBOARD_DATA_SOURCE_VALUES else "auto"
+
+
+def _dashboard_data_source() -> str:
+    configured = _dashboard_data_source_config()
+    if configured == "auto":
+        return "github" if shutil.which("gcloud") is None else "local"
+    return configured
+
+
+def _dashboard_read_only() -> bool:
+    raw = os.getenv("DASHBOARD_READ_ONLY")
+    if raw is not None:
+        return _parse_truthy(raw, default=False)
+    return _dashboard_data_source() == "github"
+
+
+def _dashboard_local_runtime_is_authoritative() -> bool:
+    try:
+        return ROOT.resolve() == Path(VM_WORKDIR).resolve()
+    except Exception:
+        return False
+
+
+def _dashboard_source_status() -> tuple[str, str]:
+    configured = _dashboard_data_source_config()
+    effective = _dashboard_data_source()
+    if effective == "local" and _dashboard_local_runtime_is_authoritative():
+        return configured, "Authoritative local mode: reading VM runtime files directly."
+    if effective == "local":
+        return configured, "Local checkout mode: reads local files and can sync from the VM."
+    return configured, "Mirror mode: reading the latest GitHub snapshot."
+
 
 def _prefer_github_data() -> bool:
-    """When gcloud isn't available (typical on Streamlit Cloud), prefer GitHub raw/API data."""
-    return shutil.which("gcloud") is None
+    """Use GitHub raw/API data only when the dashboard is explicitly in mirror mode."""
+    return _dashboard_data_source() == "github"
 
 
 @st.cache_data(ttl=30, show_spinner=False)
@@ -121,6 +168,28 @@ def _read_json_data(rel_path: str, local_path: Path) -> list[dict]:
     if isinstance(payload, dict):
         return [p for p in payload.values() if isinstance(p, dict)]
     return []
+
+
+@st.cache_data(ttl=30, show_spinner=False)
+def _read_json_object(rel_path: str, local_path: Path) -> dict:
+    payload = None
+    if _prefer_github_data():
+        txt = _fetch_github_text(rel_path)
+        if txt:
+            try:
+                payload = json.loads(txt)
+            except Exception:
+                payload = None
+    if payload is None:
+        try:
+            payload = json.loads(local_path.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def load_dashboard_sync_status() -> dict:
+    return _read_json_object("data/dashboard_sync_status.json", DASHBOARD_SYNC_STATUS_JSON)
 
 BG = "#0E1117"
 GREEN = "#00FF88"
@@ -998,7 +1067,20 @@ def load_mode_from_env(path: Path) -> tuple[bool, bool]:
     return paper, live
 
 
+def current_dashboard_mode() -> tuple[bool, bool]:
+    """Return current mode, preferring service-injected env vars when present."""
+    paper_raw = os.getenv("PAPER_TRADING")
+    live_raw = os.getenv("LIVE_TRADING")
+    if paper_raw is not None or live_raw is not None:
+        paper = _parse_truthy(paper_raw, default=True)
+        live = _parse_truthy(live_raw, default=False)
+        return paper, live
+    return load_mode_from_env(DEFAULT_ENV)
+
+
 def write_mode_to_env(path: Path, target_live: bool) -> tuple[bool, str]:
+    if _dashboard_read_only():
+        return False, "Dashboard is running in read-only mode; mode changes are disabled."
     paper_val = "false" if target_live else "true"
     live_val = "true" if target_live else "false"
     lines: list[str] = []
@@ -1030,6 +1112,61 @@ def write_mode_to_env(path: Path, target_live: bool) -> tuple[bool, str]:
         return True, f"Updated mode flags in {path}"
     except Exception as exc:
         return False, f"Could not write {path}: {exc}"
+
+
+def render_trading_mode_panel(*, key_prefix: str, include_wallet: bool = False) -> None:
+    _, live_mode = current_dashboard_mode()
+    read_only = _dashboard_read_only()
+    env_options = [str(DEFAULT_ENV), str(VM_ENV)]
+
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.subheader("TRADING MODE")
+    if read_only:
+        st.info("Read-only safeguards are enabled for this dashboard session. Mode changes are disabled.")
+    mode_choice = st.radio(
+        "Mode",
+        options=["Paper", "Live"],
+        index=1 if live_mode else 0,
+        horizontal=True,
+        key=f"{key_prefix}_mode",
+        disabled=read_only,
+    )
+    env_target = st.selectbox(
+        "Env file target",
+        options=env_options,
+        index=0,
+        key=f"{key_prefix}_env",
+        disabled=read_only,
+    )
+    if env_target == str(VM_ENV):
+        st.warning("Writing /etc/weather-bot.env usually requires sudo/root privileges.")
+    st.warning("Live mode is still blocked by main.py safety guard unless code is changed.")
+
+    if st.button("Apply Mode Change", key=f"{key_prefix}_apply_mode", disabled=read_only):
+        target_live = mode_choice == "Live"
+        ok, msg = write_mode_to_env(Path(env_target), target_live=target_live)
+        if ok:
+            st.success(msg)
+        else:
+            st.error(msg)
+
+    restart_cmd = "sudo systemctl restart weather-bot" if env_target == str(VM_ENV) else "python3 main.py"
+    st.code(restart_cmd, language="bash")
+    if read_only:
+        st.caption("Read-only session: config writes and restart actions are intentionally disabled.")
+    else:
+        st.caption("Manual restart required after mode change.")
+
+    if include_wallet:
+        st.markdown("### Wallet")
+        st.button(
+            "Connect Polygon Wallet (Coming Soon)",
+            disabled=True,
+            help="Wallet integration will be added later.",
+            key=f"{key_prefix}_wallet",
+        )
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def realized_trades(trades_df: pd.DataFrame) -> pd.DataFrame:
@@ -3230,6 +3367,12 @@ def fetch_top_model_live(city: str) -> float | None:
 def main() -> None:
     st.set_page_config(page_title="Weather Edge Terminal", layout="wide")
     apply_style()
+    configured_source, source_status = _dashboard_source_status()
+    effective_source = _dashboard_data_source()
+    dashboard_read_only = _dashboard_read_only()
+    local_runtime = _dashboard_local_runtime_is_authoritative()
+    gcloud_available = shutil.which("gcloud") is not None
+    sync_status = load_dashboard_sync_status()
 
     with st.sidebar:
         # Next model run trigger
@@ -3253,22 +3396,31 @@ def main() -> None:
         st.divider()
         st.markdown("### Data Sync")
         st.caption(f"Bot runs on `{VM_NAME}` ({VM_PROJECT}).")
-        _gcloud_ok = shutil.which("gcloud") is not None
-        if st.button(
-            "🔄 Sync from VM + Refresh",
-            use_container_width=True,
-            disabled=not _gcloud_ok,
-            help=("Pull latest logs/trades from VM, then clear all caches and reload"
-                  if _gcloud_ok else "gcloud CLI unavailable in this runtime"),
-        ):
-            with st.spinner("Syncing from VM..."):
-                try:
-                    _, msg = sync_from_vm()
-                    st.success(msg)
-                except Exception as exc:
-                    st.warning(f"VM sync partial: {exc}")
-            st.cache_data.clear()
-            st.rerun()
+        source_caption = effective_source if configured_source == effective_source else f"{configured_source} -> {effective_source}"
+        st.caption(f"Dashboard data source: `{source_caption}`")
+        st.caption(source_status)
+        if effective_source == "github" and sync_status.get("last_fast_sync_utc"):
+            st.caption(f"Last mirror sync: {sync_status['last_fast_sync_utc']}")
+        elif effective_source == "local" and not local_runtime and sync_status.get("last_fast_sync_utc"):
+            st.caption(f"Last local snapshot sync: {sync_status['last_fast_sync_utc']}")
+        if dashboard_read_only:
+            st.caption("Dashboard write controls are disabled in this session.")
+        if effective_source == "local" and not local_runtime:
+            if st.button(
+                "🔄 Sync from VM + Refresh",
+                use_container_width=True,
+                disabled=not gcloud_available,
+                help=("Pull latest logs/trades from VM, then clear all caches and reload"
+                      if gcloud_available else "gcloud CLI unavailable in this runtime"),
+            ):
+                with st.spinner("Syncing from VM..."):
+                    try:
+                        _, msg = sync_from_vm()
+                        st.success(msg)
+                    except Exception as exc:
+                        st.warning(f"VM sync partial: {exc}")
+                st.cache_data.clear()
+                st.rerun()
         st.divider()
         st.markdown("### Auto-refresh")
 
@@ -3278,22 +3430,22 @@ def main() -> None:
         st_autorefresh(interval=interval_ms, key="dashboard-refresh")
     st.sidebar.caption("Live position prices refresh every 5 min regardless of page interval.")
 
-    # Optional auto-sync from VM when available; otherwise use GitHub-backed live reads.
-    auto_sync_enabled = st.sidebar.checkbox(
-        "Auto-sync from VM",
-        value=True,
-        help="Pull latest VM logs automatically so settled stats update without manual sync.",
-    )
-    auto_sync_opt = st.sidebar.selectbox(
-        "Auto-sync cadence",
-        options=["30s", "60s", "5m"],
-        index=1,
-    )
-    auto_sync_sec = {"30s": 30, "60s": 60, "5m": 300}[auto_sync_opt]
-    gcloud_available = shutil.which("gcloud") is not None
+    auto_sync_enabled = False
+    auto_sync_sec = 0
+    if effective_source == "local" and not local_runtime:
+        auto_sync_enabled = st.sidebar.checkbox(
+            "Auto-sync from VM",
+            value=True,
+            help="Pull latest VM logs automatically so settled stats update without manual sync.",
+        )
+        auto_sync_opt = st.sidebar.selectbox(
+            "Auto-sync cadence",
+            options=["30s", "60s", "5m"],
+            index=1,
+        )
+        auto_sync_sec = {"30s": 30, "60s": 60, "5m": 300}[auto_sync_opt]
     now_epoch = _time.time()
     last_sync_epoch = float(st.session_state.get("_last_vm_live_sync_epoch", 0.0))
-    did_auto_sync = False
     if auto_sync_enabled and gcloud_available and (now_epoch - last_sync_epoch >= auto_sync_sec):
         st.session_state["_last_vm_live_sync_epoch"] = now_epoch
         try:
@@ -3303,22 +3455,27 @@ def main() -> None:
             st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
             # Ensure cached readers pick up freshly synced files immediately.
             st.cache_data.clear()
-            did_auto_sync = True
         except Exception as exc:
             st.session_state["_last_vm_live_sync_ok"] = False
             st.session_state["_last_vm_live_sync_msg"] = f"Auto-sync failed: {exc}"
             st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
     elif auto_sync_enabled and not gcloud_available:
+        st.session_state["_last_vm_live_sync_ok"] = False
+        st.session_state["_last_vm_live_sync_msg"] = "Auto-sync unavailable: gcloud CLI not present in this runtime."
+        st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
+    elif effective_source == "github":
         st.session_state["_last_vm_live_sync_ok"] = True
-        st.session_state["_last_vm_live_sync_msg"] = (
-            "Cloud mode: reading latest logs/data directly from GitHub (no VM auth required)."
-        )
+        st.session_state["_last_vm_live_sync_msg"] = "Mirror mode: reading latest logs/data directly from GitHub."
+        st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
+    elif effective_source == "local" and local_runtime:
+        st.session_state["_last_vm_live_sync_ok"] = True
+        st.session_state["_last_vm_live_sync_msg"] = "Authoritative local mode: reading VM runtime files directly."
         st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     last_sync_at = st.session_state.get("_last_vm_live_sync_at", "never")
     last_sync_msg = st.session_state.get("_last_vm_live_sync_msg", "")
     last_sync_ok = bool(st.session_state.get("_last_vm_live_sync_ok", False))
-    if auto_sync_enabled:
+    if auto_sync_enabled or effective_source != "local" or local_runtime:
         st.sidebar.caption(f"Data refresh mode timestamp: {last_sync_at}")
         if last_sync_msg:
             if last_sync_ok:
@@ -3328,8 +3485,7 @@ def main() -> None:
 
     now_stamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
 
-    mode_env_path = DEFAULT_ENV
-    paper_mode, live_mode = load_mode_from_env(mode_env_path)
+    _, live_mode = current_dashboard_mode()
     mode_text = "LIVE MODE" if live_mode else "PAPER MODE"
     mode_color = RED if live_mode else GREEN
 
@@ -3509,7 +3665,6 @@ def _render_trading_tab() -> None:
     _ = load_signals_df()
     positions = load_positions()
     metrics = kpis(trades_df, positions)
-    _, live_mode = load_mode_from_env(DEFAULT_ENV)
 
     # ── KPI bar ──────────────────────────────────────────────────────────────
     # Prefer resolved_df for P&L/win-rate metrics when trades.csv is sparse
@@ -4462,29 +4617,7 @@ def _render_trading_tab() -> None:
             )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
-    st.subheader("TRADING MODE")
-    mode_choice = st.radio("Mode", options=["Paper", "Live"], index=1 if live_mode else 0, horizontal=True)
-    env_target = st.selectbox("Env file target", options=[str(DEFAULT_ENV), str(VM_ENV)], index=0)
-    if env_target == str(VM_ENV):
-        st.warning("Writing /etc/weather-bot.env usually requires sudo/root privileges.")
-    st.warning("Live mode is still blocked by main.py safety guard unless code is changed.")
-
-    if st.button("Apply Mode Change"):
-        target_live = mode_choice == "Live"
-        ok, msg = write_mode_to_env(Path(env_target), target_live=target_live)
-        if ok:
-            st.success(msg)
-        else:
-            st.error(msg)
-
-    restart_cmd = "sudo systemctl restart weather-bot" if env_target == str(VM_ENV) else "python3 main.py"
-    st.code(restart_cmd, language="bash")
-    st.caption("Manual restart required. Dashboard does not execute privileged restart automatically.")
-
-    st.markdown("### Wallet")
-    st.button("Connect Polygon Wallet (Coming Soon)", disabled=True, help="Wallet integration will be added later.")
-    st.markdown("</div>", unsafe_allow_html=True)
+    render_trading_mode_panel(key_prefix="trading_tab", include_wallet=True)
 
 
 _MODEL_COLORS: dict[str, str] = {
@@ -4729,25 +4862,7 @@ def _render_overview_tab() -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Trading mode ──────────────────────────────────────────────────────────
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
-    st.subheader("TRADING MODE")
-    _, live_mode = load_mode_from_env(DEFAULT_ENV)
-    mode_choice = st.radio("Mode", options=["Paper", "Live"], index=1 if live_mode else 0, horizontal=True, key="ov_mode")
-    env_target = st.selectbox("Env file target", options=[str(DEFAULT_ENV), str(VM_ENV)], index=0, key="ov_env")
-    if env_target == str(VM_ENV):
-        st.warning("Writing /etc/weather-bot.env usually requires sudo/root privileges.")
-    st.warning("Live mode is still blocked by main.py safety guard unless code is changed.")
-    if st.button("Apply Mode Change", key="ov_apply_mode"):
-        target_live = mode_choice == "Live"
-        ok, msg = write_mode_to_env(Path(env_target), target_live=target_live)
-        if ok:
-            st.success(msg)
-        else:
-            st.error(msg)
-    restart_cmd = "sudo systemctl restart weather-bot" if env_target == str(VM_ENV) else "python3 main.py"
-    st.code(restart_cmd, language="bash")
-    st.caption("Manual restart required after mode change.")
-    st.markdown("</div>", unsafe_allow_html=True)
+    render_trading_mode_panel(key_prefix="overview_mode")
 
 
 def _compute_live_stats(positions: list[dict], live_prices: dict[str, float]) -> dict:
