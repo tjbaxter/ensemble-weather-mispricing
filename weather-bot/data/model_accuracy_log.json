@@ -1827,9 +1827,9 @@
   "KORD/2026-03-22": {
     "preds": {
       "ncep_nbm_conus": 62.2,
-      "ncep_aigfs025": 66.3,
+      "ncep_aigfs025": 66.8,
       "gem_seamless": 67.4,
-      "best_match": 64.1,
+      "best_match": 65.1,
       "icon_seamless": 61.9
     },
     "actual": null
@@ -1957,7 +1957,7 @@
   "KORD/2026-03-23": {
     "preds": {
       "ncep_nbm_conus": 44.2,
-      "ncep_aigfs025": 43.3,
+      "ncep_aigfs025": 42.8,
       "gem_seamless": 42.9,
       "best_match": 43.5,
       "icon_seamless": 47.8
@@ -1994,8 +1994,7 @@
     "preds": {
       "ncep_nbm_conus": 78.2,
       "gfs_seamless": 74.9,
-      "ecmwf_ifs025": 73.5,
-      "icon_seamless": 76.5
+      "ecmwf_ifs025": 73.5
     },
     "actual": null
   },
