@@ -1562,7 +1562,7 @@
       "kma_seamless": 55.8,
       "gem_seamless": 54.3
     },
-    "actual": null
+    "actual": 55.0
   },
   "KORD/2026-03-20": {
     "preds": {
@@ -1572,7 +1572,7 @@
       "best_match": 69.6,
       "icon_seamless": 65.8
     },
-    "actual": null
+    "actual": 72.0
   },
   "KMIA/2026-03-20": {
     "preds": {
@@ -1581,7 +1581,7 @@
       "ecmwf_ifs025": 72.3,
       "icon_seamless": 74.9
     },
-    "actual": null
+    "actual": 78.0
   },
   "KSEA/2026-03-20": {
     "preds": {
@@ -1598,7 +1598,7 @@
       "ecmwf_ifs025": 89.5,
       "icon_seamless": 88.6
     },
-    "actual": null
+    "actual": 89.0
   },
   "KATL/2026-03-20": {
     "preds": {
@@ -1682,7 +1682,7 @@
       "gem_global": 7.5,
       "dmi_seamless": 7.8
     },
-    "actual": null
+    "actual": 5.0
   },
   "KLGA/2026-03-21": {
     "preds": {
