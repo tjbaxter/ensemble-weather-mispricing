@@ -1816,6 +1816,9 @@
   },
   "KLGA/2026-03-22": {
     "preds": {
+      "ncep_nbm_conus": 60.7,
+      "icon_seamless": 59.3,
+      "gfs_graphcast025": 60.9,
       "kma_seamless": 52.4,
       "gem_seamless": 53.2
     },
@@ -1823,19 +1826,19 @@
   },
   "KORD/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 61.7,
+      "ncep_nbm_conus": 62.1,
       "ncep_aigfs025": 66.3,
       "gem_seamless": 67.4,
-      "best_match": 62.2,
+      "best_match": 63.3,
       "icon_seamless": 62.0
     },
     "actual": null
   },
   "KMIA/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 79.8,
-      "gfs_seamless": 79.3,
-      "ecmwf_ifs025": 78.6,
+      "ncep_nbm_conus": 79.7,
+      "gfs_seamless": 79.2,
+      "ecmwf_ifs025": 78.2,
       "icon_seamless": 81.5
     },
     "actual": null
@@ -1844,7 +1847,7 @@
     "preds": {
       "icon_seamless": 50.0,
       "gem_seamless": 54.1,
-      "ncep_nbm_conus": 51.1
+      "ncep_nbm_conus": 50.6
     },
     "actual": null
   },
@@ -1942,7 +1945,7 @@
   },
   "KLGA/2026-03-23": {
     "preds": {
-      "ncep_nbm_conus": 54.5,
+      "kma_seamless": 52.3,
       "gem_seamless": 51.1
     },
     "actual": null
@@ -1951,7 +1954,9 @@
     "preds": {
       "ncep_nbm_conus": 43.7,
       "ncep_aigfs025": 43.3,
-      "gem_seamless": 42.9
+      "gem_seamless": 42.9,
+      "best_match": 43.5,
+      "icon_seamless": 46.9
     },
     "actual": null
   },
@@ -1959,7 +1964,7 @@
     "preds": {
       "ncep_nbm_conus": 80.5,
       "gfs_seamless": 82.7,
-      "ecmwf_ifs025": 80.2,
+      "ecmwf_ifs025": 80.5,
       "icon_seamless": 84.3
     },
     "actual": null
@@ -1968,7 +1973,7 @@
     "preds": {
       "icon_seamless": 49.1,
       "gem_seamless": 48.4,
-      "ncep_nbm_conus": 50.1
+      "ncep_nbm_conus": 50.7
     },
     "actual": null
   },
