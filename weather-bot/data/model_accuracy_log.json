@@ -1816,7 +1816,7 @@
   },
   "KLGA/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 60.7,
+      "ncep_nbm_conus": 60.3,
       "icon_seamless": 59.8,
       "gfs_graphcast025": 59.7,
       "kma_seamless": 52.4,
