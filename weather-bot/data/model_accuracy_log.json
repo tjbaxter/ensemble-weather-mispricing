@@ -1829,7 +1829,7 @@
       "ncep_nbm_conus": 62.1,
       "ncep_aigfs025": 66.3,
       "gem_seamless": 67.4,
-      "best_match": 63.3,
+      "best_match": 63.2,
       "icon_seamless": 62.0
     },
     "actual": null
@@ -1945,6 +1945,9 @@
   },
   "KLGA/2026-03-23": {
     "preds": {
+      "ncep_nbm_conus": 54.6,
+      "icon_seamless": 49.3,
+      "gfs_graphcast025": 50.6,
       "kma_seamless": 52.3,
       "gem_seamless": 51.1
     },
@@ -1964,7 +1967,6 @@
     "preds": {
       "ncep_nbm_conus": 80.5,
       "gfs_seamless": 82.7,
-      "ecmwf_ifs025": 80.5,
       "icon_seamless": 84.3
     },
     "actual": null
