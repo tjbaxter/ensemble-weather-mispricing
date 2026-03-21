@@ -1686,11 +1686,10 @@
   },
   "KLGA/2026-03-21": {
     "preds": {
-      "ncep_nbm_conus": 55.8,
-      "icon_seamless": 55.4,
+      "ncep_nbm_conus": 55.7,
       "gfs_graphcast025": 56.0,
       "kma_seamless": 55.5,
-      "gem_seamless": 51.8
+      "gem_seamless": 52.4
     },
     "actual": null
   },
@@ -1816,11 +1815,10 @@
   },
   "KLGA/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 62.0,
-      "icon_seamless": 59.3,
+      "ncep_nbm_conus": 60.9,
       "gfs_graphcast025": 60.9,
       "kma_seamless": 62.9,
-      "gem_seamless": 54.7
+      "gem_seamless": 53.2
     },
     "actual": null
   },
