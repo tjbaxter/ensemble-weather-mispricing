@@ -1332,5 +1332,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":77.9,\"gfs_seamless\":74.9,\"ecmwf_ifs025\":73.4,\"icon_seamless\":77.4}",
     "days_ahead": 2,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x200fe9901b578b5f5e30765216d44c4c4e744e32661b178cfb7577719d329923",
+    "token_id": "17605159050968557539581454432645824690497473202823621552604218140960593198924",
+    "side": "BUY_YES",
+    "city": "NYC",
+    "station_icao": "KLGA",
+    "date": "2026-03-22",
+    "bucket": "54-55",
+    "fill_price": 0.095,
+    "fill_size": 71.05263157894737,
+    "cost": 6.75,
+    "timestamp": "2026-03-21T13:44:03.272368+00:00",
+    "strategy": "CAVENDISH_MK3",
+    "forecast_prob": 0.9999999997078506,
+    "market_prob": 0.095,
+    "edge": 0.9049999997078506,
+    "ev_per_bet": 47.632,
+    "spread_colour": "GREEN",
+    "det_spread": 0.8,
+    "model_values_json": "{\"kma_seamless\":52.4,\"gem_seamless\":53.2}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]
