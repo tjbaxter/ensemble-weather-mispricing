@@ -56,6 +56,7 @@ from strategy.conviction import (
     get_commercial_temps,
     score_conviction,
 )
+from monitoring.deep_observability import get_deep_observability
 
 
 @dataclass
@@ -88,6 +89,7 @@ class Signal:
     # CONVICTION = shadow signal: single highest-probability bucket, full Kelly, never executed
     # SINGLE    = non-ladder directional pick
     strategy: str = "SINGLE"
+    decision_id: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -98,6 +100,58 @@ def _kelly_position_cap(bankroll: float) -> float:
     if DYNAMIC_RISK_SIZING_ENABLED:
         return max(KELLY_MIN_BET_USD, float(bankroll) * EQUITY_MAX_POSITION_PCT)
     return KELLY_MAX_BET_USD
+
+
+_DEEP_OBS = get_deep_observability()
+_OBS_MARKET_SCAN_ID = ""
+
+
+def set_signal_observability_context(market_scan_id: str | None) -> None:
+    global _OBS_MARKET_SCAN_ID
+    _OBS_MARKET_SCAN_ID = market_scan_id or ""
+
+
+def _log_signal_eval(
+    *,
+    strategy: str,
+    city: str,
+    station_icao: str,
+    target_date: str,
+    bucket: str,
+    side: str,
+    forecast_prob: float,
+    market_prob: float,
+    edge: float,
+    size_usd: float,
+    decision: str,
+    rejection_reason: str | None,
+    gate_results: dict[str, dict],
+    forecast_bundle: dict,
+    strategy_context: dict,
+) -> str:
+    return _DEEP_OBS.log_signal_eval(
+        {
+            "decision_id": "",
+            "timestamp_utc": datetime.now(UTC).isoformat(),
+            "strategy": strategy,
+            "city": city,
+            "station_icao": station_icao,
+            "target_date": target_date,
+            "bucket": bucket,
+            "side": side,
+            "forecast_prob": forecast_prob,
+            "market_prob": market_prob,
+            "edge": edge,
+            "size_usd": size_usd,
+            "decision": decision,
+            "rejection_reason": rejection_reason,
+            "snapshot_id": forecast_bundle.get("__snapshot_id", ""),
+            "prob_calc_id": forecast_bundle.get("__prob_calc_id", ""),
+            "market_scan_id": _OBS_MARKET_SCAN_ID,
+            "gate_results": gate_results,
+            "strategy_context": strategy_context,
+        }
+    )
 
 
 def calculate_hours_to_resolution(end_date_iso: str) -> float:
@@ -334,19 +388,104 @@ def generate_signals(
             )
 
             if action == "NO_TRADE":
+                _log_signal_eval(
+                    strategy="SINGLE",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date,
+                    bucket=bucket,
+                    side="BUY_YES",
+                    forecast_prob=float(forecast_prob),
+                    market_prob=float(market_prob),
+                    edge=float(edge),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="no_trade",
+                    gate_results={"edge_or_confidence": {"passed": False}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "single"},
+                )
                 continue
 
             # Overround guard: structurally broken market, reject BUY_YES
             if action == "BUY_YES" and market_overround:
+                _log_signal_eval(
+                    strategy="SINGLE",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date,
+                    bucket=bucket,
+                    side=action,
+                    forecast_prob=float(forecast_prob),
+                    market_prob=float(market_prob),
+                    edge=float(edge),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="market_overround",
+                    gate_results={"overround_guard": {"passed": False, "sum_yes_prices": bucket_yes_sum}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "single"},
+                )
                 continue
 
             if action == "BUY_YES":
                 if market_prob < HARD_MIN_YES_ENTRY_PRICE:
+                    _log_signal_eval(
+                        strategy="SINGLE",
+                        city=city,
+                        station_icao=station_icao,
+                        target_date=date,
+                        bucket=bucket,
+                        side=action,
+                        forecast_prob=float(forecast_prob),
+                        market_prob=float(market_prob),
+                        edge=float(edge),
+                        size_usd=0.0,
+                        decision="REJECT",
+                        rejection_reason="price_below_floor",
+                        gate_results={"price_floor": {"passed": False, "min": HARD_MIN_YES_ENTRY_PRICE}},
+                        forecast_bundle=forecast_bundle,
+                        strategy_context={"selection_path": "single"},
+                    )
                     continue
                 # D+2/D+3: only enter if price is absurdly cheap
                 if _d_max is not None and market_prob > _d_max:
+                    _log_signal_eval(
+                        strategy="SINGLE",
+                        city=city,
+                        station_icao=station_icao,
+                        target_date=date,
+                        bucket=bucket,
+                        side=action,
+                        forecast_prob=float(forecast_prob),
+                        market_prob=float(market_prob),
+                        edge=float(edge),
+                        size_usd=0.0,
+                        decision="REJECT",
+                        rejection_reason="dplus_price_ceiling",
+                        gate_results={"dplus_price_ceiling": {"passed": False, "max": _d_max}},
+                        forecast_bundle=forecast_bundle,
+                        strategy_context={"selection_path": "single", "days_ahead": days_ahead},
+                    )
                     continue
                 if market_prob > HARD_MAX_YES_ENTRY_PRICE:
+                    _log_signal_eval(
+                        strategy="SINGLE",
+                        city=city,
+                        station_icao=station_icao,
+                        target_date=date,
+                        bucket=bucket,
+                        side=action,
+                        forecast_prob=float(forecast_prob),
+                        market_prob=float(market_prob),
+                        edge=float(edge),
+                        size_usd=0.0,
+                        decision="REJECT",
+                        rejection_reason="hard_price_ceiling",
+                        gate_results={"price_ceiling": {"passed": False, "max": HARD_MAX_YES_ENTRY_PRICE}},
+                        forecast_bundle=forecast_bundle,
+                        strategy_context={"selection_path": "single"},
+                    )
                     continue
 
             # NO bet filter: only take NO bets where the market is genuinely
@@ -365,6 +504,23 @@ def generate_signals(
 
             effective_edge, _guardrail_penalized = _effective_edge_with_soft_guardrails(action, market_prob, edge)
             if effective_edge <= ALPHA_THRESHOLD:
+                _log_signal_eval(
+                    strategy="SINGLE",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date,
+                    bucket=bucket,
+                    side=action,
+                    forecast_prob=float(forecast_prob),
+                    market_prob=float(market_prob),
+                    edge=float(effective_edge),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="edge_below_alpha",
+                    gate_results={"alpha_threshold": {"passed": False, "threshold": ALPHA_THRESHOLD}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "single", "soft_guardrail_penalized": bool(_guardrail_penalized)},
+                )
                 continue
 
             size = _compute_size(
@@ -377,6 +533,23 @@ def generate_signals(
                 station_icao=station_icao,
             )
             if size < max(MIN_ORDER_USD, PRACTICAL_MIN_ORDER_USD):
+                _log_signal_eval(
+                    strategy="SINGLE",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date,
+                    bucket=bucket,
+                    side=action,
+                    forecast_prob=float(forecast_prob),
+                    market_prob=float(market_prob),
+                    edge=float(effective_edge),
+                    size_usd=float(size),
+                    decision="REJECT",
+                    rejection_reason="size_below_min",
+                    gate_results={"size_min": {"passed": False, "min": max(MIN_ORDER_USD, PRACTICAL_MIN_ORDER_USD)}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "single"},
+                )
                 continue
 
             token_id = token_info["yes_token_id"] if action == "BUY_YES" else token_info["no_token_id"]
@@ -384,8 +557,7 @@ def generate_signals(
             # EV = p_win * profit_if_correct - (1-p_win) * cost
             # Shares = size / entry_price; profit if win = shares * (1 - entry_price)
             ev = win_prob * (size / entry_price) * (1.0 - entry_price) - (1.0 - win_prob) * size
-            signals.append(
-                Signal(
+            sig_obj = Signal(
                     market_id=market["condition_id"],
                     token_id=token_id,
                     side=action,
@@ -412,7 +584,27 @@ def generate_signals(
                     temporal_discount=temporal_discount,
                     strategy="SINGLE",
                 )
+            sig_obj.decision_id = _log_signal_eval(
+                strategy="SINGLE",
+                city=city,
+                station_icao=station_icao,
+                target_date=date,
+                bucket=bucket,
+                side=action,
+                forecast_prob=float(forecast_prob),
+                market_prob=float(market_prob),
+                edge=float(effective_edge),
+                size_usd=float(size),
+                decision="TRADE",
+                rejection_reason=None,
+                gate_results={
+                    "alpha_threshold": {"passed": True, "threshold": ALPHA_THRESHOLD},
+                    "price_guard": {"passed": True},
+                },
+                forecast_bundle=forecast_bundle,
+                strategy_context={"selection_path": "single", "high_delta": bool(high_delta)},
             )
+            signals.append(sig_obj)
 
     signals.sort(key=lambda s: s.edge, reverse=True)
     return signals
@@ -708,10 +900,61 @@ def generate_top2_shadow_signals(
             model_prob  = forecast.get(bucket, 0.0) * temporal_discount
             market_prob = token_info["price"]
             if model_prob < TOP2_SHADOW_MIN_PROB:
+                _log_signal_eval(
+                    strategy="TOP2_SHADOW",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date,
+                    bucket=bucket,
+                    side="BUY_YES",
+                    forecast_prob=float(model_prob),
+                    market_prob=float(market_prob),
+                    edge=float(model_prob - market_prob),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="model_prob_below_min",
+                    gate_results={"model_prob_min": {"passed": False, "threshold": TOP2_SHADOW_MIN_PROB}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "top2_shadow"},
+                )
                 continue
             if model_prob <= market_prob:               # no positive edge
+                _log_signal_eval(
+                    strategy="TOP2_SHADOW",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date,
+                    bucket=bucket,
+                    side="BUY_YES",
+                    forecast_prob=float(model_prob),
+                    market_prob=float(market_prob),
+                    edge=float(model_prob - market_prob),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="non_positive_edge",
+                    gate_results={"edge_positive": {"passed": False}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "top2_shadow"},
+                )
                 continue
             if market_prob < HARD_MIN_YES_ENTRY_PRICE or market_prob > _d_max:
+                _log_signal_eval(
+                    strategy="TOP2_SHADOW",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date,
+                    bucket=bucket,
+                    side="BUY_YES",
+                    forecast_prob=float(model_prob),
+                    market_prob=float(market_prob),
+                    edge=float(model_prob - market_prob),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="price_guard_failed",
+                    gate_results={"price_guard": {"passed": False, "min": HARD_MIN_YES_ENTRY_PRICE, "max": _d_max}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "top2_shadow"},
+                )
                 continue
             candidates.append({
                 "bucket":      bucket,
@@ -750,7 +993,7 @@ def generate_top2_shadow_signals(
                 cand["model_prob"] * (sz / cand["market_prob"]) * (1.0 - cand["market_prob"])
                 - (1.0 - cand["model_prob"]) * sz
             )
-            return Signal(
+            sig = Signal(
                 market_id=market["condition_id"],
                 token_id=cand["token_id"],
                 side="BUY_YES",
@@ -774,6 +1017,24 @@ def generate_top2_shadow_signals(
                 temporal_discount=temporal_discount,
                 strategy=strategy,
             )
+            sig.decision_id = _log_signal_eval(
+                strategy=strategy,
+                city=city,
+                station_icao=station_icao,
+                target_date=date,
+                bucket=cand["bucket"],
+                side="BUY_YES",
+                forecast_prob=float(cand["model_prob"]),
+                market_prob=float(cand["market_prob"]),
+                edge=float(cand["edge"]),
+                size_usd=float(sz),
+                decision="TRADE",
+                rejection_reason=None,
+                gate_results={"top2_shadow_candidate": {"passed": True}},
+                forecast_bundle=forecast_bundle,
+                strategy_context={"selection_path": "top2_shadow"},
+            )
+            return sig
 
         # ── 2A — TOP2_EQUAL: total budget split exactly 50/50 ───────────────────
         # Both legs get half the budget. Identical capital on favourite and runner-up.
@@ -924,10 +1185,61 @@ def generate_purdey_cavendish_signals(
             model_prob = forecast.get(bucket, 0.0) * temporal_discount
             market_prob = token_info["price"]
             if model_prob < TOP2_SHADOW_MIN_PROB:
+                _log_signal_eval(
+                    strategy="PURDEY_CAVENDISH",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date_str,
+                    bucket=bucket,
+                    side="BUY_YES",
+                    forecast_prob=float(model_prob),
+                    market_prob=float(market_prob),
+                    edge=float(model_prob - market_prob),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="model_prob_below_min",
+                    gate_results={"model_prob_min": {"passed": False, "threshold": TOP2_SHADOW_MIN_PROB}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "purdey_cavendish"},
+                )
                 continue
             if model_prob <= market_prob:
+                _log_signal_eval(
+                    strategy="PURDEY_CAVENDISH",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date_str,
+                    bucket=bucket,
+                    side="BUY_YES",
+                    forecast_prob=float(model_prob),
+                    market_prob=float(market_prob),
+                    edge=float(model_prob - market_prob),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="non_positive_edge",
+                    gate_results={"edge_positive": {"passed": False}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "purdey_cavendish"},
+                )
                 continue
             if market_prob < HARD_MIN_YES_ENTRY_PRICE or market_prob > _d_max:
+                _log_signal_eval(
+                    strategy="PURDEY_CAVENDISH",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date_str,
+                    bucket=bucket,
+                    side="BUY_YES",
+                    forecast_prob=float(model_prob),
+                    market_prob=float(market_prob),
+                    edge=float(model_prob - market_prob),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="price_guard_failed",
+                    gate_results={"price_guard": {"passed": False, "min": HARD_MIN_YES_ENTRY_PRICE, "max": _d_max}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "purdey_cavendish"},
+                )
                 continue
             candidates.append({
                 "bucket": bucket,
@@ -951,7 +1263,7 @@ def generate_purdey_cavendish_signals(
                 cand["model_prob"] * (sz / cand["market_prob"]) * (1.0 - cand["market_prob"])
                 - (1.0 - cand["model_prob"]) * sz
             )
-            return Signal(
+            sig = Signal(
                 market_id=cand["condition_id"],
                 token_id=cand["token_id"],
                 side="BUY_YES",
@@ -975,6 +1287,24 @@ def generate_purdey_cavendish_signals(
                 temporal_discount=temporal_discount,
                 strategy=strategy,
             )
+            sig.decision_id = _log_signal_eval(
+                strategy=strategy,
+                city=city,
+                station_icao=station_icao,
+                target_date=date_str,
+                bucket=cand["bucket"],
+                side="BUY_YES",
+                forecast_prob=float(cand["model_prob"]),
+                market_prob=float(cand["market_prob"]),
+                edge=float(cand["edge"]),
+                size_usd=float(sz),
+                decision="TRADE",
+                rejection_reason=None,
+                gate_results={"purdey_cavendish_candidate": {"passed": True}},
+                forecast_bundle=forecast_bundle,
+                strategy_context={"selection_path": "purdey_cavendish"},
+            )
+            return sig
 
         _base_sz = kelly_size(
             market_price=top1["market_prob"],
@@ -1188,8 +1518,42 @@ def generate_mk2_ace_signals(
             mkt_price = float(token_info.get("price", 0) or 0)
             token_id = token_info.get("yes_token_id", "")
             if not token_id or mkt_price < HARD_MIN_YES_ENTRY_PRICE or mkt_price > _d_max:
+                _log_signal_eval(
+                    strategy="MK2_ACE",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date_str,
+                    bucket=bucket,
+                    side="BUY_YES",
+                    forecast_prob=float(wp),
+                    market_prob=float(mkt_price),
+                    edge=float(wp - mkt_price),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="token_or_price_guard_failed",
+                    gate_results={"token_and_price_guard": {"passed": False}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "mk2_ace"},
+                )
                 continue
             if wp < 0.01:
+                _log_signal_eval(
+                    strategy="MK2_ACE",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date_str,
+                    bucket=bucket,
+                    side="BUY_YES",
+                    forecast_prob=float(wp),
+                    market_prob=float(mkt_price),
+                    edge=float(wp - mkt_price),
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="weighted_prob_below_min",
+                    gate_results={"weighted_prob_min": {"passed": False, "threshold": 0.01}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context={"selection_path": "mk2_ace"},
+                )
                 continue
             ranked.append({
                 "bucket": bucket,
@@ -1235,7 +1599,7 @@ def generate_mk2_ace_signals(
             mp = max(cand["market_prob"], 0.01)
             wp_ = cand["model_prob"]
             ev = wp_ * (sz / mp) * (1.0 - mp) - (1.0 - wp_) * sz
-            return Signal(
+            sig = Signal(
                 market_id=cand["condition_id"],
                 token_id=cand["token_id"],
                 side="BUY_YES",
@@ -1259,6 +1623,24 @@ def generate_mk2_ace_signals(
                 temporal_discount=temporal_discount,
                 strategy=strategy,
             )
+            sig.decision_id = _log_signal_eval(
+                strategy=strategy,
+                city=city,
+                station_icao=station_icao,
+                target_date=date_str,
+                bucket=cand["bucket"],
+                side="BUY_YES",
+                forecast_prob=float(wp_),
+                market_prob=float(cand["market_prob"]),
+                edge=float(cand["edge"]),
+                size_usd=float(sz),
+                decision="TRADE",
+                rejection_reason=None,
+                gate_results={"mk2_candidate": {"passed": True}},
+                forecast_bundle=forecast_bundle,
+                strategy_context={"selection_path": "mk2_ace", "n_models": cand.get("n_models", None)},
+            )
+            return sig
 
         peak_bucket = top1["bucket"]
 

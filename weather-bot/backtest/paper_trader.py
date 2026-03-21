@@ -33,11 +33,18 @@ from execution.portfolio import Portfolio
 from execution.risk_engine import apply_risk_controls
 from monitoring.dashboard import render_dashboard
 from monitoring.logger import BotLogger
+from monitoring.trade_audit import (
+    TradeAuditStore,
+    forecast_bundle_for_signal,
+    market_snapshot_for_signal,
+)
+from monitoring.deep_observability import get_deep_observability
 from strategy.signals import (
     generate_signals,
     generate_mk2_ace_signals,
     generate_purdey_cavendish_signals,
     generate_top2_shadow_signals,
+    set_signal_observability_context,
     summarize_top_missed_edges,
 )
 
@@ -74,29 +81,62 @@ class ShadowTrader:
             positions_path=f"data/positions_{slug}.json",
         )
         self.order_manager = OrderManager(live_trading=False)
+        self.audit = TradeAuditStore()
+        self.deep_obs = get_deep_observability()
         self._log = logging.getLogger(f"weather-bot.{slug}")
 
     _PURDEY_CAVENDISH_VARIANTS = {"PURDEY_MK1", "CAVENDISH_MK1"}
     _MK2_ACE_VARIANTS = {"PURDEY_MK2", "CAVENDISH_MK3", "TRUE_ALPHA", "PROPS_KELLY"}
 
-    def run_once(self, markets: list[dict], forecasts: dict, bankroll: float) -> None:
+    def run_once(
+        self,
+        markets: list[dict],
+        forecasts: dict,
+        bankroll: float,
+        run_id: str | None = None,
+    ) -> None:
         """Execute one scan using shared market + forecast data."""
+        if run_id is None:
+            run_id = self.audit.new_run_id(f"shadow-{self.variant.lower()}")
         if self.variant in self._MK2_ACE_VARIANTS:
+            set_signal_observability_context("")
             all_shadows = generate_mk2_ace_signals(markets, forecasts, bankroll)
         elif self.variant in self._PURDEY_CAVENDISH_VARIANTS:
+            set_signal_observability_context("")
             all_shadows = generate_purdey_cavendish_signals(markets, forecasts, bankroll)
         else:
+            set_signal_observability_context("")
             all_shadows = generate_top2_shadow_signals(markets, forecasts, bankroll)
         signals = [s for s in all_shadows if s.strategy == self.variant]
 
         deployed = 0.0
         executed = 0
         for signal in signals:
+            sig = signal.to_dict()
+            market_snap = market_snapshot_for_signal(sig, markets)
+            forecast_bundle = forecast_bundle_for_signal(sig, forecasts)
             if self.portfolio.holds_market_bucket(signal.market_id, signal.bucket):
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine=f"shadow:{self.variant}",
+                    action="skip_already_held",
+                    signal=sig,
+                    reason="already_held",
+                    forecast_bundle=forecast_bundle,
+                    market_snapshot=market_snap,
+                )
                 continue
             if self._existing_positions(signal.market_id) >= MAX_POSITIONS_PER_MARKET:
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine=f"shadow:{self.variant}",
+                    action="skip_position_limit",
+                    signal=sig,
+                    reason="max_positions_per_market",
+                    forecast_bundle=forecast_bundle,
+                    market_snapshot=market_snap,
+                )
                 continue
-            sig = signal.to_dict()
             decision = apply_risk_controls(
                 requested_size_usd=float(sig.get("size_usd", 0.0) or 0.0),
                 signal=sig,
@@ -105,17 +145,117 @@ class ShadowTrader:
                 deployed_today_usd=deployed,
             )
             if decision.skipped:
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine=f"shadow:{self.variant}",
+                    action="skip_risk",
+                    signal=sig,
+                    reason=decision.reason,
+                    risk_decision={
+                        "size_usd": decision.size_usd,
+                        "daily_budget_usd": decision.daily_budget_usd,
+                        "position_cap_usd": decision.position_cap_usd,
+                        "quality_mult": decision.quality_mult,
+                        "skipped": decision.skipped,
+                        "reason": decision.reason,
+                    },
+                    forecast_bundle=forecast_bundle,
+                    market_snapshot=market_snap,
+                )
                 continue
             if decision.daily_budget_usd <= 0 and deployed + decision.size_usd > MAX_DAILY_EXPOSURE:
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine=f"shadow:{self.variant}",
+                    action="skip_daily_exposure",
+                    signal=sig,
+                    reason="daily_exposure_cap",
+                    risk_decision={
+                        "size_usd": decision.size_usd,
+                        "daily_budget_usd": decision.daily_budget_usd,
+                        "position_cap_usd": decision.position_cap_usd,
+                        "quality_mult": decision.quality_mult,
+                        "skipped": decision.skipped,
+                        "reason": decision.reason,
+                    },
+                    forecast_bundle=forecast_bundle,
+                    market_snapshot=market_snap,
+                )
                 continue
             sig["size_usd"] = decision.size_usd
             result = self.order_manager.place_order(sig)
+            self.deep_obs.log_execution(
+                {
+                    "execution_id": "",
+                    "decision_id": sig.get("decision_id", ""),
+                    "timestamp_utc": datetime.now(UTC).isoformat(),
+                    "strategy": sig.get("strategy", self.variant),
+                    "city": sig.get("city", ""),
+                    "target_date": sig.get("date", ""),
+                    "bucket": sig.get("bucket", ""),
+                    "side": sig.get("side", ""),
+                    "price": result.fill_price,
+                    "size_usd": result.size_usd,
+                    "status": result.status,
+                    "details": result.details,
+                }
+            )
             if result.status.startswith("skipped"):
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine=f"shadow:{self.variant}",
+                    action="skip_execution",
+                    signal=sig,
+                    reason=result.status,
+                    risk_decision={
+                        "size_usd": decision.size_usd,
+                        "daily_budget_usd": decision.daily_budget_usd,
+                        "position_cap_usd": decision.position_cap_usd,
+                        "quality_mult": decision.quality_mult,
+                        "skipped": decision.skipped,
+                        "reason": decision.reason,
+                    },
+                    execution_result={
+                        "status": result.status,
+                        "fill_price": result.fill_price,
+                        "size_usd": result.size_usd,
+                        "details": result.details,
+                    },
+                    forecast_bundle=forecast_bundle,
+                    market_snapshot=market_snap,
+                )
                 continue
             self.portfolio.open_position(sig, result.fill_price)
             deployed += decision.size_usd
             executed += 1
             self.logger.log_signal(sig, "trade")
+            self.audit.log_event(
+                run_id=run_id,
+                engine=f"shadow:{self.variant}",
+                action="trade_executed",
+                signal=sig,
+                risk_decision={
+                    "size_usd": decision.size_usd,
+                    "daily_budget_usd": decision.daily_budget_usd,
+                    "position_cap_usd": decision.position_cap_usd,
+                    "quality_mult": decision.quality_mult,
+                    "skipped": decision.skipped,
+                    "reason": decision.reason,
+                },
+                execution_result={
+                    "status": result.status,
+                    "fill_price": result.fill_price,
+                    "size_usd": result.size_usd,
+                    "details": result.details,
+                },
+                forecast_bundle=forecast_bundle,
+                market_snapshot=market_snap,
+                context={
+                    "requested_size_usd": float(signal.size_usd),
+                    "approved_size_usd": float(decision.size_usd),
+                    "fill_price": float(result.fill_price),
+                },
+            )
             self._log.info(
                 f"SHADOW_TRADE {self.variant} {signal.city} {signal.date} "
                 f"{signal.bucket} {signal.side} ${decision.size_usd:.2f} @ {result.fill_price:.3f} "
@@ -166,6 +306,8 @@ class PaperTrader:
         self.logger = BotLogger(output_dir="logs")
         self.portfolio = Portfolio(initial_bankroll=INITIAL_BANKROLL)
         self.order_manager = OrderManager(live_trading=False)
+        self.audit = TradeAuditStore()
+        self.deep_obs = get_deep_observability()
         self.forecast_client = ForecastClient(met_office_api_key=os.getenv("MET_OFFICE_API_KEY"))
         self.market_client = PolymarketDataClient(diagnostic=os.getenv("DIAGNOSTIC_MODE", "").lower() in {"1", "true", "yes"})
         self.wu_client = WeatherUndergroundClient()
@@ -201,6 +343,7 @@ class PaperTrader:
         await self.wu_client.close()
 
     async def run_once(self) -> None:
+        run_id = self.audit.new_run_id("paper-main")
         if self.portfolio.max_drawdown_pct() >= MAX_DRAWDOWN_PCT:
             self.logger.warning("Drawdown limit reached; skipping scan.")
             return
@@ -233,6 +376,16 @@ class PaperTrader:
 
         # Store latest markets so the decoupled shadow loop can use them.
         self._cached_markets = markets
+        market_scan_id = self.deep_obs.log_market_state(
+            {
+                "market_scan_id": "",
+                "timestamp_utc": datetime.now(UTC).isoformat(),
+                "scan_trigger": "paper_main_run_once",
+                "markets_count": len(markets),
+                "markets": markets,
+            }
+        )
+        set_signal_observability_context(market_scan_id)
 
         await self._log_accuweather_snapshots(markets)
 
@@ -259,15 +412,45 @@ class PaperTrader:
         for signal in signals:
             # Shadow CONVICTION signals are never executed — just logged for A/B scoring.
             if signal.strategy == "CONVICTION":
-                self.logger.log_signal(signal.to_dict(), "conviction_signal")
+                sig = signal.to_dict()
+                self.logger.log_signal(sig, "conviction_signal")
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine="paper:main",
+                    action="conviction_signal",
+                    signal=sig,
+                    reason="shadow_only_strategy",
+                    forecast_bundle=forecast_bundle_for_signal(sig, self.forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, markets),
+                )
                 continue
 
             if self.portfolio.holds_market_bucket(signal.market_id, signal.bucket):
-                self.logger.log_signal(signal.to_dict(), "already_held")
+                sig = signal.to_dict()
+                self.logger.log_signal(sig, "already_held")
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine="paper:main",
+                    action="skip_already_held",
+                    signal=sig,
+                    reason="already_held",
+                    forecast_bundle=forecast_bundle_for_signal(sig, self.forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, markets),
+                )
                 skipped_already_held += 1
                 continue
             if self._existing_positions(signal.market_id) >= MAX_POSITIONS_PER_MARKET:
-                self.logger.log_signal(signal.to_dict(), "skip_position_limit")
+                sig = signal.to_dict()
+                self.logger.log_signal(sig, "skip_position_limit")
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine="paper:main",
+                    action="skip_position_limit",
+                    signal=sig,
+                    reason="max_positions_per_market",
+                    forecast_bundle=forecast_bundle_for_signal(sig, self.forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, markets),
+                )
                 skipped_position_limit += 1
                 continue
             sig = signal.to_dict()
@@ -280,22 +463,122 @@ class PaperTrader:
             )
             if decision.skipped:
                 self.logger.log_signal(sig, f"skip_{decision.reason}")
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine="paper:main",
+                    action="skip_risk",
+                    signal=sig,
+                    reason=decision.reason,
+                    risk_decision={
+                        "size_usd": decision.size_usd,
+                        "daily_budget_usd": decision.daily_budget_usd,
+                        "position_cap_usd": decision.position_cap_usd,
+                        "quality_mult": decision.quality_mult,
+                        "skipped": decision.skipped,
+                        "reason": decision.reason,
+                    },
+                    forecast_bundle=forecast_bundle_for_signal(sig, self.forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, markets),
+                )
                 skipped_daily_exposure += 1
                 continue
             if decision.daily_budget_usd <= 0 and deployed + decision.size_usd > MAX_DAILY_EXPOSURE:
                 self.logger.log_signal(sig, "skip_daily_exposure")
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine="paper:main",
+                    action="skip_daily_exposure",
+                    signal=sig,
+                    reason="daily_exposure_cap",
+                    risk_decision={
+                        "size_usd": decision.size_usd,
+                        "daily_budget_usd": decision.daily_budget_usd,
+                        "position_cap_usd": decision.position_cap_usd,
+                        "quality_mult": decision.quality_mult,
+                        "skipped": decision.skipped,
+                        "reason": decision.reason,
+                    },
+                    forecast_bundle=forecast_bundle_for_signal(sig, self.forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, markets),
+                )
                 skipped_daily_exposure += 1
                 continue
             sig["size_usd"] = decision.size_usd
             result = self.order_manager.place_order(sig)
+            self.deep_obs.log_execution(
+                {
+                    "execution_id": "",
+                    "decision_id": sig.get("decision_id", ""),
+                    "timestamp_utc": datetime.now(UTC).isoformat(),
+                    "strategy": sig.get("strategy", "SINGLE"),
+                    "city": sig.get("city", ""),
+                    "target_date": sig.get("date", ""),
+                    "bucket": sig.get("bucket", ""),
+                    "side": sig.get("side", ""),
+                    "price": result.fill_price,
+                    "size_usd": result.size_usd,
+                    "status": result.status,
+                    "details": result.details,
+                }
+            )
             if result.status.startswith("skipped"):
                 self.logger.log_signal(sig, result.status)
+                self.audit.log_event(
+                    run_id=run_id,
+                    engine="paper:main",
+                    action="skip_execution",
+                    signal=sig,
+                    reason=result.status,
+                    risk_decision={
+                        "size_usd": decision.size_usd,
+                        "daily_budget_usd": decision.daily_budget_usd,
+                        "position_cap_usd": decision.position_cap_usd,
+                        "quality_mult": decision.quality_mult,
+                        "skipped": decision.skipped,
+                        "reason": decision.reason,
+                    },
+                    execution_result={
+                        "status": result.status,
+                        "fill_price": result.fill_price,
+                        "size_usd": result.size_usd,
+                        "details": result.details,
+                    },
+                    forecast_bundle=forecast_bundle_for_signal(sig, self.forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, markets),
+                )
                 skipped_execution += 1
                 continue
             position = self.portfolio.open_position(sig, result.fill_price)
             deployed += decision.size_usd
             trades_executed += 1
             self.logger.log_signal(sig, "trade")
+            self.audit.log_event(
+                run_id=run_id,
+                engine="paper:main",
+                action="trade_executed",
+                signal=sig,
+                risk_decision={
+                    "size_usd": decision.size_usd,
+                    "daily_budget_usd": decision.daily_budget_usd,
+                    "position_cap_usd": decision.position_cap_usd,
+                    "quality_mult": decision.quality_mult,
+                    "skipped": decision.skipped,
+                    "reason": decision.reason,
+                },
+                execution_result={
+                    "status": result.status,
+                    "fill_price": result.fill_price,
+                    "size_usd": result.size_usd,
+                    "details": result.details,
+                },
+                forecast_bundle=forecast_bundle_for_signal(sig, self.forecasts),
+                market_snapshot=market_snapshot_for_signal(sig, markets),
+                context={
+                    "requested_size_usd": float(signal.size_usd),
+                    "approved_size_usd": float(decision.size_usd),
+                    "fill_price": float(result.fill_price),
+                },
+            )
             self.logger.info(
                 f"PAPER TRADE {signal.city} {signal.date} {signal.bucket} "
                 f"{signal.side} ${decision.size_usd:.2f} @ {result.fill_price:.3f} "
@@ -458,12 +741,14 @@ class PaperTrader:
         if not self._cached_markets or not self.forecasts:
             self.logger.info("SHADOW_SKIP no cached markets or forecasts yet")
             return
+        run_id = self.audit.new_run_id("paper-shadows")
         for shadow in self.shadows:
             try:
                 shadow.run_once(
                     self._cached_markets,
                     self.forecasts,
                     shadow.portfolio.current_cash,
+                    run_id=run_id,
                 )
             except Exception as exc:
                 self.logger.warning(f"Shadow {shadow.variant} failed: {exc}")

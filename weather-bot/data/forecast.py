@@ -29,6 +29,7 @@ from data.metar_parser import parse_metar_temp_c
 from data.probability import ensemble_to_bucket_probs
 from data.wu_forecast import get_wu_daily_high
 from data.wu_rounding import is_boundary_temperature, predict_wu_display_celsius, predict_wu_display_fahrenheit
+from monitoring.deep_observability import get_deep_observability
 
 
 AVIATION_WEATHER_API = "https://aviationweather.gov/api/data/metar"
@@ -88,6 +89,57 @@ class StationForecaster:
         self.http = httpx.AsyncClient(timeout=10.0, headers={"User-Agent": "WeatherBot/1.0 (contact@example.com)"})
         self._nws_cache: dict[tuple[str, int, int], tuple[float, list[dict[str, Any]]]] = {}
         self.ensemble = EnsembleForecastClient()
+        self._deep_obs = get_deep_observability()
+
+    def _log_deep_forecast(
+        self,
+        *,
+        trigger: str,
+        station_icao: str,
+        city: str,
+        target_date: date,
+        model_values: dict[str, float],
+        model_weights: dict[str, float],
+        bucket_probs: dict[str, float],
+        method: str,
+    ) -> tuple[str, str]:
+        ts = datetime.now(UTC).isoformat()
+        snapshot_id = self._deep_obs.log_model_snapshot(
+            {
+                "snapshot_id": "",
+                "timestamp_utc": ts,
+                "trigger": trigger,
+                "city": city,
+                "station_icao": station_icao,
+                "target_date": target_date.isoformat(),
+                "models": {k: {"raw_temp_f": float(v)} for k, v in model_values.items()},
+                "ensemble_mean_f": float(mean(model_values.values())) if model_values else None,
+                "ensemble_stdev_f": float(pstdev(model_values.values())) if len(model_values) > 1 else 0.0,
+                "ensemble_min_f": float(min(model_values.values())) if model_values else None,
+                "ensemble_max_f": float(max(model_values.values())) if model_values else None,
+                "model_count": len(model_values),
+                "model_weights_used": model_weights,
+            }
+        )
+        prob_calc_id = self._deep_obs.log_bucket_probs(
+            {
+                "prob_calc_id": "",
+                "snapshot_id": snapshot_id,
+                "timestamp_utc": ts,
+                "city": city,
+                "station_icao": station_icao,
+                "target_date": target_date.isoformat(),
+                "strategy": "FORECAST_CORE",
+                "input_temps_f": model_values,
+                "weights_applied": model_weights,
+                "distribution_params": {"method": method},
+                "bucket_probs": bucket_probs,
+                "top_1_bucket": max(bucket_probs, key=bucket_probs.get) if bucket_probs else None,
+                "top_1_prob": max(bucket_probs.values()) if bucket_probs else None,
+                "prob_sum_check": float(sum(bucket_probs.values())) if bucket_probs else 0.0,
+            }
+        )
+        return snapshot_id, prob_calc_id
 
     async def close(self) -> None:
         await self.ensemble.close()
@@ -211,6 +263,22 @@ class StationForecaster:
                 unit=unit,
             )
 
+            weights = (
+                {k: round(1.0 / len(det_values), 6) for k in det_values}
+                if det_values
+                else {}
+            )
+            snapshot_id, prob_calc_id = self._log_deep_forecast(
+                trigger="det_ensemble",
+                station_icao=station_icao,
+                city=station.get("market_label", station_icao),
+                target_date=target_date,
+                model_values={k: float(v) for k, v in det_values.items()},
+                model_weights=weights,
+                bucket_probs={k: float(v) for k, v in probs.items()},
+                method="bucket_probabilities+det_spread_override",
+            )
+
             return {
                 "probs": probs,
                 "rounding_confidence": confidence,
@@ -225,6 +293,8 @@ class StationForecaster:
                 "det_p_win": p_win,
                 "det_model_values": det_values,
                 "wu_crowd_temp": wu_crowd_temp,
+                "__snapshot_id": snapshot_id,
+                "__prob_calc_id": prob_calc_id,
             }
 
         # ── Fallback: probabilistic ensemble-API (for stations with no per-city config) ──
@@ -277,6 +347,16 @@ class StationForecaster:
                     unit=station.get("resolution_unit", "C"),
                 )
 
+                snapshot_id, prob_calc_id = self._log_deep_forecast(
+                    trigger="ensemble_fallback",
+                    station_icao=station_icao,
+                    city=station.get("market_label", station_icao),
+                    target_date=target_date,
+                    model_values={f"member_{i}": float(v) for i, v in enumerate(members[:25])},
+                    model_weights={},
+                    bucket_probs={k: float(v) for k, v in probs.items()},
+                    method="ensemble_to_bucket_probs",
+                )
                 return {
                     "probs": probs,
                     "rounding_confidence": confidence,
@@ -290,6 +370,8 @@ class StationForecaster:
                     "primary_model_temp": primary_temp,
                     "baseline_model_temp": baseline_temp,
                     "wu_crowd_temp": wu_crowd_temp,
+                    "__snapshot_id": snapshot_id,
+                    "__prob_calc_id": prob_calc_id,
                 }
 
         point_mean = await self._fetch_station_daily_high_forecast(station, target_date)
@@ -303,11 +385,23 @@ class StationForecaster:
         unit = station["resolution_unit"]
         display_temp = predict_wu_display_fahrenheit(point_mean) if unit == "F" else predict_wu_display_celsius(point_mean)
         low_conf = is_boundary_temperature(point_mean, unit=unit)
+        snapshot_id, prob_calc_id = self._log_deep_forecast(
+            trigger="point_forecast",
+            station_icao=station_icao,
+            city=station.get("market_label", station_icao),
+            target_date=target_date,
+            model_values={"point_forecast": float(point_mean)},
+            model_weights={"point_forecast": 1.0},
+            bucket_probs={k: float(v) for k, v in probs.items()},
+            method="bucket_probabilities",
+        )
         return {
             "probs": probs,
             "rounding_confidence": "LOW" if low_conf else "HIGH",
             "predicted_display_temp": display_temp,
             "forecast_temp_raw": point_mean,
+            "__snapshot_id": snapshot_id,
+            "__prob_calc_id": prob_calc_id,
         }
 
     async def _fetch_station_daily_high_forecast(self, station: dict[str, Any], target_date: date) -> float | None:

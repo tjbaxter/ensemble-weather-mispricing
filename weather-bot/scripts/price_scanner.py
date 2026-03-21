@@ -46,6 +46,7 @@ from config.settings import (
     HARD_MIN_YES_ENTRY_PRICE,
     PRACTICAL_MIN_ORDER_USD,
 )
+from monitoring.trade_audit import TradeAuditStore
 
 # ── Logging ────────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -70,6 +71,7 @@ POSITIONS_PATH      = _ROOT / "data" / "positions.json"
 # Telegram
 TELEGRAM_TOKEN   = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+AUDIT = TradeAuditStore()
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -189,7 +191,7 @@ async def _fetch_ask_prices(token_ids: list[str], http: httpx.AsyncClient) -> di
 
 # ── Paper trade placement ──────────────────────────────────────────────────────
 
-def _place_paper_trade(sig: dict, live_ask: float, ev: float) -> None:
+def _place_paper_trade(sig: dict, live_ask: float, ev: float, run_id: str) -> None:
     """Append a paper position to positions.json."""
     if not PAPER_TRADING:
         return
@@ -226,6 +228,42 @@ def _place_paper_trade(sig: dict, live_ask: float, ev: float) -> None:
     positions = _load_positions()
     positions.append(position)
     _save_positions(positions)
+    AUDIT.log_event(
+        run_id=run_id,
+        engine="price-scanner",
+        action="trade_executed",
+        signal={
+            "market_id": sig.get("condition_id", ""),
+            "token_id": sig.get("token_id", ""),
+            "city": sig.get("city", ""),
+            "station_icao": sig.get("station_icao", ""),
+            "date": sig.get("date", ""),
+            "bucket": sig.get("bucket", ""),
+            "side": "BUY_YES",
+            "forecast_prob": sig.get("model_prob", 0.0),
+            "market_prob": live_ask,
+            "edge": ev,
+            "size_usd": cost,
+            "strategy": "PRICE_SCANNER",
+            "days_ahead": sig.get("days_ahead", ""),
+            "spread_colour": sig.get("spread_colour", ""),
+            "det_spread": sig.get("det_spread", ""),
+            "ev_per_bet": sig.get("ev_per_bet", ""),
+            "model_values_json": sig.get("model_values_json", "{}"),
+        },
+        execution_result={
+            "status": "paper_fill",
+            "fill_price": live_ask,
+            "size_usd": cost,
+            "details": {"source": "price_scanner"},
+        },
+        context={
+            "model_prob": sig.get("model_prob", 0.0),
+            "scan_price": sig.get("market_prob_at_scan", None),
+            "live_ask": live_ask,
+            "ev": ev,
+        },
+    )
 
     log.info(
         "💰 PRICE_SCANNER PAPER TRADE: %s %s BUY_YES @ %.3f  model=%.0f%%  ev=+%.3f  cost=$%.2f",
@@ -257,6 +295,7 @@ async def run_price_scanner() -> None:
 
     async with httpx.AsyncClient(timeout=20.0) as http:
         while True:
+            run_id = AUDIT.new_run_id("price-scanner")
             tick_start = datetime.now(UTC)
 
             signals = _load_cached_signals()
@@ -316,7 +355,7 @@ async def run_price_scanner() -> None:
                     model_prob * 100, scan_ask, live_ask, dip_magnitude, ev,
                 )
 
-                _place_paper_trade(sig, live_ask, ev)
+                _place_paper_trade(sig, live_ask, ev, run_id)
                 trades += 1
 
             elapsed = (datetime.now(UTC) - tick_start).total_seconds()

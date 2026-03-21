@@ -33,6 +33,7 @@ if str(ROOT) not in sys.path:
 
 from config.cities import STATIONS
 from strategy.model_weights import log_actual_temperature
+from monitoring.deep_observability import get_deep_observability
 
 SIGNALS_CSV    = ROOT / "logs" / "signals.csv"
 TRADES_CSV     = ROOT / "logs" / "trades.csv"
@@ -40,6 +41,7 @@ RESOLVED_CSV   = ROOT / "logs" / "resolved.csv"
 POSITIONS_JSON = ROOT / "data" / "positions.json"
 
 IEM_DAILY_URL = "https://mesonet.agron.iastate.edu/cgi-bin/request/daily.py"
+_DEEP_OBS = get_deep_observability()
 
 
 def _round_half_up(x: float) -> int:
@@ -499,6 +501,26 @@ async def resolve_all() -> dict:
                 "days_ahead": row.get("days_ahead", ""),
                 "kelly_fraction_used": row.get("kelly_fraction_used", ""),
             }
+            _DEEP_OBS.log_resolution(
+                {
+                    "resolution_id": "",
+                    "timestamp_utc": datetime.now(UTC).isoformat(),
+                    "city": city,
+                    "station_icao": station_icao,
+                    "target_date": target_date_str,
+                    "bucket": bucket,
+                    "side": side,
+                    "actual_temp": actual,
+                    "outcome": outcome,
+                    "pnl_usd": pnl,
+                    "strategy": strategy,
+                    "entry_price": entry_price,
+                    "size_usd": size_usd,
+                    "forecast_prob": forecast_prob,
+                    "edge": edge,
+                    "signal_timestamp": row.get("timestamp", ""),
+                }
+            )
 
             with RESOLVED_CSV.open("a", newline="", encoding="utf-8") as f:
                 writer = csv.DictWriter(f, fieldnames=RESOLVED_HEADER)

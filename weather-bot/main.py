@@ -15,6 +15,7 @@ from config.settings import load_runtime_overrides
 from data.forecast import StationForecaster
 from data.polymarket import PolymarketDataClient
 from execution.order_manager import OrderManager
+from monitoring.trade_audit import TradeAuditStore, forecast_bundle_for_signal, market_snapshot_for_signal
 from strategy.signals import generate_signals
 from scripts.metar_scanner import run_metar_scanner
 from scripts.ws_price_monitor import run_ws_price_monitor
@@ -85,6 +86,8 @@ async def run_live(bankroll: float) -> None:
     )
 
     logger = BotLogger(output_dir="logs")
+    audit = TradeAuditStore()
+    run_id = audit.new_run_id("live-main")
     portfolio = Portfolio(initial_bankroll=bankroll, positions_path="data/positions_live.json")
 
     if portfolio.max_drawdown_pct() >= MAX_DRAWDOWN_PCT:
@@ -137,11 +140,29 @@ async def run_live(bankroll: float) -> None:
             bucket = sig.get("bucket", "")
 
             if portfolio.holds_market_bucket(market_id, bucket):
+                audit.log_event(
+                    run_id=run_id,
+                    engine="live:main",
+                    action="skip_already_held",
+                    signal=sig,
+                    reason="already_held",
+                    forecast_bundle=forecast_bundle_for_signal(sig, forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, hydrated),
+                )
                 skipped_reasons["duplicate"] = skipped_reasons.get("duplicate", 0) + 1
                 continue
 
             existing = sum(1 for p in portfolio.positions if p.market_id == market_id)
             if existing >= MAX_POSITIONS_PER_MARKET:
+                audit.log_event(
+                    run_id=run_id,
+                    engine="live:main",
+                    action="skip_position_limit",
+                    signal=sig,
+                    reason="max_positions_per_market",
+                    forecast_bundle=forecast_bundle_for_signal(sig, forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, hydrated),
+                )
                 skipped_reasons["max_per_market"] = skipped_reasons.get("max_per_market", 0) + 1
                 continue
 
@@ -153,9 +174,43 @@ async def run_live(bankroll: float) -> None:
                 deployed_today_usd=daily_deployed,
             )
             if decision.skipped:
+                audit.log_event(
+                    run_id=run_id,
+                    engine="live:main",
+                    action="skip_risk",
+                    signal=sig,
+                    reason=decision.reason,
+                    risk_decision={
+                        "size_usd": decision.size_usd,
+                        "daily_budget_usd": decision.daily_budget_usd,
+                        "position_cap_usd": decision.position_cap_usd,
+                        "quality_mult": decision.quality_mult,
+                        "skipped": decision.skipped,
+                        "reason": decision.reason,
+                    },
+                    forecast_bundle=forecast_bundle_for_signal(sig, forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, hydrated),
+                )
                 skipped_reasons[decision.reason] = skipped_reasons.get(decision.reason, 0) + 1
                 continue
             if decision.daily_budget_usd <= 0 and daily_deployed + decision.size_usd > MAX_DAILY_EXPOSURE:
+                audit.log_event(
+                    run_id=run_id,
+                    engine="live:main",
+                    action="skip_daily_exposure",
+                    signal=sig,
+                    reason="daily_cap",
+                    risk_decision={
+                        "size_usd": decision.size_usd,
+                        "daily_budget_usd": decision.daily_budget_usd,
+                        "position_cap_usd": decision.position_cap_usd,
+                        "quality_mult": decision.quality_mult,
+                        "skipped": decision.skipped,
+                        "reason": decision.reason,
+                    },
+                    forecast_bundle=forecast_bundle_for_signal(sig, forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, hydrated),
+                )
                 skipped_reasons["daily_cap"] = skipped_reasons.get("daily_cap", 0) + 1
                 continue
 
@@ -166,6 +221,33 @@ async def run_live(bankroll: float) -> None:
                 pos = portfolio.open_position(sig, result.fill_price)
                 daily_deployed += decision.size_usd
                 logger.log_signal(sig, "live_trade")
+                audit.log_event(
+                    run_id=run_id,
+                    engine="live:main",
+                    action="trade_executed",
+                    signal=sig,
+                    risk_decision={
+                        "size_usd": decision.size_usd,
+                        "daily_budget_usd": decision.daily_budget_usd,
+                        "position_cap_usd": decision.position_cap_usd,
+                        "quality_mult": decision.quality_mult,
+                        "skipped": decision.skipped,
+                        "reason": decision.reason,
+                    },
+                    execution_result={
+                        "status": result.status,
+                        "fill_price": result.fill_price,
+                        "size_usd": result.size_usd,
+                        "details": result.details,
+                    },
+                    forecast_bundle=forecast_bundle_for_signal(sig, forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, hydrated),
+                    context={
+                        "requested_size_usd": size_usd,
+                        "approved_size_usd": decision.size_usd,
+                        "fill_price": result.fill_price,
+                    },
+                )
                 print(
                     f"  [{sig.get('city')}] {bucket} {sig.get('side')} "
                     f"${decision.size_usd:.2f} @ {result.fill_price:.3f} -> {result.status} "
@@ -174,6 +256,29 @@ async def run_live(bankroll: float) -> None:
                 placed += 1
             else:
                 logger.log_signal(sig, f"live_rejected_{result.status}")
+                audit.log_event(
+                    run_id=run_id,
+                    engine="live:main",
+                    action="skip_execution",
+                    signal=sig,
+                    reason=result.status,
+                    risk_decision={
+                        "size_usd": decision.size_usd,
+                        "daily_budget_usd": decision.daily_budget_usd,
+                        "position_cap_usd": decision.position_cap_usd,
+                        "quality_mult": decision.quality_mult,
+                        "skipped": decision.skipped,
+                        "reason": decision.reason,
+                    },
+                    execution_result={
+                        "status": result.status,
+                        "fill_price": result.fill_price,
+                        "size_usd": result.size_usd,
+                        "details": result.details,
+                    },
+                    forecast_bundle=forecast_bundle_for_signal(sig, forecasts),
+                    market_snapshot=market_snapshot_for_signal(sig, hydrated),
+                )
                 print(f"  [{sig.get('city')}] {bucket} REJECTED: {result.status}")
 
         print(f"Done. {placed} orders placed, ${daily_deployed:.2f} deployed.")
