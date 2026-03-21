@@ -2045,9 +2045,9 @@
   },
   "NZWN/2026-03-23": {
     "preds": {
-      "ukmo_seamless": 22.9,
-      "ecmwf_ifs025": 20.9,
-      "icon_seamless": 18.6
+      "ukmo_seamless": 23.0,
+      "ecmwf_ifs025": 21.2,
+      "icon_seamless": 18.2
     },
     "actual": null
   },
@@ -2059,6 +2059,15 @@
       "icon_seamless": 10.3,
       "ecmwf_ifs025": 11.3,
       "gfs_graphcast025": 11.1
+    },
+    "actual": null
+  },
+  "CYYZ/2026-03-23": {
+    "preds": {
+      "kma_gdps": 2.9,
+      "meteofrance_arpege_world": 3.2,
+      "gem_global": 2.1,
+      "dmi_seamless": 1.8
     },
     "actual": null
   }
