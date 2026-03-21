@@ -1,0 +1,31 @@
+{
+  "fast_sync_file_count": 25,
+  "fast_sync_files": [
+    "data/positions.json",
+    "data/positions_archive_20260228.json",
+    "data/positions_archive_20260302.json",
+    "data/positions_shadow_2a.json",
+    "data/positions_shadow_2b.json",
+    "data/positions_shadow_2c.json",
+    "data/positions_shadow_ace.json",
+    "data/positions_shadow_cavendish.json",
+    "data/positions_shadow_cavendish2.json",
+    "data/positions_shadow_cavendish3.json",
+    "data/positions_shadow_props_kelly.json",
+    "data/positions_shadow_purdey.json",
+    "data/positions_shadow_purdey2.json",
+    "data/positions_shadow_true_alpha.json",
+    "data/polymarket_cache.json",
+    "data/commercial_forecast_log.json",
+    "data/model_snapshot_log.json",
+    "data/model_accuracy_log.json",
+    "data/accuracy_rows_cache.json",
+    "data/morning_obs_cache.json",
+    "logs/resolved.csv",
+    "logs/signals.csv",
+    "logs/trades.csv",
+    "logs/shadow_cavendish3/resolved.csv",
+    "logs/shadow_true_alpha/resolved.csv"
+  ],
+  "last_fast_sync_utc": "2026-03-21 18:10:02 UTC"
+}
