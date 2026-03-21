@@ -402,5 +402,23 @@
     "ev_at_entry": 0.27,
     "spread_colour": "RED",
     "model_values_json": "{\"icon_seamless\":50.0,\"gem_seamless\":53.3,\"ncep_nbm_conus\":50.4}"
+  },
+  {
+    "market_id": "0x3187f3c502e2e1fc244329f27d25a20ec770273e9450ab804ffe9c16b27a6cea",
+    "token_id": "112186863191244058397485661071814122306998827515821161557027458266149298843952",
+    "side": "BUY_YES",
+    "city": "Atlanta",
+    "station_icao": "KATL",
+    "date": "2026-03-22",
+    "bucket": "80-81",
+    "fill_price": 0.14,
+    "fill_size": 35.7143,
+    "cost": 5.0,
+    "timestamp": "2026-03-21T11:42:54.412592+00:00",
+    "strategy": "WS_PRICE_MONITOR",
+    "model_prob": 0.2128,
+    "ev_at_entry": 0.0728,
+    "spread_colour": "GREEN",
+    "model_values_json": "{\"ncep_nbm_conus\":83.3,\"gfs_seamless\":82.8,\"ecmwf_ifs025\":80.4,\"icon_seamless\":81.8}"
   }
 ]
