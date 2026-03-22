@@ -803,5 +803,28 @@
     "model_values_json": "{\"icon_seamless\":50.7,\"gem_seamless\":53.7,\"ncep_nbm_conus\":50.3}",
     "days_ahead": 0,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0xa0bdba19f9df69c007f08fd54c92a8e7e5ee54a6cf888f19396088ea7f56eb61",
+    "token_id": "3236766942045998575041052844354590003049255364630716643021802586172622912745",
+    "side": "BUY_YES",
+    "city": "Miami",
+    "station_icao": "KMIA",
+    "date": "2026-03-23",
+    "bucket": "86-87",
+    "fill_price": 0.051000000000000004,
+    "fill_size": 98.0392156862745,
+    "cost": 5.0,
+    "timestamp": "2026-03-22T01:40:34.225716+00:00",
+    "strategy": "SINGLE",
+    "forecast_prob": 0.08537727422630821,
+    "market_prob": 0.051000000000000004,
+    "edge": 0.03437727422630821,
+    "ev_per_bet": 3.37,
+    "spread_colour": "RED",
+    "det_spread": 3.8,
+    "model_values_json": "{\"ncep_nbm_conus\":80.8,\"gfs_seamless\":82.9,\"ecmwf_ifs025\":80.3,\"icon_seamless\":84.1}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]
