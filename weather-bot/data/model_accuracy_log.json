@@ -1829,7 +1829,7 @@
       "ncep_nbm_conus": 64.9,
       "ncep_aigfs025": 65.9,
       "gem_seamless": 67.8,
-      "best_match": 67.9,
+      "best_match": 68.4,
       "icon_seamless": 62.3
     },
     "actual": null
@@ -1837,7 +1837,7 @@
   "KMIA/2026-03-22": {
     "preds": {
       "ncep_nbm_conus": 79.6,
-      "gfs_seamless": 80.0,
+      "gfs_seamless": 80.2,
       "ecmwf_ifs025": 78.3,
       "icon_seamless": 81.4
     },
