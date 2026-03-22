@@ -1816,7 +1816,7 @@
   },
   "KLGA/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 60.6,
+      "ncep_nbm_conus": 59.9,
       "icon_seamless": 61.1,
       "gfs_graphcast025": 61.4,
       "kma_seamless": 60.1,
@@ -1826,18 +1826,18 @@
   },
   "KORD/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 65.2,
+      "ncep_nbm_conus": 66.0,
       "ncep_aigfs025": 66.9,
       "gem_seamless": 67.8,
-      "best_match": 68.7,
+      "best_match": 69.0,
       "icon_seamless": 63.6
     },
     "actual": null
   },
   "KMIA/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 79.2,
-      "gfs_seamless": 80.6,
+      "ncep_nbm_conus": 79.6,
+      "gfs_seamless": 80.0,
       "ecmwf_ifs025": 78.3,
       "icon_seamless": 82.1
     },
@@ -1847,14 +1847,14 @@
     "preds": {
       "icon_seamless": 49.4,
       "gem_seamless": 53.7,
-      "ncep_nbm_conus": 50.7
+      "ncep_nbm_conus": 50.5
     },
     "actual": null
   },
   "KDFW/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 93.3,
-      "gfs_seamless": 92.8,
+      "ncep_nbm_conus": 93.7,
+      "gfs_seamless": 92.9,
       "ecmwf_ifs025": 92.4,
       "icon_seamless": 92.5
     },
@@ -1862,8 +1862,8 @@
   },
   "KATL/2026-03-22": {
     "preds": {
-      "ncep_nbm_conus": 82.9,
-      "gfs_seamless": 84.2,
+      "ncep_nbm_conus": 83.6,
+      "gfs_seamless": 83.8,
       "ecmwf_ifs025": 81.3,
       "icon_seamless": 83.1
     },
@@ -1874,7 +1874,7 @@
       "meteofrance_arome_france": 12.9,
       "meteofrance_seamless": 13.3,
       "meteofrance_arome_france_hd": 13.3,
-      "icon_seamless": 12.5,
+      "icon_seamless": 12.6,
       "dmi_seamless": 14.1
     },
     "actual": null
@@ -1946,7 +1946,7 @@
   },
   "KLGA/2026-03-23": {
     "preds": {
-      "ncep_nbm_conus": 55.2,
+      "ncep_nbm_conus": 55.3,
       "icon_seamless": 51.6,
       "gfs_graphcast025": 51.7,
       "kma_seamless": 55.9,
@@ -1956,9 +1956,9 @@
   },
   "KORD/2026-03-23": {
     "preds": {
-      "ncep_nbm_conus": 42.6,
-      "ncep_aigfs025": 41.9,
-      "gem_seamless": 41.0,
+      "ncep_nbm_conus": 43.3,
+      "ncep_aigfs025": 42.4,
+      "gem_seamless": 41.8,
       "best_match": 43.0,
       "icon_seamless": 44.9
     },
@@ -1976,14 +1976,14 @@
   "KSEA/2026-03-23": {
     "preds": {
       "icon_seamless": 48.6,
-      "gem_seamless": 50.1,
+      "gem_seamless": 49.0,
       "ncep_nbm_conus": 50.9
     },
     "actual": null
   },
   "KDFW/2026-03-23": {
     "preds": {
-      "ncep_nbm_conus": 79.6,
+      "ncep_nbm_conus": 78.8,
       "gfs_seamless": 78.2,
       "ecmwf_ifs025": 77.4,
       "icon_seamless": 77.0
@@ -1992,7 +1992,7 @@
   },
   "KATL/2026-03-23": {
     "preds": {
-      "ncep_nbm_conus": 77.2,
+      "ncep_nbm_conus": 78.1,
       "gfs_seamless": 78.9,
       "ecmwf_ifs025": 72.2,
       "icon_seamless": 78.4
@@ -2004,7 +2004,7 @@
       "meteofrance_arome_france": 14.6,
       "meteofrance_seamless": 14.8,
       "meteofrance_arome_france_hd": 14.8,
-      "icon_seamless": 15.2,
+      "icon_seamless": 15.0,
       "dmi_seamless": 15.5
     },
     "actual": null
