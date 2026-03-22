@@ -1148,5 +1148,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":64.9,\"ncep_aigfs025\":65.9,\"gem_seamless\":67.8,\"best_match\":68.4,\"icon_seamless\":62.3}",
     "days_ahead": 0,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0xe53b4393c32493a897fcbd40d70cf277bf3cf42b51eeac47cbb05d03bf19262d",
+    "token_id": "16598909551320279796120857885555726056101128421477917408690171829194334232385",
+    "side": "BUY_YES",
+    "city": "Atlanta",
+    "station_icao": "KATL",
+    "date": "2026-03-22",
+    "bucket": "84-85",
+    "fill_price": 0.43500000000000005,
+    "fill_size": 13.2183908045977,
+    "cost": 5.75,
+    "timestamp": "2026-03-22T04:00:30.121398+00:00",
+    "strategy": "CAVENDISH_MK3",
+    "forecast_prob": 0.31106949044152915,
+    "market_prob": 0.435,
+    "edge": -0.12393050955847085,
+    "ev_per_bet": -1.424,
+    "spread_colour": "GREEN",
+    "det_spread": 2.9,
+    "model_values_json": "{\"ncep_nbm_conus\":82.9,\"gfs_seamless\":84.2,\"ecmwf_ifs025\":81.3,\"icon_seamless\":83.1}",
+    "days_ahead": 0,
+    "kelly_fraction_used": 0.25
   }
 ]
