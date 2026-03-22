@@ -1875,7 +1875,7 @@
       "meteofrance_seamless": 13.1,
       "meteofrance_arome_france_hd": 13.1,
       "icon_seamless": 12.6,
-      "dmi_seamless": 14.1
+      "dmi_seamless": 14.2
     },
     "actual": null
   },
@@ -1940,7 +1940,7 @@
       "kma_gdps": 9.1,
       "meteofrance_arpege_world": 5.7,
       "gem_global": 8.2,
-      "dmi_seamless": 10.4
+      "dmi_seamless": 9.7
     },
     "actual": null
   },
@@ -2005,7 +2005,7 @@
       "meteofrance_seamless": 15.2,
       "meteofrance_arome_france_hd": 15.2,
       "icon_seamless": 15.0,
-      "dmi_seamless": 15.5
+      "dmi_seamless": 15.3
     },
     "actual": null
   },
@@ -2070,7 +2070,7 @@
       "kma_gdps": 2.8,
       "meteofrance_arpege_world": 2.6,
       "gem_global": 2.3,
-      "dmi_seamless": 2.0
+      "dmi_seamless": 2.3
     },
     "actual": null
   }
