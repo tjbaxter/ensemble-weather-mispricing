@@ -1820,7 +1820,7 @@
       "icon_seamless": 61.1,
       "gfs_graphcast025": 61.4,
       "kma_seamless": 60.1,
-      "gem_seamless": 54.1
+      "gem_seamless": 55.2
     },
     "actual": null
   },
@@ -1828,7 +1828,7 @@
     "preds": {
       "ncep_nbm_conus": 66.0,
       "ncep_aigfs025": 66.9,
-      "gem_seamless": 67.8,
+      "gem_seamless": 68.3,
       "best_match": 69.0,
       "icon_seamless": 63.6
     },
@@ -1846,7 +1846,7 @@
   "KSEA/2026-03-22": {
     "preds": {
       "icon_seamless": 49.4,
-      "gem_seamless": 53.7,
+      "gem_seamless": 55.0,
       "ncep_nbm_conus": 50.5
     },
     "actual": null
@@ -1881,9 +1881,9 @@
   },
   "LFPG/2026-03-22": {
     "preds": {
-      "ukmo_uk_deterministic_2km": 14.4,
+      "ukmo_uk_deterministic_2km": 14.1,
       "metno_seamless": 14.3,
-      "ukmo_seamless": 14.4,
+      "ukmo_seamless": 14.1,
       "ecmwf_ifs025": 14.6
     },
     "actual": null
@@ -1950,7 +1950,7 @@
       "icon_seamless": 51.6,
       "gfs_graphcast025": 51.7,
       "kma_seamless": 55.9,
-      "gem_seamless": 48.5
+      "gem_seamless": 50.7
     },
     "actual": null
   },
@@ -1958,7 +1958,7 @@
     "preds": {
       "ncep_nbm_conus": 43.3,
       "ncep_aigfs025": 42.4,
-      "gem_seamless": 41.8,
+      "gem_seamless": 38.9,
       "best_match": 43.0,
       "icon_seamless": 44.9
     },
@@ -1976,7 +1976,7 @@
   "KSEA/2026-03-23": {
     "preds": {
       "icon_seamless": 48.6,
-      "gem_seamless": 49.0,
+      "gem_seamless": 54.5,
       "ncep_nbm_conus": 50.9
     },
     "actual": null
@@ -2011,16 +2011,16 @@
   },
   "LFPG/2026-03-23": {
     "preds": {
-      "ukmo_uk_deterministic_2km": 15.9,
+      "ukmo_uk_deterministic_2km": 16.1,
       "metno_seamless": 15.4,
-      "ukmo_seamless": 15.9,
+      "ukmo_seamless": 16.1,
       "ecmwf_ifs025": 15.5
     },
     "actual": null
   },
   "RKSI/2026-03-23": {
     "preds": {
-      "ncep_aigfs025": 16.5,
+      "ncep_aigfs025": 16.6,
       "gfs_graphcast025": 16.1,
       "ecmwf_ifs025": 13.2,
       "kma_gdps": 15.9,
