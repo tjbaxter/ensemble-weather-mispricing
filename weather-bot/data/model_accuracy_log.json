@@ -1827,7 +1827,7 @@
   "KORD/2026-03-22": {
     "preds": {
       "ncep_nbm_conus": 65.2,
-      "ncep_aigfs025": 65.9,
+      "ncep_aigfs025": 66.9,
       "gem_seamless": 67.8,
       "best_match": 68.7,
       "icon_seamless": 63.6
@@ -1890,7 +1890,7 @@
   },
   "RKSI/2026-03-22": {
     "preds": {
-      "ncep_aigfs025": 15.0,
+      "ncep_aigfs025": 14.8,
       "gfs_graphcast025": 14.2,
       "ecmwf_ifs025": 13.2,
       "kma_gdps": 12.5,

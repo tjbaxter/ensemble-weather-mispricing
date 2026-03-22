@@ -1286,5 +1286,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":54.9,\"icon_seamless\":52.8,\"gfs_graphcast025\":49.8,\"kma_seamless\":55.9,\"gem_seamless\":48.5}",
     "days_ahead": 1,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0x0420cb3f05679513514fce9a7c1e19d802bef631d7ba56c3ef24f5e8f201adc0",
+    "token_id": "103021600842889340315663133806051520813563275689870276202959821047827720361905",
+    "side": "BUY_YES",
+    "city": "Chicago",
+    "station_icao": "KORD",
+    "date": "2026-03-22",
+    "bucket": "70-71",
+    "fill_price": 0.058499999999999996,
+    "fill_size": 85.47008547008548,
+    "cost": 5.0,
+    "timestamp": "2026-03-22T04:25:29.187032+00:00",
+    "strategy": "PURDEY_MK2",
+    "forecast_prob": 0.1143035532324619,
+    "market_prob": 0.058499999999999996,
+    "edge": 0.0558035532324619,
+    "ev_per_bet": 4.77,
+    "spread_colour": "RED",
+    "det_spread": 5.1,
+    "model_values_json": "{\"ncep_nbm_conus\":65.2,\"ncep_aigfs025\":66.9,\"gem_seamless\":67.8,\"best_match\":68.7,\"icon_seamless\":63.6}",
+    "days_ahead": 0,
+    "kelly_fraction_used": 0.25
   }
 ]
