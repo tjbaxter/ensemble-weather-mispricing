@@ -1079,5 +1079,28 @@
     "model_values_json": "{\"ncep_nbm_conus\":80.9,\"gfs_seamless\":82.9,\"ecmwf_ifs025\":80.6,\"icon_seamless\":84.1}",
     "days_ahead": 1,
     "kelly_fraction_used": 0.25
+  },
+  {
+    "market_id": "0xad211357d05c0ac3f935af7e18ae71704104ec9bd0150aa451659b40a29fe780",
+    "token_id": "17652438180081861928035502438125536452792286398568892844863073986398583360827",
+    "side": "BUY_YES",
+    "city": "NYC",
+    "station_icao": "KLGA",
+    "date": "2026-03-23",
+    "bucket": "52-53",
+    "fill_price": 0.255,
+    "fill_size": 19.607843137254903,
+    "cost": 5.0,
+    "timestamp": "2026-03-22T00:50:23.974771+00:00",
+    "strategy": "TOP2_EQUAL",
+    "forecast_prob": 0.52,
+    "market_prob": 0.255,
+    "edge": 0.265,
+    "ev_per_bet": 5.196,
+    "spread_colour": "RED",
+    "det_spread": 7.4,
+    "model_values_json": "{\"ncep_nbm_conus\":54.9,\"icon_seamless\":52.8,\"gfs_graphcast025\":49.8,\"kma_seamless\":55.9,\"gem_seamless\":48.5}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.25
   }
 ]
