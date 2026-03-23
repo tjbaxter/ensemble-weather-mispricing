@@ -52,6 +52,7 @@ class PrimeAlphaPlan:
     trust_scores: dict[str, float]
     current_display_by_source: dict[str, int]
     bucket_support: dict[str, float]
+    all_model_bucket_counts: dict[str, int]
     initial_selected_buckets: list[str]
     selected_buckets: list[str]
     range_low: int | None
@@ -71,6 +72,7 @@ class PrimeAlphaPlan:
             "trust_scores": self.trust_scores,
             "current_display_by_source": self.current_display_by_source,
             "bucket_support": self.bucket_support,
+            "all_model_bucket_counts": self.all_model_bucket_counts,
             "initial_selected_buckets": self.initial_selected_buckets,
             "selected_buckets": self.selected_buckets,
             "range_low": self.range_low,
@@ -189,6 +191,12 @@ def build_prime_alpha_plan(
         all_displays[PRIME_ALPHA_FLAGSHIP_KEY] = _market_display_temp(
             predicted_display_temp, unit,
         )
+    all_model_bucket_counts: dict[str, int] = {}
+    for bucket in initial_selected_buckets:
+        all_model_bucket_counts[bucket] = sum(
+            1 for d in all_displays.values() if _bucket_contains_display(bucket, d)
+        )
+
     selected_buckets = _drop_uncorroborated_edges(
         initial_selected_buckets,
         current_display_by_source=all_displays,
@@ -227,6 +235,7 @@ def build_prime_alpha_plan(
         trust_scores={k: round(v, 3) for k, v in trust_scores.items() if v > 0},
         current_display_by_source=current_display_by_source,
         bucket_support=bucket_support,
+        all_model_bucket_counts={b: all_model_bucket_counts.get(b, 0) for b in selected_buckets},
         initial_selected_buckets=initial_selected_buckets,
         selected_buckets=selected_buckets,
         range_low=range_low,

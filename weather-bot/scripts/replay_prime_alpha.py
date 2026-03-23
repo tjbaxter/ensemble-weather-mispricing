@@ -159,6 +159,7 @@ def main() -> None:
         "fallback_models": plan.fallback_models,
         "trusted_flagship": plan.trusted_flagship,
         "trust_scores": plan.trust_scores,
+        "all_model_bucket_counts": plan.all_model_bucket_counts,
         "current_display_by_source": plan.current_display_by_source,
         "initial_selected_buckets": plan.initial_selected_buckets,
         "selected_buckets": plan.selected_buckets,

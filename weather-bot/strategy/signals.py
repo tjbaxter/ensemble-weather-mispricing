@@ -1843,7 +1843,7 @@ def generate_mk2_ace_signals(
                     KELLY_MIN_BET_USD,
                 )
                 support_scores = {
-                    c["bucket"]: prime_plan.bucket_support.get(c["bucket"], 1.0)
+                    c["bucket"]: max(prime_plan.all_model_bucket_counts.get(c["bucket"], 1), 1)
                     for c in prime_cands
                 }
                 total_support = sum(support_scores.values()) or 1.0
