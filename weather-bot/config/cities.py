@@ -22,7 +22,16 @@ STATIONS = {
         "priority": "HIGH",
         "city_slug": "nyc",
         # Backtested: 363 days, 44.1% bucket accuracy (exhaustive 5-model search)
-        "ensemble_models": ["ncep_nbm_conus", "icon_seamless", "gfs_graphcast025", "kma_seamless", "gem_seamless"],
+        "ensemble_models": [
+            "ncep_nbm_conus",
+            "gfs_graphcast025",
+            "icon_seamless",
+            "kma_seamless",
+            "gem_seamless",
+            "kma_gdps",
+            "gem_hrdps_continental",
+            "ncep_aigfs025"
+        ],
         "spread_threshold": 3.0,   # °F — range-bucket city
         "p_win_green": 0.58,
         "p_win_red": 0.52,
@@ -47,7 +56,15 @@ STATIONS = {
         "priority": "HIGH",
         "city_slug": "chicago",
         # Backtested: 32 days, 71.9% bucket accuracy (5-model ensemble)
-        "ensemble_models": ["ncep_nbm_conus", "ncep_aigfs025", "gem_seamless", "best_match", "icon_seamless"],
+        "ensemble_models": [
+            "ncep_nbm_conus",
+            "ncep_aigfs025",
+            "gem_seamless",
+            "best_match",
+            "icon_seamless",
+            "ecmwf_ifs025",
+            "gfs_seamless"
+        ],
         "spread_threshold": 3.0,   # °F
         "p_win_green": 0.65,
         "p_win_red": 0.55,
@@ -120,7 +137,17 @@ STATIONS = {
         "nws_grid_y": 51,
         "priority": "MEDIUM",
         "city_slug": "miami",
-        "ensemble_models": ["ncep_nbm_conus", "gfs_seamless", "ecmwf_ifs025", "icon_seamless"],
+        "ensemble_models": [
+            "gem_global",
+            "ncep_aigfs025",
+            "gem_seamless",
+            "gem_regional",
+            "gfs_graphcast025",
+            "ncep_nbm_conus",
+            "ecmwf_ifs025",
+            "gfs_seamless",
+            "icon_seamless"
+        ],
         "spread_threshold": 3.0,
         "p_win_green": 0.58,
         "p_win_red": 0.52,
@@ -145,7 +172,16 @@ STATIONS = {
         "priority": "MEDIUM",
         "city_slug": "seattle",
         # Backtested: 81 days, best ensemble: ICON + GEM + NBM
-        "ensemble_models": ["icon_seamless", "gem_seamless", "ncep_nbm_conus"],
+        "ensemble_models": [
+            "ncep_nbm_conus",
+            "gem_seamless",
+            "gem_hrdps_continental",
+            "knmi_seamless",
+            "dmi_seamless",
+            "icon_seamless",
+            "ecmwf_ifs025",
+            "gfs_seamless"
+        ],
         "spread_threshold": 3.0,   # °F
         "p_win_green": 0.62,
         "p_win_red": 0.52,
@@ -169,7 +205,16 @@ STATIONS = {
         "nws_grid_y": 108,
         "priority": "MEDIUM",
         "city_slug": "dallas",
-        "ensemble_models": ["ncep_nbm_conus", "gfs_seamless", "ecmwf_ifs025", "icon_seamless"],
+        "ensemble_models": [
+            "icon_seamless",
+            "gem_seamless",
+            "gem_regional",
+            "gfs_seamless",
+            "gfs_hrrr",
+            "ncep_aigfs025",
+            "ecmwf_ifs025",
+            "ncep_nbm_conus"
+        ],
         "spread_threshold": 3.0,
         "p_win_green": 0.58,
         "p_win_red": 0.52,
@@ -193,7 +238,15 @@ STATIONS = {
         "nws_grid_y": 88,
         "priority": "MEDIUM",
         "city_slug": "atlanta",
-        "ensemble_models": ["ncep_nbm_conus", "gfs_seamless", "ecmwf_ifs025", "icon_seamless"],
+        "ensemble_models": [
+            "ncep_nbm_conus",
+            "icon_seamless",
+            "gem_global",
+            "ncep_aigfs025",
+            "gem_seamless",
+            "ecmwf_ifs025",
+            "gfs_seamless"
+        ],
         "spread_threshold": 3.0,
         "p_win_green": 0.58,
         "p_win_red": 0.52,
@@ -224,6 +277,12 @@ STATIONS = {
             "meteofrance_arome_france_hd",
             "icon_seamless",
             "dmi_seamless",
+            "ecmwf_ifs025",
+            "kma_seamless",
+            "ukmo_uk_deterministic_2km",
+            "ukmo_seamless",
+            "ukmo_global_deterministic_10km",
+            "ncep_aigfs025"
         ],
         "spread_threshold": 1.0,   # °C — pre-registered, do not change
         "p_win_green": 0.75,       # validated empirical
@@ -246,7 +305,18 @@ STATIONS = {
         "priority": "LOW",
         "city_slug": "paris",
         # Backtested: 10 days only — small sample, use conservatively
-        "ensemble_models": ["ukmo_uk_deterministic_2km", "metno_seamless", "ukmo_seamless", "ecmwf_ifs025"],
+        "ensemble_models": [
+            "ukmo_seamless",
+            "ukmo_uk_deterministic_2km",
+            "metno_seamless",
+            "ecmwf_ifs025",
+            "meteofrance_seamless",
+            "jma_seamless",
+            "ncep_aigfs025",
+            "meteofrance_arome_france",
+            "icon_seamless",
+            "dmi_seamless"
+        ],
         "spread_threshold": 1.5,
         "p_win_green": 0.65,
         "p_win_red": 0.52,
@@ -268,7 +338,16 @@ STATIONS = {
         "priority": "LOW",
         "city_slug": "seoul",
         # Backtested: ~50 days, NCEP AI-GFS + GraphCast best combination
-        "ensemble_models": ["ncep_aigfs025", "gfs_graphcast025", "ecmwf_ifs025", "kma_gdps", "kma_seamless"],
+        "ensemble_models": [
+            "ncep_aigfs025",
+            "gfs_graphcast025",
+            "ecmwf_ifs025",
+            "ncep_hgefs025_ensemble_mean",
+            "kma_gdps",
+            "kma_seamless",
+            "icon_seamless",
+            "meteofrance_seamless"
+        ],
         "spread_threshold": 1.5,
         "p_win_green": 0.70,
         "p_win_red": 0.55,
@@ -312,7 +391,15 @@ STATIONS = {
         "city_slug": "buenos-aires",
         # Backtested: 78 days, UKMO Seamless 65.4% — UK Met Office excels in Southern Hemisphere.
         # No ensemble beats single UKMO; use ECMWF + ICON for spread signal.
-        "ensemble_models": ["ukmo_seamless", "ecmwf_ifs025", "icon_seamless", "gem_global"],
+        "ensemble_models": [
+            "ukmo_seamless",
+            "ecmwf_ifs025",
+            "best_match",
+            "icon_seamless",
+            "ncep_aigfs025",
+            "meteofrance_seamless",
+            "gfs_seamless"
+        ],
         "spread_threshold": 1.5,
         "p_win_green": 0.65,
         "p_win_red": 0.55,
@@ -335,7 +422,13 @@ STATIONS = {
         "city_slug": "wellington",
         # Not yet backtested — BOM ACCESS-G best for NZ, UKMO excellent for SH.
         # Add ecmwf + icon for spread diversity.
-        "ensemble_models": ["bom_access_global", "ukmo_seamless", "ecmwf_ifs025", "icon_seamless"],
+        "ensemble_models": [
+            "bom_access_global",
+            "ukmo_seamless",
+            "ecmwf_ifs025",
+            "icon_seamless",
+            "gfs_seamless"
+        ],
         "spread_threshold": 1.5,
         "p_win_green": 0.60,
         "p_win_red": 0.52,
@@ -358,12 +451,12 @@ STATIONS = {
         "city_slug": "ankara",
         # Backtested: 37 days, 62.2% bucket accuracy (+16.3pp over best single)
         "ensemble_models": [
-            "icon_global",
-            "meteofrance_arpege_world",
-            "jma_seamless",
             "icon_seamless",
+            "icon_global",
             "ecmwf_ifs025",
             "gfs_graphcast025",
+            "jma_seamless",
+            "meteofrance_arpege_world"
         ],
         "spread_threshold": 1.5,
         "p_win_green": 0.70,
@@ -386,7 +479,17 @@ STATIONS = {
         "priority": "LOW",
         "city_slug": "toronto",
         # Backtested: 81 days, 53.1% bucket accuracy (KMA + MF ARPEGE + GEM + DMI)
-        "ensemble_models": ["kma_gdps", "meteofrance_arpege_world", "gem_global", "dmi_seamless"],
+        "ensemble_models": [
+            "ncep_nbm_conus",
+            "kma_gdps",
+            "meteofrance_arpege_world",
+            "gem_global",
+            "dmi_seamless",
+            "ncep_aigfs025",
+            "gem_regional",
+            "gfs_seamless",
+            "ecmwf_ifs025"
+        ],
         "spread_threshold": 1.5,
         "p_win_green": 0.65,
         "p_win_red": 0.55,

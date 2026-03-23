@@ -18,6 +18,15 @@ A conservative, paper-first Python bot for weather prediction markets on Polymar
 5. Compute edge and apply rounding-confidence-adjusted Kelly sizing.
 6. Skip danger windows around METAR releases and log every decision.
 
+## Shadow Strategies
+
+- `TRUE_ALPHA` remains the legacy weighted-bucket reference model.
+- `PRIME_ALPHA` is the deterministic MK2 replacement candidate:
+  - trust yesterday's market-hit models first
+  - include the flagship ensemble only if it also hit yesterday
+  - convert today's trusted temperatures into one contiguous market window
+  - cap the window at 3 buckets so it cannot spray non-adjacent extras
+
 ## Resolution Source
 
 Markets resolve from Weather Underground historical station pages (e.g., `KLGA` for NYC and `EGLC` for London). Forecasting logic is explicitly designed to predict what Weather Underground will display, not generic city forecasts.
@@ -60,7 +69,8 @@ Run a local terminal-style dashboard for PnL, open positions, and mode flags:
 What it shows:
 
 - Realized PnL and cumulative equity curve from `logs/trades.csv`
-- Open positions and exposure from `data/positions.json`
+- Open positions and exposure from `data/positions.json` or `data/positions_live.json` depending on mode
+- Realtime settlement overlay from the read-only `settlement_watcher` sidecar
 - Counts resolving today/tomorrow
 - Paper/Live mode controls that update `.env` by default
 
@@ -68,6 +78,8 @@ Notes:
 
 - `DASHBOARD_DATA_SOURCE=local|github|auto` controls whether the dashboard reads authoritative local files or the GitHub mirror. `auto` preserves the old behavior.
 - `DASHBOARD_READ_ONLY=true` disables mode/config writes. Use this for production dashboards.
+- `scripts/settlement_watcher.py` writes `data/settlement_snapshot.json` and `data/settlement_status.json`; the dashboard uses those files for instant settled-PnL overlays without mutating paper/live position files.
+- `umaResolutionStatus=proposed` is displayed immediately as provisional; final resolution replaces it once Polymarket moves to resolved/closed.
 - To edit VM mode flags directly, select `/etc/weather-bot.env` in the dashboard (requires sudo/root write permission).
 - After changing mode flags, restart the bot process/service manually.
 
@@ -82,7 +94,7 @@ For an authoritative read-only production dashboard on the VM itself:
 3. Visit:
    - `http://localhost:8501`
 
-This VM-hosted dashboard reads local runtime files directly (`DASHBOARD_DATA_SOURCE=local`) and is intended to be the source of truth. The public Streamlit Cloud app remains a mirror fed by GitHub sync.
+This VM-hosted dashboard reads local runtime files directly (`DASHBOARD_DATA_SOURCE=local`) and is intended to be the source of truth. The realtime settlement watcher runs as a separate `systemd` service and never modifies `paper_trader.py`, `positions*.json`, or `logs/resolved.csv`. The public Streamlit Cloud app remains a mirror fed by GitHub sync.
 
 ## Quick Market Check
 
@@ -99,6 +111,13 @@ Historical forecast calibration (no need to wait for live resolution):
 
 - `python3 scripts/backtest_calibration.py --past-days 30`
 - writes calibration metrics to `logs/calibration.json`
+
+Replay and audit tools:
+
+- `python3 scripts/replay_prime_alpha.py --fixture data/prime_alpha_scenarios/atlanta_2026-03-23.json`
+- `python3 scripts/replay_prime_alpha.py --city Atlanta --station-icao KATL --date 2026-03-23 --bucket-labels 72-73,74-75,76-77,78-79,80-81`
+- `python3 scripts/query_trade_audit.py --strategy PRIME_ALPHA --date 2026-03-23 --limit 20`
+- `python3 scripts/query_trade_audit.py --decision-id <decision_id> --show-payloads`
 
 ## Paper Trading Validation (Required)
 

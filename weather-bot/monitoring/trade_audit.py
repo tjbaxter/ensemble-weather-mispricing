@@ -50,6 +50,11 @@ class TradeAuditStore:
                     token_id TEXT,
                     bucket TEXT,
                     side TEXT,
+                    decision_id TEXT,
+                    market_scan_id TEXT,
+                    snapshot_id TEXT,
+                    prob_calc_id TEXT,
+                    execution_id TEXT,
 
                     forecast_prob REAL,
                     market_prob REAL,
@@ -81,6 +86,21 @@ class TradeAuditStore:
                 )
                 """
             )
+            existing_cols = {
+                str(row[1])
+                for row in conn.execute("PRAGMA table_info(trade_decisions)")
+            }
+            for column_name, column_type in (
+                ("decision_id", "TEXT"),
+                ("market_scan_id", "TEXT"),
+                ("snapshot_id", "TEXT"),
+                ("prob_calc_id", "TEXT"),
+                ("execution_id", "TEXT"),
+            ):
+                if column_name not in existing_cols:
+                    conn.execute(
+                        f"ALTER TABLE trade_decisions ADD COLUMN {column_name} {column_type}"
+                    )
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_trade_decisions_date ON trade_decisions(target_date)"
             )
@@ -92,6 +112,15 @@ class TradeAuditStore:
             )
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_trade_decisions_strategy ON trade_decisions(strategy)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_trade_decisions_decision_id ON trade_decisions(decision_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_trade_decisions_market_scan_id ON trade_decisions(market_scan_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_trade_decisions_execution_id ON trade_decisions(execution_id)"
             )
 
     def new_run_id(self, engine: str) -> str:
@@ -140,6 +169,11 @@ class TradeAuditStore:
             "token_id": sig.get("token_id", ""),
             "bucket": sig.get("bucket", ""),
             "side": sig.get("side", ""),
+            "decision_id": str(sig.get("decision_id", ctx.get("decision_id", "")) or ""),
+            "market_scan_id": str(sig.get("market_scan_id", ctx.get("market_scan_id", "")) or ""),
+            "snapshot_id": str(sig.get("snapshot_id", f_bundle.get("__snapshot_id", "")) or ""),
+            "prob_calc_id": str(sig.get("prob_calc_id", f_bundle.get("__prob_calc_id", "")) or ""),
+            "execution_id": str(exe.get("execution_id", ctx.get("execution_id", "")) or ""),
             "forecast_prob": _as_float(sig.get("forecast_prob")),
             "market_prob": _as_float(sig.get("market_prob")),
             "edge": _as_float(sig.get("edge")),
@@ -171,12 +205,13 @@ class TradeAuditStore:
                 INSERT INTO trade_decisions (
                     event_id, event_ts, run_id, engine, action, reason,
                     city, station_icao, target_date, strategy, market_id, token_id, bucket, side,
+                    decision_id, market_scan_id, snapshot_id, prob_calc_id, execution_id,
                     forecast_prob, market_prob, edge, requested_size_usd, approved_size_usd, fill_price,
                     days_ahead, hours_to_resolution, temporal_discount, spread_colour, det_spread, ev_per_bet,
                     risk_skipped, risk_quality_mult, risk_position_cap_usd, risk_daily_budget_usd, risk_reason,
                     execution_status, execution_details_json, model_values_json, forecast_bundle_json,
                     market_snapshot_json, context_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     row["event_id"],
@@ -193,6 +228,11 @@ class TradeAuditStore:
                     row["token_id"],
                     row["bucket"],
                     row["side"],
+                    row["decision_id"],
+                    row["market_scan_id"],
+                    row["snapshot_id"],
+                    row["prob_calc_id"],
+                    row["execution_id"],
                     row["forecast_prob"],
                     row["market_prob"],
                     row["edge"],

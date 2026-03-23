@@ -101,7 +101,7 @@ def _ensure_resolved_csv() -> None:
 _SHADOW_STRATEGIES = {
     "TOP2_EQUAL", "TOP2_COND", "TOP2_PROP",
     "PURDEY_MK1", "CAVENDISH_MK1",
-    "PURDEY_MK2", "CAVENDISH_MK3", "TRUE_ALPHA", "PROPS_KELLY",
+    "PURDEY_MK2", "CAVENDISH_MK3", "TRUE_ALPHA", "PRIME_ALPHA", "PROPS_KELLY",
 }
 
 
@@ -248,6 +248,7 @@ def _load_pending_trades() -> list[dict]:
         (ROOT / "data" / "positions_shadow_purdey2.json",   "PURDEY_MK2"),
         (ROOT / "data" / "positions_shadow_cavendish3.json","CAVENDISH_MK3"),
         (ROOT / "data" / "positions_shadow_true_alpha.json","TRUE_ALPHA"),
+        (ROOT / "data" / "positions_shadow_prime_alpha.json","PRIME_ALPHA"),
         (ROOT / "data" / "positions_shadow_props_kelly.json", "PROPS_KELLY"),
     ]
     for shadow_path, shadow_strategy in _SHADOW_FILES:
@@ -581,6 +582,7 @@ def print_summary(stats: dict) -> None:
             "PURDEY_MK2":    "PURDEY_MK2    (weighted top-2)",
             "CAVENDISH_MK3": "CAVENDISH_MK3 (weighted peak + earned flanks)",
             "TRUE_ALPHA":    "TRUE_ALPHA    (≥10% + ≥1 model, prop Kelly)",
+            "PRIME_ALPHA":   "PRIME_ALPHA   (prior-day hit range, contiguous)",
             "PROPS_KELLY":   "PROPS_KELLY   (weighted flanks, prop Kelly)",
         }
 
@@ -716,6 +718,7 @@ def prune_expired_positions() -> int:
         (ROOT / "data" / "positions_shadow_purdey2.json",   "PURDEY_MK2"),
         (ROOT / "data" / "positions_shadow_cavendish3.json","CAVENDISH_MK3"),
         (ROOT / "data" / "positions_shadow_true_alpha.json","TRUE_ALPHA"),
+        (ROOT / "data" / "positions_shadow_prime_alpha.json","PRIME_ALPHA"),
         (ROOT / "data" / "positions_shadow_props_kelly.json","PROPS_KELLY"),
     ]
     for shadow_path, shadow_strategy in _SHADOW_PRUNE:

@@ -18,6 +18,15 @@ import plotly.graph_objects as go
 import requests
 import streamlit as st
 
+from monitoring.settlement_common import (
+    SETTLEMENT_SNAPSHOT_JSON,
+    SETTLEMENT_STATUS_JSON,
+    build_position_key,
+    choose_primary_positions_path,
+    coerce_float,
+    normalize_bucket_label,
+)
+
 try:
     from streamlit_autorefresh import st_autorefresh
 except Exception:  # pragma: no cover
@@ -49,7 +58,10 @@ TRADES_CSV = ROOT / "logs" / "trades.csv"
 SIGNALS_CSV = ROOT / "logs" / "signals.csv"
 RESOLVED_CSV = ROOT / "logs" / "resolved.csv"
 POSITIONS_JSON = ROOT / "data" / "positions.json"
+POSITIONS_LIVE_JSON = ROOT / "data" / "positions_live.json"
 DASHBOARD_SYNC_STATUS_JSON = ROOT / "data" / "dashboard_sync_status.json"
+SETTLEMENT_SNAPSHOT_PATH = ROOT / SETTLEMENT_SNAPSHOT_JSON
+SETTLEMENT_STATUS_PATH = ROOT / SETTLEMENT_STATUS_JSON
 DEFAULT_ENV = ROOT / ".env"
 VM_ENV = Path("/etc/weather-bot.env")
 
@@ -190,6 +202,197 @@ def _read_json_object(rel_path: str, local_path: Path) -> dict:
 
 def load_dashboard_sync_status() -> dict:
     return _read_json_object("data/dashboard_sync_status.json", DASHBOARD_SYNC_STATUS_JSON)
+
+
+@st.cache_data(ttl=5, show_spinner=False)
+def load_settlement_status() -> dict:
+    return _read_json_object(SETTLEMENT_STATUS_JSON, SETTLEMENT_STATUS_PATH)
+
+
+@st.cache_data(ttl=5, show_spinner=False)
+def load_settlement_snapshot_df() -> pd.DataFrame:
+    payload = _read_json_object(SETTLEMENT_SNAPSHOT_JSON, SETTLEMENT_SNAPSHOT_PATH)
+    rows = payload.get("rows", []) if isinstance(payload, dict) else []
+    if not isinstance(rows, list) or not rows:
+        return pd.DataFrame()
+
+    df = pd.DataFrame([row for row in rows if isinstance(row, dict)])
+    if df.empty:
+        return df
+
+    defaults = {
+        "resolved_at": "",
+        "target_date": "",
+        "city": "",
+        "bucket": "",
+        "side": "BUY_YES",
+        "strategy": "",
+        "mode": "paper",
+        "settlement_phase": "",
+        "outcome": "",
+        "entry_price": 0.0,
+        "size_usd": 0.0,
+        "pnl_usd": 0.0,
+        "official_resolved": 0,
+        "challenge_window": 0,
+        "position_key": "",
+        "portfolio_slug": "",
+        "signal_timestamp": "",
+    }
+    for col, default in defaults.items():
+        if col not in df.columns:
+            df[col] = default
+        else:
+            df[col] = df[col].fillna(default)
+
+    df["resolved_at"] = pd.to_datetime(df["resolved_at"], errors="coerce", utc=True)
+    df["target_date_dt"] = pd.to_datetime(df["target_date"], errors="coerce", utc=True)
+    df["signal_timestamp"] = pd.to_datetime(df["signal_timestamp"], errors="coerce", utc=True)
+    df["pnl_usd"] = pd.to_numeric(df["pnl_usd"], errors="coerce").fillna(0.0)
+    df["entry_price"] = pd.to_numeric(df["entry_price"], errors="coerce").fillna(0.0)
+    df["size_usd"] = pd.to_numeric(df["size_usd"], errors="coerce").fillna(0.0)
+    df["forecast_prob"] = pd.to_numeric(df.get("forecast_prob", 0.0), errors="coerce").fillna(0.0)
+    df["edge"] = pd.to_numeric(df.get("edge", 0.0), errors="coerce").fillna(0.0)
+    df["official_resolved"] = pd.to_numeric(df["official_resolved"], errors="coerce").fillna(0).astype(int)
+    df["challenge_window"] = pd.to_numeric(df["challenge_window"], errors="coerce").fillna(0).astype(int)
+    df["bucket"] = df["bucket"].map(normalize_bucket_label)
+    return df.sort_values(["target_date_dt", "resolved_at", "signal_timestamp"], ascending=True)
+
+
+def current_main_mode_name() -> str:
+    _, live_mode = current_dashboard_mode()
+    return "live" if live_mode else "paper"
+
+
+def load_positions_from_path(rel_path: str, local_path: Path) -> list[dict]:
+    return _read_json_data(rel_path, local_path)
+
+
+def load_primary_positions() -> list[dict]:
+    _, live_mode = current_dashboard_mode()
+    local_path = choose_primary_positions_path(ROOT, live_mode=live_mode)
+    rel_path = "data/positions_live.json" if live_mode else "data/positions.json"
+    rows = load_positions_from_path(rel_path, local_path)
+    mode = "live" if live_mode else "paper"
+    out: list[dict] = []
+    for row in rows:
+        item = dict(row)
+        item["bucket"] = normalize_bucket_label(item.get("bucket"))
+        item["strategy"] = str(item.get("strategy", "") or "LADDER")
+        item["_mode"] = mode
+        item["_portfolio_slug"] = "live_main" if live_mode else "paper_main"
+        item["_position_key"] = build_position_key(item, item["_portfolio_slug"])
+        out.append(item)
+    return out
+
+
+def _filter_rows_for_strategy(df: pd.DataFrame, strategy: str, main_mode: str) -> pd.DataFrame:
+    if df.empty or "strategy" not in df.columns:
+        return pd.DataFrame()
+    subset = df[df["strategy"] == strategy].copy()
+    if strategy in {"SINGLE", "LADDER", "CONVICTION"} and "mode" in subset.columns:
+        subset = subset[subset["mode"].isin({main_mode, ""})].copy()
+    elif "mode" in subset.columns and strategy not in {"SINGLE", "LADDER", "CONVICTION"}:
+        subset = subset[subset["mode"].isin({"paper", ""})].copy()
+    return subset
+
+
+def load_effective_resolved_df() -> pd.DataFrame:
+    snapshot_df = load_settlement_snapshot_df()
+    if snapshot_df.empty:
+        legacy = load_resolved_df().copy()
+        if not legacy.empty and "mode" not in legacy.columns:
+            legacy["mode"] = "paper"
+            legacy["settlement_phase"] = "official"
+            legacy["official_resolved"] = 1
+        return legacy
+
+    legacy = load_resolved_df().copy()
+    if not legacy.empty:
+        legacy["bucket"] = legacy["bucket"].map(normalize_bucket_label)
+        legacy["mode"] = "paper"
+        legacy["settlement_phase"] = "official"
+        legacy["official_resolved"] = 1
+        legacy_keys = (
+            legacy["strategy"].fillna("").astype(str)
+            + "|"
+            + legacy["city"].fillna("").astype(str)
+            + "|"
+            + legacy["target_date"].fillna("").astype(str)
+            + "|"
+            + legacy["bucket"].fillna("").astype(str)
+            + "|"
+            + legacy["side"].fillna("").astype(str)
+            + "|"
+            + legacy["signal_timestamp"].fillna("").astype(str)
+        )
+        snapshot_keys = set(
+            (
+                snapshot_df["strategy"].fillna("").astype(str)
+                + "|"
+                + snapshot_df["city"].fillna("").astype(str)
+                + "|"
+                + snapshot_df["target_date"].fillna("").astype(str)
+                + "|"
+                + snapshot_df["bucket"].fillna("").astype(str)
+                + "|"
+                + snapshot_df["side"].fillna("").astype(str)
+                + "|"
+                + snapshot_df["signal_timestamp"].astype(str)
+            ).tolist()
+        )
+        legacy = legacy.loc[~legacy_keys.isin(snapshot_keys)].copy()
+    combined = pd.concat([legacy, snapshot_df], ignore_index=True, sort=False) if not legacy.empty else snapshot_df.copy()
+    if combined.empty:
+        return combined
+    combined = combined.sort_values(["target_date_dt", "resolved_at", "signal_timestamp"], ascending=True)
+    combined["cum_pnl"] = combined["pnl_usd"].cumsum()
+    return combined
+
+
+def settled_position_keys_for_mode(mode: str) -> set[str]:
+    snapshot_df = load_settlement_snapshot_df()
+    if snapshot_df.empty or "position_key" not in snapshot_df.columns:
+        return set()
+    subset = snapshot_df[snapshot_df["mode"] == mode].copy()
+    return {
+        str(key)
+        for key in subset["position_key"].fillna("").astype(str).tolist()
+        if key
+    }
+
+
+def settlement_lookup_by_position_key() -> dict[str, dict]:
+    snapshot_df = load_settlement_snapshot_df()
+    if snapshot_df.empty or "position_key" not in snapshot_df.columns:
+        return {}
+    ordered = snapshot_df.sort_values(["resolved_at", "signal_timestamp"], ascending=True)
+    latest = ordered.drop_duplicates(subset=["position_key"], keep="last")
+    return {
+        str(row["position_key"]): row.to_dict()
+        for _, row in latest.iterrows()
+        if str(row.get("position_key", "") or "")
+    }
+
+
+def split_positions_for_display(positions: list[dict]) -> tuple[list[dict], list[dict], int]:
+    today_str = _date.today().isoformat()
+    lookup = settlement_lookup_by_position_key()
+    still_open: list[dict] = []
+    settled_rows: list[dict] = []
+    stale_count = 0
+
+    for position in positions:
+        key = str(position.get("_position_key", "") or "")
+        settlement = lookup.get(key)
+        if settlement is not None:
+            settled_rows.append({**position, **settlement})
+            continue
+        if str(position.get("date", "9999")) < today_str:
+            stale_count += 1
+            continue
+        still_open.append(position)
+    return still_open, settled_rows, stale_count
 
 BG = "#0E1117"
 GREEN = "#00FF88"
@@ -866,7 +1069,29 @@ def load_shadow_resolved_df(slug: str) -> pd.DataFrame:
 def load_shadow_positions(slug: str) -> list[dict]:
     """Load open positions for a shadow model."""
     path = ROOT / "data" / f"positions_{slug}.json"
-    return _read_json_data(f"data/positions_{slug}.json", path)
+    rows = _read_json_data(f"data/positions_{slug}.json", path)
+    strategy_fallback = {
+        "shadow_2a": "TOP2_EQUAL",
+        "shadow_2b": "TOP2_COND",
+        "shadow_2c": "TOP2_PROP",
+        "shadow_purdey": "PURDEY_MK1",
+        "shadow_cavendish": "CAVENDISH_MK1",
+        "shadow_purdey2": "PURDEY_MK2",
+        "shadow_cavendish3": "CAVENDISH_MK3",
+        "shadow_true_alpha": "TRUE_ALPHA",
+        "shadow_prime_alpha": "PRIME_ALPHA",
+        "shadow_props_kelly": "PROPS_KELLY",
+    }.get(slug, "")
+    out: list[dict] = []
+    for row in rows:
+        item = dict(row)
+        item["bucket"] = normalize_bucket_label(item.get("bucket"))
+        item["strategy"] = str(item.get("strategy", "") or strategy_fallback)
+        item["_mode"] = "paper"
+        item["_portfolio_slug"] = slug
+        item["_position_key"] = build_position_key(item, slug)
+        out.append(item)
+    return out
 
 
 def _strat_stats(df: pd.DataFrame) -> dict:
@@ -875,7 +1100,7 @@ def _strat_stats(df: pd.DataFrame) -> dict:
         return {
             "pnl": 0.0, "wins": 0, "losses": 0, "n": 0,
             "wr": 0.0, "avg_win": 0.0, "avg_loss": 0.0,
-            "staked": 0.0, "roi": 0.0,
+            "staked": 0.0, "roi": 0.0, "provisional": 0, "official": 0,
         }
     wins   = int((df["outcome"] == "WIN").sum())
     losses = int((df["outcome"] == "LOSS").sum())
@@ -884,6 +1109,8 @@ def _strat_stats(df: pd.DataFrame) -> dict:
     staked = float(df["size_usd"].fillna(0).sum()) if "size_usd" in df.columns else 0.0
     win_pnls  = df.loc[df["outcome"] == "WIN",  "pnl_usd"]
     loss_pnls = df.loc[df["outcome"] == "LOSS", "pnl_usd"]
+    provisional = int((df.get("settlement_phase", pd.Series(dtype=str)) == "proposed").sum()) if "settlement_phase" in df.columns else 0
+    official = int((pd.to_numeric(df.get("official_resolved", 0), errors="coerce").fillna(0) == 1).sum()) if "official_resolved" in df.columns else 0
     return {
         "pnl":      pnl,
         "wins":     wins,
@@ -894,6 +1121,8 @@ def _strat_stats(df: pd.DataFrame) -> dict:
         "avg_loss": float(loss_pnls.mean()) if len(loss_pnls) else 0.0,
         "staked":   staked,
         "roi":      pnl / staked * 100 if staked else 0.0,
+        "provisional": provisional,
+        "official": official,
     }
 
 
@@ -1042,7 +1271,7 @@ html,body{{background:#080D12;overflow:hidden;width:100%;height:{height+4}px}}
 
 
 def load_positions() -> list[dict]:
-    return _read_json_data("data/positions.json", POSITIONS_JSON)
+    return load_primary_positions()
 
 
 def load_mode_from_env(path: Path) -> tuple[bool, bool]:
@@ -1182,6 +1411,7 @@ def realized_trades(trades_df: pd.DataFrame) -> pd.DataFrame:
 
 def kpis(trades_df: pd.DataFrame, positions: list[dict]) -> dict[str, float]:
     resolved = realized_trades(trades_df)
+    open_positions, _, _ = split_positions_for_display(positions)
     wins = 0
     losses = 0
     if not resolved.empty:
@@ -1189,14 +1419,14 @@ def kpis(trades_df: pd.DataFrame, positions: list[dict]) -> dict[str, float]:
         wins = int((outcomes == "won").sum())
         losses = int((outcomes == "lost").sum())
 
-    exposure = sum(float(p.get("cost", 0.0) or 0.0) for p in positions)
-    open_count = len(positions)
+    exposure = sum(float(p.get("cost", 0.0) or 0.0) for p in open_positions)
+    open_count = len(open_positions)
 
     now_utc = datetime.now(UTC).date()
     today = now_utc.isoformat()
     tomorrow = (now_utc + timedelta(days=1)).isoformat()
-    resolving_today = sum(1 for p in positions if str(p.get("date", "")) == today)
-    resolving_tomorrow = sum(1 for p in positions if str(p.get("date", "")) == tomorrow)
+    resolving_today = sum(1 for p in open_positions if str(p.get("date", "")) == today)
+    resolving_tomorrow = sum(1 for p in open_positions if str(p.get("date", "")) == tomorrow)
 
     total_pnl = float(resolved["pnl"].sum()) if not resolved.empty else 0.0
     total_resolved = wins + losses
@@ -1283,9 +1513,13 @@ def sync_from_vm() -> tuple[bool, str]:
         ("logs/trades.csv",                    f"{VM_WORKDIR}/logs/trades.csv"),
         ("logs/signals.csv",                   f"{VM_WORKDIR}/logs/signals.csv"),
         ("data/positions.json",                f"{VM_WORKDIR}/data/positions.json"),
+        ("data/positions_live.json",           f"{VM_WORKDIR}/data/positions_live.json"),
         ("data/positions_shadow_2a.json",      f"{VM_WORKDIR}/data/positions_shadow_2a.json"),
         ("data/positions_shadow_2b.json",      f"{VM_WORKDIR}/data/positions_shadow_2b.json"),
         ("data/positions_shadow_2c.json",      f"{VM_WORKDIR}/data/positions_shadow_2c.json"),
+        ("data/settlement_snapshot.json",      f"{VM_WORKDIR}/data/settlement_snapshot.json"),
+        ("data/settlement_status.json",        f"{VM_WORKDIR}/data/settlement_status.json"),
+        ("data/settlement_summary.json",       f"{VM_WORKDIR}/data/settlement_summary.json"),
         ("logs/calibration.json",              f"{VM_WORKDIR}/logs/calibration.json"),
         ("data/commercial_forecast_log.json",  f"{VM_WORKDIR}/data/commercial_forecast_log.json"),
         ("data/model_snapshot_log.json",       f"{VM_WORKDIR}/data/model_snapshot_log.json"),
@@ -1350,6 +1584,7 @@ def sync_from_vm_live() -> tuple[bool, str]:
         ("logs/trades.csv",                    f"{VM_WORKDIR}/logs/trades.csv"),
         ("logs/signals.csv",                   f"{VM_WORKDIR}/logs/signals.csv"),
         ("data/positions.json",                f"{VM_WORKDIR}/data/positions.json"),
+        ("data/positions_live.json",           f"{VM_WORKDIR}/data/positions_live.json"),
         ("data/positions_shadow_2a.json",      f"{VM_WORKDIR}/data/positions_shadow_2a.json"),
         ("data/positions_shadow_2b.json",      f"{VM_WORKDIR}/data/positions_shadow_2b.json"),
         ("data/positions_shadow_2c.json",      f"{VM_WORKDIR}/data/positions_shadow_2c.json"),
@@ -1358,14 +1593,18 @@ def sync_from_vm_live() -> tuple[bool, str]:
         ("data/positions_shadow_cavendish.json",  f"{VM_WORKDIR}/data/positions_shadow_cavendish.json"),
         ("data/positions_shadow_cavendish3.json", f"{VM_WORKDIR}/data/positions_shadow_cavendish3.json"),
         ("data/positions_shadow_true_alpha.json", f"{VM_WORKDIR}/data/positions_shadow_true_alpha.json"),
+        ("data/positions_shadow_prime_alpha.json", f"{VM_WORKDIR}/data/positions_shadow_prime_alpha.json"),
         ("data/positions_shadow_props_kelly.json", f"{VM_WORKDIR}/data/positions_shadow_props_kelly.json"),
+        ("data/settlement_snapshot.json",      f"{VM_WORKDIR}/data/settlement_snapshot.json"),
+        ("data/settlement_status.json",        f"{VM_WORKDIR}/data/settlement_status.json"),
+        ("data/settlement_summary.json",       f"{VM_WORKDIR}/data/settlement_summary.json"),
     ]
     # Shadow-model resolved logs (used by strategy scoreboard settled lines)
     shadow_slugs = [
         "shadow_2a", "shadow_2b", "shadow_2c",
         "shadow_purdey", "shadow_purdey2",
         "shadow_cavendish", "shadow_cavendish3",
-        "shadow_true_alpha", "shadow_props_kelly",
+        "shadow_true_alpha", "shadow_prime_alpha", "shadow_props_kelly",
     ]
     for slug in shadow_slugs:
         files.append((f"logs/{slug}/resolved.csv", f"{VM_WORKDIR}/logs/{slug}/resolved.csv"))
@@ -3373,6 +3612,7 @@ def main() -> None:
     local_runtime = _dashboard_local_runtime_is_authoritative()
     gcloud_available = shutil.which("gcloud") is not None
     sync_status = load_dashboard_sync_status()
+    settlement_status = load_settlement_status()
 
     with st.sidebar:
         # Next model run trigger
@@ -3399,6 +3639,28 @@ def main() -> None:
         source_caption = effective_source if configured_source == effective_source else f"{configured_source} -> {effective_source}"
         st.caption(f"Dashboard data source: `{source_caption}`")
         st.caption(source_status)
+        if settlement_status.get("last_heartbeat_utc"):
+            st.caption(f"Settlement watcher heartbeat: {settlement_status['last_heartbeat_utc']}")
+        if settlement_status.get("last_success_utc"):
+            st.caption(f"Settlement watcher success: {settlement_status['last_success_utc']}")
+        if settlement_status.get("watcher_rows") is not None:
+            st.caption(
+                f"Watcher overlay rows: {settlement_status.get('watcher_rows', 0)} "
+                f"· tracked positions: {settlement_status.get('tracked_positions', 0)}"
+            )
+        live_recon = settlement_status.get("live_reconciliation", {}) if isinstance(settlement_status, dict) else {}
+        if isinstance(live_recon, dict) and live_recon.get("enabled"):
+            if live_recon.get("ok", False):
+                st.caption("Live wallet reconciliation: OK")
+            elif live_recon.get("error"):
+                st.warning(f"Live wallet reconciliation error: {live_recon['error']}")
+            else:
+                st.warning(
+                    f"Live wallet reconciliation mismatch: local={live_recon.get('local_count', 0)} "
+                    f"remote={live_recon.get('remote_count', 0)}"
+                )
+        if settlement_status.get("last_error"):
+            st.warning(f"Settlement watcher error: {settlement_status['last_error']}")
         if effective_source == "github" and sync_status.get("last_fast_sync_utc"):
             st.caption(f"Last mirror sync: {sync_status['last_fast_sync_utc']}")
         elif effective_source == "local" and not local_runtime and sync_status.get("last_fast_sync_utc"):
@@ -3424,11 +3686,13 @@ def main() -> None:
         st.divider()
         st.markdown("### Auto-refresh")
 
-    refresh_opt = st.sidebar.selectbox("Interval", options=["off", "30s", "60s", "5m"], index=1)
+    refresh_options = ["off", "5s", "15s", "30s", "60s", "5m"]
+    default_refresh = "5s" if local_runtime else "30s"
+    refresh_opt = st.sidebar.selectbox("Interval", options=refresh_options, index=refresh_options.index(default_refresh))
     if refresh_opt != "off" and st_autorefresh is not None:
-        interval_ms = {"30s": 30_000, "60s": 60_000, "5m": 300_000}[refresh_opt]
+        interval_ms = {"5s": 5_000, "15s": 15_000, "30s": 30_000, "60s": 60_000, "5m": 300_000}[refresh_opt]
         st_autorefresh(interval=interval_ms, key="dashboard-refresh")
-    st.sidebar.caption("Live position prices refresh every 5 min regardless of page interval.")
+    st.sidebar.caption("Settlement watcher rows refresh on the page interval. Live position prices refresh every 5 min.")
 
     auto_sync_enabled = False
     auto_sync_sec = 0
@@ -3440,10 +3704,10 @@ def main() -> None:
         )
         auto_sync_opt = st.sidebar.selectbox(
             "Auto-sync cadence",
-            options=["30s", "60s", "5m"],
+            options=["15s", "30s", "60s", "5m"],
             index=1,
         )
-        auto_sync_sec = {"30s": 30, "60s": 60, "5m": 300}[auto_sync_opt]
+        auto_sync_sec = {"15s": 15, "30s": 30, "60s": 60, "5m": 300}[auto_sync_opt]
     now_epoch = _time.time()
     last_sync_epoch = float(st.session_state.get("_last_vm_live_sync_epoch", 0.0))
     if auto_sync_enabled and gcloud_available and (now_epoch - last_sync_epoch >= auto_sync_sec):
@@ -3507,7 +3771,7 @@ def main() -> None:
 
     (
         tab_ov, tab_single, tab_ladder, tab_conv,
-        tab_2a, tab_2b, tab_2c, tab_purdey, tab_cavendish, tab_purdey2, tab_cavendish3, tab_true_alpha, tab_pk, tab_acc,
+        tab_2a, tab_2b, tab_2c, tab_purdey, tab_cavendish, tab_purdey2, tab_cavendish3, tab_true_alpha, tab_prime_alpha, tab_pk, tab_acc,
     ) = st.tabs([
         "🏆 Overview",
         "⚡ SINGLE",
@@ -3521,15 +3785,16 @@ def main() -> None:
         "🎯 PURDEY MK2",
         "🌱 CAVENDISH III",
         "💎 True Alpha",
+        "🧭 Prime Alpha",
         "🎲 Props Kelly",
         "📊 Accuracy",
     ])
 
-    resolved_df = load_resolved_df()
+    resolved_df = load_effective_resolved_df()
     has_strat   = not resolved_df.empty and "strategy" in resolved_df.columns
 
     def _strat_df(s: str) -> pd.DataFrame:
-        return resolved_df[resolved_df["strategy"] == s].copy() if has_strat else pd.DataFrame()
+        return _filter_rows_for_strategy(resolved_df, s, current_main_mode_name()) if has_strat else pd.DataFrame()
 
     # Fetch live positions + prices — main bot positions (SINGLE / LADDER)
     _all_positions      = load_positions()
@@ -3541,6 +3806,7 @@ def main() -> None:
     _shadow_purdey2     = load_shadow_positions("shadow_purdey2")
     _shadow_cavendish3  = load_shadow_positions("shadow_cavendish3")
     _shadow_true_alpha  = load_shadow_positions("shadow_true_alpha")
+    _shadow_prime_alpha = load_shadow_positions("shadow_prime_alpha")
     _shadow_props_kelly = load_shadow_positions("shadow_props_kelly")
 
     # Filter main positions by strategy tag.
@@ -3562,7 +3828,7 @@ def main() -> None:
         p["token_id"]
         for p in (_all_positions + _shadow_2a + _shadow_2b + _shadow_2c
                   + _shadow_purdey + _shadow_cavendish + _shadow_purdey2
-                  + _shadow_cavendish3 + _shadow_true_alpha + _shadow_props_kelly)
+                  + _shadow_cavendish3 + _shadow_true_alpha + _shadow_prime_alpha + _shadow_props_kelly)
         if p.get("token_id")
     })
     _live_prices_main = fetch_live_position_prices(_all_token_ids) if _all_token_ids else {}
@@ -3648,6 +3914,13 @@ def main() -> None:
             live_ts=_live_ts_main, key_prefix="true_alpha",
         )
 
+    with tab_prime_alpha:
+        _render_model_detail_tab(
+            "🧭 Prime Alpha", _strat_df("PRIME_ALPHA"),
+            positions=_shadow_prime_alpha, live_prices=_live_prices_main,
+            live_ts=_live_ts_main, key_prefix="prime_alpha",
+        )
+
     with tab_pk:
         _render_model_detail_tab(
             "🎲 Props Kelly", _strat_df("PROPS_KELLY"),
@@ -3661,10 +3934,11 @@ def main() -> None:
 
 def _render_trading_tab() -> None:
     trades_df = load_trades_df()
-    resolved_df = load_resolved_df()   # from daily_resolver.py
+    resolved_df = load_effective_resolved_df()
     _ = load_signals_df()
     positions = load_positions()
     metrics = kpis(trades_df, positions)
+    still_open, watcher_settled, stale_count = split_positions_for_display(positions)
 
     # ── KPI bar ──────────────────────────────────────────────────────────────
     # Prefer resolved_df for P&L/win-rate metrics when trades.csv is sparse
@@ -3683,83 +3957,11 @@ def _render_trading_tab() -> None:
     _token_ids = tuple(p["token_id"] for p in positions if p.get("token_id"))
     _live_prices = fetch_live_position_prices(_token_ids) if _token_ids else {}
     _live_ts = datetime.now(UTC).strftime("%H:%M UTC")
-
-    # ── Real-time resolution detection ───────────────────────────────────────
-    # When a market resolves, Polymarket instantly moves the YES price to
-    # ~0.001 (lost) or ~0.998 (won). We detect this from live prices directly —
-    # no need to wait for the daily WU resolver cron.
-    #
-    # Thresholds: YES price ≥ 0.95 → resolved YES; YES price ≤ 0.05 → resolved NO
-    RESOLVE_WIN_THRESHOLD  = 0.95
-    RESOLVE_LOSS_THRESHOLD = 0.05
-
-    live_resolved   = []   # positions inferred as resolved from live price
-    still_open      = []   # positions still genuinely live
-
-    today_str = _date.today().isoformat()
-
-    for p in positions:
-        tid         = p.get("token_id")
-        live_p      = _live_prices.get(tid)
-        side        = p.get("side", "BUY_YES")
-        cost        = float(p.get("cost",      0) or 0)
-        fill_size   = float(p.get("fill_size", 0) or 0)
-        target_date = p.get("date", "9999")
-
-        if live_p is None:
-            still_open.append(p)
-            continue
-
-        token_price = float(live_p)
-
-        # positions.json stores the token_id of the token we actually HOLD:
-        #   BUY_YES → YES token id → token_price is the YES price
-        #   BUY_NO  → NO token id  → token_price is the NO price
-        # In BOTH cases: our token approaching $1 means WON, approaching $0 means LOST.
-        won  = token_price >= RESOLVE_WIN_THRESHOLD
-        lost = token_price <= RESOLVE_LOSS_THRESHOLD
-
-        # Only classify as resolved if the target date has already passed.
-        # A still-open position can have extreme prices (e.g. a far-OTM bucket
-        # that trades at $0.01) — we must not mistake it for a settled market.
-        is_expired = target_date <= today_str
-
-        yes_price = token_price  # alias used by dedup code below
-
-        if is_expired and (won or lost):
-            pnl = round(fill_size - cost, 4) if won else round(-cost, 4)
-            live_resolved.append({**p, "live_won": won, "live_pnl": pnl, "live_price": yes_price})
-        else:
-            still_open.append(p)
-
-    # Aggregate live-resolved metrics (these are real-time, no WU needed)
-    live_res_wins   = sum(1 for r in live_resolved if r["live_won"])
-    live_res_losses = len(live_resolved) - live_res_wins
-    live_res_pnl    = sum(r["live_pnl"] for r in live_resolved)
-
-    # Combine: official resolver data + live-inferred (avoid double-counting
-    # if resolver already logged the same position in resolved.csv)
-    # Use (city, date, bucket, side) as dedup key
-    resolver_keys = set()
-    if not resolved_df.empty:
-        for _, row in resolved_df.iterrows():
-            resolver_keys.add((row.get("city",""), row.get("target_date",""),
-                               row.get("bucket",""), row.get("side","")))
-
-    net_live_resolved = [
-        r for r in live_resolved
-        if (r.get("city",""), r.get("date",""), r.get("bucket",""), r.get("side",""))
-           not in resolver_keys
-    ]
-    net_live_pnl    = sum(r["live_pnl"] for r in net_live_resolved)
-    net_live_wins   = sum(1 for r in net_live_resolved if r["live_won"])
-    net_live_losses = len(net_live_resolved) - net_live_wins
-
-    total_wins   = res_wins   + net_live_wins
-    total_losses = res_losses + net_live_losses
-    total_res    = total_wins + total_losses
-    total_res_pnl = res_pnl  + net_live_pnl
-    total_wr     = total_wins / total_res if total_res else 0.0
+    total_wins = res_wins
+    total_losses = res_losses
+    total_res = total_wins + total_losses
+    total_res_pnl = res_pnl
+    total_wr = total_wins / total_res if total_res else 0.0
 
     # Unrealized: only positions that haven't resolved yet
     unreal_pnl = 0.0
@@ -3893,23 +4095,24 @@ def _render_trading_tab() -> None:
                 "won":      None,
             })
 
-        # Live-resolved: final P&L (fill_size - cost if WIN, else -cost)
-        for r in net_live_resolved:
-            cost      = float(r.get("cost",      0) or 0)
-            fill_size = float(r.get("fill_size", 0) or 0)
+        # Watcher-settled: provisional/final P&L from the settlement sidecar.
+        for r in watcher_settled:
             fill      = float(r.get("fill_price", 0) or 0)
-            final_pnl = r["live_pnl"]
+            final_pnl = float(r.get("pnl_usd", 0) or 0)
+            outcome   = str(r.get("outcome", "") or "")
+            phase     = str(r.get("settlement_phase", "") or "")
             _bar_rows.append({
-                "label":    f"{r.get('city','?')} {r.get('date','?')} {r.get('bucket','?')} ✓",
+                "label":    f"{r.get('city','?')} {r.get('date','?')} {r.get('bucket','?')} {'~' if phase == 'proposed' else '✓'}",
                 "city":     r.get("city", "?"),
                 "date":     r.get("date", "?"),
                 "bucket":   r.get("bucket", "?"),
                 "side":     r.get("side", "?"),
                 "fill":     fill,
-                "cur":      r.get("live_price", fill),
+                "cur":      1.0 if outcome == "WIN" else 0.5 if outcome == "HALF_WIN" else 0.0,
                 "upnl":     final_pnl,
                 "resolved": True,
-                "won":      r["live_won"],
+                "won":      outcome == "WIN",
+                "phase":    phase,
             })
 
         if _bar_rows:
@@ -3970,7 +4173,9 @@ def _render_trading_tab() -> None:
                     return "#3B82F6" if is_yes else "#F97316"        # bright blue / orange
                 # P&L mode
                 if r["resolved"]:
-                    return "#F59E0B" if r["won"] else "#6B7280"      # gold WIN / grey LOSS
+                    if r.get("phase") == "proposed":
+                        return "#F59E0B"
+                    return "#10B981" if r["won"] else "#6B7280"
                 return "#00FF88" if v >= 0 else "#FF4444"
 
             bar_colors = [_bar_colour(r, v, color_mode) for r, v in zip(_bar_rows_sorted, bar_vals)]
@@ -3985,7 +4190,8 @@ def _render_trading_tab() -> None:
                 )
             else:
                 legend_html = (
-                    '<span style="color:#F59E0B;font-size:0.8rem;">■ Settled WIN</span>&nbsp;&nbsp;'
+                    '<span style="color:#F59E0B;font-size:0.8rem;">■ Provisional</span>&nbsp;&nbsp;'
+                    '<span style="color:#10B981;font-size:0.8rem;">■ Settled WIN</span>&nbsp;&nbsp;'
                     '<span style="color:#6B7280;font-size:0.8rem;">■ Settled LOSS</span>&nbsp;&nbsp;'
                     '<span style="color:#00FF88;font-size:0.8rem;">■ Open +P&L</span>&nbsp;&nbsp;'
                     '<span style="color:#FF4444;font-size:0.8rem;">■ Open -P&L</span>'
@@ -4002,7 +4208,8 @@ def _render_trading_tab() -> None:
                     text=[f"${v:+.2f}" for v in bar_vals],
                     textposition="outside",
                     customdata=[[r["side"], r["fill"], r["cur"],
-                                 "✅ SETTLED" if r["resolved"] and r["won"]
+                                 "🟡 PROVISIONAL" if r["resolved"] and r.get("phase") == "proposed"
+                                 else "✅ SETTLED" if r["resolved"] and r["won"]
                                  else "❌ SETTLED" if r["resolved"]
                                  else "⏳ LIVE"] for r in _bar_rows_sorted],
                     hovertemplate=(
@@ -4035,7 +4242,12 @@ def _render_trading_tab() -> None:
                     cum_vals.append(round(cum, 2))
                     labels.append(r["label"])
                     colors.append(_bar_colour(r, r["upnl"], color_mode))
-                    status = "✅ SETTLED" if r["resolved"] and r["won"] else "❌ SETTLED" if r["resolved"] else "⏳ LIVE"
+                    status = (
+                        "🟡 PROVISIONAL" if r["resolved"] and r.get("phase") == "proposed"
+                        else "✅ SETTLED" if r["resolved"] and r["won"]
+                        else "❌ SETTLED" if r["resolved"]
+                        else "⏳ LIVE"
+                    )
                     hovers.append(
                         f"{r['city']} · {r['date']} · {r['bucket']} · {status}<br>"
                         f"Side: {r['side']}  Entry: {r['fill']:.3f}  Now: {r['cur']:.3f}<br>"
@@ -4096,9 +4308,9 @@ def _render_trading_tab() -> None:
 
             st.plotly_chart(fig, use_container_width=True)
             st.caption(
-                f"Live unrealized P&L · {n_live}/{len(positions)} prices · "
+                f"Live unrealized P&L · {n_live}/{len(still_open)} open prices · "
                 f"total: **${sum(r['upnl'] for r in _bar_rows):+.2f}** · "
-                f"resolves start appearing at 10:00 UTC · prices refresh every 5 min"
+                f"{len(watcher_settled)} watcher-settled ({sum(1 for r in watcher_settled if str(r.get('settlement_phase', '')) == 'proposed')} provisional) · prices refresh every 5 min"
             )
         else:
             st.info("Fetching live prices… refresh in a moment.")
@@ -4170,19 +4382,22 @@ def _render_trading_tab() -> None:
                 "won":      None,
             })
 
-        for r in net_live_resolved:
+        for r in watcher_settled:
             fill = float(r.get("fill_price", 0) or 0)
+            outcome = str(r.get("outcome", "") or "")
+            phase = str(r.get("settlement_phase", "") or "")
             _wf_rows.append({
-                "label":    f"{r.get('city','?')} {r.get('date','?')} {r.get('bucket','?')} ✓",
+                "label":    f"{r.get('city','?')} {r.get('date','?')} {r.get('bucket','?')} {'~' if phase == 'proposed' else '✓'}",
                 "city":     r.get("city", "?"),
                 "date":     r.get("date", "?"),
                 "bucket":   r.get("bucket", "?"),
                 "side":     r.get("side", "?"),
                 "fill":     fill,
-                "cur":      r.get("live_price", fill),
-                "upnl":     r["live_pnl"],
+                "cur":      1.0 if outcome == "WIN" else 0.5 if outcome == "HALF_WIN" else 0.0,
+                "upnl":     float(r.get("pnl_usd", 0) or 0),
                 "resolved": True,
-                "won":      r["live_won"],
+                "won":      outcome == "WIN",
+                "phase":    phase,
             })
 
         if _wf_rows:
@@ -4215,7 +4430,9 @@ def _render_trading_tab() -> None:
                         return "#1D4ED8" if is_yes else "#C2410C"
                     return "#3B82F6" if is_yes else "#F97316"
                 if r["resolved"]:
-                    return "#F59E0B" if r["won"] else "#6B7280"
+                    if r.get("phase") == "proposed":
+                        return "#F59E0B"
+                    return "#10B981" if r["won"] else "#6B7280"
                 return "#00FF88" if v >= 0 else "#FF4444"
 
             if _wf_color == "🔵 YES / NO":
@@ -4228,7 +4445,8 @@ def _render_trading_tab() -> None:
                 )
             else:
                 st.markdown(
-                    '<span style="color:#F59E0B;font-size:0.8rem;">■ Settled WIN</span>&nbsp;&nbsp;'
+                    '<span style="color:#F59E0B;font-size:0.8rem;">■ Provisional</span>&nbsp;&nbsp;'
+                    '<span style="color:#10B981;font-size:0.8rem;">■ Settled WIN</span>&nbsp;&nbsp;'
                     '<span style="color:#6B7280;font-size:0.8rem;">■ Settled LOSS</span>&nbsp;&nbsp;'
                     '<span style="color:#00FF88;font-size:0.8rem;">■ Open +P&L</span>&nbsp;&nbsp;'
                     '<span style="color:#FF4444;font-size:0.8rem;">■ Open -P&L</span>',
@@ -4257,7 +4475,8 @@ def _render_trading_tab() -> None:
                     text=[f"${v:+.2f}" for v in _wf_vals],
                     textposition="outside",
                     customdata=[[r["side"], r["fill"], r["cur"],
-                                 "✅ SETTLED" if r["resolved"] and r["won"]
+                                 "🟡 PROVISIONAL" if r["resolved"] and r.get("phase") == "proposed"
+                                 else "✅ SETTLED" if r["resolved"] and r["won"]
                                  else "❌ SETTLED" if r["resolved"]
                                  else "⏳ LIVE"] for r in _wf_sorted],
                     hovertemplate=(
@@ -4285,8 +4504,12 @@ def _render_trading_tab() -> None:
                     _cum2_vals.append(round(_cum2, 2))
                     _labels2.append(r["label"])
                     _colors2.append(_wf_colour(r, r["upnl"], _wf_color))
-                    _status = ("✅ SETTLED" if r["resolved"] and r["won"]
-                               else "❌ SETTLED" if r["resolved"] else "⏳ LIVE")
+                    _status = (
+                        "🟡 PROVISIONAL" if r["resolved"] and r.get("phase") == "proposed"
+                        else "✅ SETTLED" if r["resolved"] and r["won"]
+                        else "❌ SETTLED" if r["resolved"]
+                        else "⏳ LIVE"
+                    )
                     _hovers2.append(
                         f"{r['city']} · {r['date']} · {r['bucket']} · {_status}<br>"
                         f"Side: {r['side']}  Entry: {r['fill']:.3f}  Now: {r['cur']:.3f}<br>"
@@ -4318,25 +4541,39 @@ def _render_trading_tab() -> None:
             st.plotly_chart(wf_fig, use_container_width=True)
             st.caption(
                 f"Unrealized P&L · {_open_cnt} open positions with live prices · "
-                f"{_res_cnt} settled today · prices refresh every 5 min"
+                f"{_res_cnt} watcher-settled ({sum(1 for r in watcher_settled if str(r.get('settlement_phase', '')) == 'proposed')} provisional) · prices refresh every 5 min"
             )
             st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── Live Resolved (real-time, from price threshold detection) ────────────
-    if net_live_resolved:
+    # ── Watcher Settled (real-time, from settlement watcher) ─────────────────
+    if watcher_settled:
         st.markdown('<div class="panel">', unsafe_allow_html=True)
-        st.subheader(f"⚡ LIVE RESOLVED ({len(net_live_resolved)}) · updated {_live_ts}")
-        st.caption("Positions where Polymarket price moved to ≥0.95 (WIN) or ≤0.05 (LOSS) — updates every 5 min, no WU scraping needed.")
-        lr_df = pd.DataFrame(net_live_resolved)
-        lr_df["result"]   = lr_df["live_won"].map({True: "✅ WIN", False: "❌ LOSS"})
-        lr_df["pnl_fmt"]  = lr_df["live_pnl"].apply(lambda x: f"${x:+.2f}")
-        lr_df["price_fmt"] = lr_df["live_price"].apply(lambda x: f"{x:.3f}")
+        provisional_count = sum(1 for r in watcher_settled if str(r.get("settlement_phase", "")) == "proposed")
+        st.subheader(f"⚡ WATCHER SETTLED ({len(watcher_settled)}) · updated {_live_ts}")
+        st.caption("Realtime settlement watcher overlay from Polymarket market status. Proposed rows are displayed immediately but remain provisional until final resolution.")
+        lr_df = pd.DataFrame(watcher_settled)
+        lr_df["result"] = lr_df.apply(
+            lambda row: "🟡 PROVISIONAL" if str(row.get("settlement_phase", "")) == "proposed"
+            else "✅ WIN" if str(row.get("outcome", "")) == "WIN"
+            else "➗ HALF" if str(row.get("outcome", "")) == "HALF_WIN"
+            else "❌ LOSS",
+            axis=1,
+        )
+        lr_df["pnl_fmt"]  = lr_df["pnl_usd"].apply(lambda x: f"${float(x):+.2f}")
+        lr_df["price_fmt"] = lr_df.apply(
+            lambda row: "1.000" if str(row.get("outcome", "")) == "WIN"
+            else "0.500" if str(row.get("outcome", "")) == "HALF_WIN"
+            else "0.000",
+            axis=1,
+        )
         show_lr = lr_df[["city", "station_icao", "date", "bucket", "side", "fill_price", "price_fmt", "result", "pnl_fmt"]].rename(columns={
             "city": "City", "station_icao": "Station", "date": "Date",
             "bucket": "Bucket", "side": "Side", "fill_price": "Entry",
             "price_fmt": "Settled Price", "result": "Result", "pnl_fmt": "P&L",
         })
         def _colour_result(val):
+            if "PROVISIONAL" in str(val): return "color:#F59E0B;font-weight:700"
+            if "HALF" in str(val): return "color:#60A5FA;font-weight:700"
             if "WIN"  in str(val): return "color:#00FF88;font-weight:700"
             if "LOSS" in str(val): return "color:#FF4444;font-weight:700"
             return ""
@@ -4344,8 +4581,10 @@ def _render_trading_tab() -> None:
             return "color:#00FF88;font-weight:600" if str(val).startswith("$+") else "color:#FF4444;font-weight:600"
         styled_lr = show_lr.style.applymap(_colour_result, subset=["Result"]).applymap(_colour_pnl, subset=["P&L"])
         st.dataframe(styled_lr, use_container_width=True, hide_index=True)
-        net_lr_pnl = sum(r["live_pnl"] for r in net_live_resolved)
-        st.caption(f"Live P&L from resolved positions: **${net_lr_pnl:+.2f}** · {net_live_wins}W / {net_live_losses}L")
+        net_lr_pnl = sum(float(r.get("pnl_usd", 0) or 0) for r in watcher_settled)
+        live_wins = sum(1 for r in watcher_settled if str(r.get("outcome", "")) == "WIN")
+        live_losses = sum(1 for r in watcher_settled if str(r.get("outcome", "")) == "LOSS")
+        st.caption(f"Watcher-settled P&L: **${net_lr_pnl:+.2f}** · {live_wins}W / {live_losses}L · {provisional_count} provisional")
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Open Positions ────────────────────────────────────────────────────────
@@ -4630,12 +4869,13 @@ _MODEL_COLORS: dict[str, str] = {
     "🌿 CAVENDISH":  "#2ECC71",
     "CAVENDISH_MK3": "#1ABC9C",
     "TRUE_ALPHA":    "#F0C040",
+    "PRIME_ALPHA":   "#FF6B6B",
 }
 
 
 def _render_overview_tab() -> None:
     """Comparison scoreboard: all strategies side-by-side, plus live open-book."""
-    resolved_df = load_resolved_df()
+    resolved_df = load_effective_resolved_df()
     positions   = load_positions()
     shadow_2a          = load_shadow_positions("shadow_2a")
     shadow_2b          = load_shadow_positions("shadow_2b")
@@ -4645,12 +4885,13 @@ def _render_overview_tab() -> None:
     shadow_purdey2     = load_shadow_positions("shadow_purdey2")
     shadow_cavendish3  = load_shadow_positions("shadow_cavendish3")
     shadow_true_alpha  = load_shadow_positions("shadow_true_alpha")
+    shadow_prime_alpha = load_shadow_positions("shadow_prime_alpha")
     shadow_props_kelly = load_shadow_positions("shadow_props_kelly")
 
     has_strat = not resolved_df.empty and "strategy" in resolved_df.columns
 
     def _strat_slice(s: str) -> pd.DataFrame:
-        return resolved_df[resolved_df["strategy"] == s].copy() if has_strat else pd.DataFrame()
+        return _filter_rows_for_strategy(resolved_df, s, current_main_mode_name()) if has_strat else pd.DataFrame()
 
     # Filter main positions by strategy tag for each live tab.
     # Fall back to all positions if none are tagged yet (pre-tagging legacy data).
@@ -4663,7 +4904,7 @@ def _render_overview_tab() -> None:
     conviction_pos = _pos_tagged("CONVICTION")
 
     # Fetch all live prices in one batch
-    _all_pos = positions + shadow_2a + shadow_2b + shadow_2c + shadow_purdey + shadow_cavendish + shadow_purdey2 + shadow_cavendish3 + shadow_true_alpha + shadow_props_kelly
+    _all_pos = positions + shadow_2a + shadow_2b + shadow_2c + shadow_purdey + shadow_cavendish + shadow_purdey2 + shadow_cavendish3 + shadow_true_alpha + shadow_prime_alpha + shadow_props_kelly
     _all_tids = tuple({p["token_id"] for p in _all_pos if p.get("token_id")})
     _live_prices = fetch_live_position_prices(_all_tids) if _all_tids else {}
     _live_ts = datetime.now(UTC).strftime("%H:%M UTC")
@@ -4680,6 +4921,7 @@ def _render_overview_tab() -> None:
         ("🎯 PURDEY MK2",    "PURDEY_MK2",    _strat_slice("PURDEY_MK2"),    shadow_purdey2),
         ("🌱 CAVENDISH MK3", "CAVENDISH_MK3", _strat_slice("CAVENDISH_MK3"), shadow_cavendish3),
         ("💎 True Alpha",    "TRUE_ALPHA",    _strat_slice("TRUE_ALPHA"),    shadow_true_alpha),
+        ("🧭 Prime Alpha",   "PRIME_ALPHA",   _strat_slice("PRIME_ALPHA"),   shadow_prime_alpha),
         ("🎲 Props Kelly",   "PROPS_KELLY",   _strat_slice("PROPS_KELLY"),   shadow_props_kelly),
     ]
 
@@ -4714,9 +4956,13 @@ def _render_overview_tab() -> None:
             accent = _MODEL_COLORS.get(key, BLUE)
             border_color = "#1a4d2e" if ls["unrealized_pnl"] >= 0 else "#4d1a1a"
             with col:
+                provisional_note = (
+                    f' · {m["provisional"]} provisional'
+                    if m.get("provisional", 0) > 0 else ""
+                )
                 settled_line = (
                     f'<div style="color:{pnl_c};font-size:0.8rem;font-weight:600;">'
-                    f'${m["pnl"]:+.2f} settled · {m["wins"]}W/{m["losses"]}L · {m["wr"]*100:.0f}% WR</div>'
+                    f'${m["pnl"]:+.2f} settled · {m["wins"]}W/{m["losses"]}L · {m["wr"]*100:.0f}% WR{provisional_note}</div>'
                     if m["n"] > 0 else
                     '<div style="color:#555;font-size:0.75rem;">No settled trades yet</div>'
                 )
@@ -4819,8 +5065,7 @@ def _render_overview_tab() -> None:
 
     # ── Live open-book positions ───────────────────────────────────────────────
     if positions:
-        today_str = _date.today().isoformat()
-        open_positions = [p for p in positions if str(p.get("date", "9999")) >= today_str]
+        open_positions, settled_rows, stale_count = split_positions_for_display(positions)
         st.markdown('<div class="panel">', unsafe_allow_html=True)
         st.markdown(
             '<div style="font-size:0.95rem;font-weight:700;color:#aaa;'
@@ -4851,11 +5096,19 @@ def _render_overview_tab() -> None:
             })
         pos_df = pd.DataFrame(rows)
         st.dataframe(pos_df, use_container_width=True, hide_index=True)
-        stale_count = max(0, len(positions) - len(open_positions))
-        if stale_count:
+        settled_count = len(settled_rows)
+        if stale_count or settled_count:
+            details = [f"{len(open_positions)} genuinely open positions"]
+            if stale_count:
+                details.append(f"{stale_count} past-date rows excluded")
+            if settled_count:
+                provisional = sum(1 for row in settled_rows if str(row.get("settlement_phase", "")) == "proposed")
+                if provisional:
+                    details.append(f"{settled_count} watcher-settled ({provisional} provisional)")
+                else:
+                    details.append(f"{settled_count} watcher-settled")
             st.caption(
-                f"Live prices as of {_live_ts} · {len(open_positions)} genuinely open positions "
-                f"({stale_count} past-date rows excluded)"
+                f"Live prices as of {_live_ts} · " + " · ".join(details)
             )
         else:
             st.caption(f"Live prices as of {_live_ts} · {len(open_positions)} open positions")
@@ -4868,20 +5121,16 @@ def _render_overview_tab() -> None:
 def _compute_live_stats(positions: list[dict], live_prices: dict[str, float]) -> dict:
     """Compute live unrealized P&L stats for genuinely open positions only.
 
-    Positions whose target date has passed are excluded from the "open" count
-    and exposure — they belong in resolved.csv, not the live scoreboard.
+    Positions already observed by the settlement watcher are excluded from the
+    live book even if they still exist in the raw positions files.
     """
-    today_str = _date.today().isoformat()
+    positions, _, _ = split_positions_for_display(positions)
     total_staked = unrealized_pnl = 0.0
     open_count = n_priced = 0
     best_pos = worst_pos = None
     best_pnl, worst_pnl = float("-inf"), float("inf")
 
     for p in positions:
-        target_date = p.get("date", "9999")
-        if target_date < today_str:
-            continue
-
         tid  = p.get("token_id")
         cur  = live_prices.get(tid) if tid else None
         fill = float(p.get("fill_price", 0) or 0)
@@ -4917,35 +5166,7 @@ def _render_live_positions_section(
     key_prefix: str = "strat",
 ) -> None:
     """Render live open positions waterfall + table for a strategy tab."""
-    today_str = _date.today().isoformat()
-
-    RESOLVE_WIN_THRESHOLD  = 0.95
-    RESOLVE_LOSS_THRESHOLD = 0.05
-
-    live_resolved: list[dict] = []
-    still_open: list[dict] = []
-
-    for p in positions:
-        tid         = p.get("token_id")
-        live_p      = live_prices.get(tid) if tid else None
-        cost        = float(p.get("cost",      0) or 0)
-        fill_size   = float(p.get("fill_size", 0) or 0)
-        target_date = p.get("date", "9999")
-
-        if live_p is None:
-            still_open.append(p)
-            continue
-
-        token_price = float(live_p)
-        won  = token_price >= RESOLVE_WIN_THRESHOLD
-        lost = token_price <= RESOLVE_LOSS_THRESHOLD
-        is_expired = target_date <= today_str
-
-        if is_expired and (won or lost):
-            pnl = round(fill_size - cost, 4) if won else round(-cost, 4)
-            live_resolved.append({**p, "live_won": won, "live_pnl": pnl, "live_price": token_price})
-        else:
-            still_open.append(p)
+    still_open, settled_rows, stale_count = split_positions_for_display(positions)
 
     # Build waterfall rows
     _bar_rows: list[dict] = []
@@ -4969,19 +5190,22 @@ def _render_live_positions_section(
             "resolved": False,
             "won":      None,
         })
-    for r in live_resolved:
+    for r in settled_rows:
         fill = float(r.get("fill_price", 0) or 0)
+        outcome = str(r.get("outcome", "") or "")
+        resolved_state = str(r.get("settlement_phase", "") or "")
         _bar_rows.append({
-            "label":    f"{r.get('city','?')} {r.get('date','?')} {r.get('bucket','?')} ✓",
+            "label":    f"{r.get('city','?')} {r.get('date','?')} {r.get('bucket','?')} {'~' if resolved_state == 'proposed' else '✓'}",
             "city":     r.get("city", "?"),
             "date":     r.get("date", "?"),
             "bucket":   r.get("bucket", "?"),
             "side":     r.get("side", "?"),
             "fill":     fill,
-            "cur":      r.get("live_price", fill),
-            "upnl":     r["live_pnl"],
+            "cur":      1.0 if outcome == "WIN" else 0.5 if outcome == "HALF_WIN" else 0.0,
+            "upnl":     coerce_float(r.get("pnl_usd")),
             "resolved": True,
-            "won":      r["live_won"],
+            "won":      outcome == "WIN",
+            "phase":    resolved_state,
         })
 
     _open_cnt = sum(1 for r in _bar_rows if not r["resolved"])
@@ -4998,7 +5222,7 @@ def _render_live_positions_section(
   <span style="color:{TEXT};font-size:1rem;font-weight:700;letter-spacing:.05em;">
     LIVE OPEN POSITIONS</span>
   <span style="color:{unreal_color};font-size:1.1rem;font-weight:700;">${total_unreal:+.2f}</span>
-  <span style="color:{GRAY};font-size:0.82rem;">{_open_cnt} open · {_res_cnt} settled today · {live_ts}</span>
+  <span style="color:{GRAY};font-size:0.82rem;">{_open_cnt} open · {_res_cnt} watcher-settled · {stale_count} stale hidden · {live_ts}</span>
 </div>""",
         unsafe_allow_html=True,
     )
@@ -5011,7 +5235,9 @@ def _render_live_positions_section(
     else:
         def _bar_colour_fn(r: dict, v: float) -> str:
             if r["resolved"]:
-                return "#F59E0B" if r["won"] else "#6B7280"
+                if r.get("phase") == "proposed":
+                    return "#F59E0B"
+                return "#10B981" if r["won"] else "#6B7280"
             return GREEN if v >= 0 else RED
 
         _sorted = sorted(_bar_rows, key=lambda r: (r["resolved"], r["upnl"]))
@@ -5029,7 +5255,8 @@ def _render_live_positions_section(
             textposition="outside",
             customdata=[[
                 r["side"], r["fill"], r["cur"],
-                "✅ SETTLED" if r["resolved"] and r["won"]
+                "🟡 PROVISIONAL" if r["resolved"] and r.get("phase") == "proposed"
+                else "✅ SETTLED" if r["resolved"] and r["won"]
                 else "❌ SETTLED" if r["resolved"]
                 else "⏳ LIVE",
             ] for r in _sorted],
@@ -5052,7 +5279,8 @@ def _render_live_positions_section(
         )
         st.plotly_chart(wf_fig, use_container_width=True, key=f"{key_prefix}_live_wf")
         st.markdown(
-            '<span style="color:#F59E0B;font-size:0.78rem;">■ Settled WIN</span>&nbsp;&nbsp;'
+            '<span style="color:#F59E0B;font-size:0.78rem;">■ Provisional</span>&nbsp;&nbsp;'
+            '<span style="color:#10B981;font-size:0.78rem;">■ Settled WIN</span>&nbsp;&nbsp;'
             '<span style="color:#6B7280;font-size:0.78rem;">■ Settled LOSS</span>&nbsp;&nbsp;'
             '<span style="color:#00FF88;font-size:0.78rem;">■ Open +P&L</span>&nbsp;&nbsp;'
             '<span style="color:#FF4444;font-size:0.78rem;">■ Open -P&L</span>',
@@ -5074,8 +5302,7 @@ def _render_live_positions_section(
             (pos_df["live_price"].fillna(pos_df["fill_price"]) - pos_df["fill_price"])
             * pos_df["fill_size"]
         ).round(2)
-        pos_df["_expired"] = (pos_df["date"] < today_str) & pos_df["live_price"].isna()
-        active_df  = pos_df[~pos_df["_expired"]].copy()
+        active_df = pos_df.copy()
 
         if not active_df.empty:
             active_df["live_price_fmt"] = active_df["live_price"].apply(
@@ -5132,6 +5359,8 @@ def _render_model_detail_tab(
 
     if note:
         st.caption(f"ℹ️ {note}")
+    if m.get("provisional", 0) > 0:
+        st.caption(f"Settlement watcher: {m['provisional']} provisional trade(s) are included in the settled line until final Polymarket resolution lands.")
 
     # ── SECTION 1: Live Unrealized KPIs (always first, always visible) ────────
     if positions is not None and live_prices is not None:

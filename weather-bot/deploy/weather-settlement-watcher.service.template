@@ -1,0 +1,27 @@
+[Unit]
+Description=Weather Settlement Watcher
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__WORKDIR__
+EnvironmentFile=-/etc/weather-bot.env
+Environment=PYTHONUNBUFFERED=1
+ExecStartPre=/usr/bin/mkdir -p __WORKDIR__/logs __WORKDIR__/data
+ExecStart=__WORKDIR__/venv/bin/python3 __WORKDIR__/scripts/settlement_watcher.py
+Restart=always
+RestartSec=10
+TimeoutStopSec=20
+StandardOutput=append:__WORKDIR__/logs/settlement_watcher.log
+StandardError=append:__WORKDIR__/logs/settlement_watcher_error.log
+
+# Keep the watcher isolated from execution and lightweight enough for the VM.
+MemoryMax=384M
+CPUQuota=25%
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

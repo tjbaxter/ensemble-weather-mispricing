@@ -1,0 +1,44 @@
+{
+  "city": "Atlanta",
+  "station_icao": "KATL",
+  "target_date": "2026-03-23",
+  "bucket_labels": [
+    "72-73",
+    "74-75",
+    "76-77",
+    "78-79",
+    "80-81",
+    "82-83"
+  ],
+  "predicted_display_temp": 77,
+  "current_model_values": {
+    "ncep_nbm_conus": 76.1,
+    "icon_seamless": 76.9,
+    "gem_seamless": 79.9,
+    "gfs_seamless": 76.1,
+    "gem_global": 81.3,
+    "ncep_aigfs025": 76.8,
+    "ecmwf_ifs025": 73.2
+  },
+  "prior_resolved_bucket": "82-83",
+  "current_true_alpha_buckets": [
+    "72-73",
+    "74-75",
+    "76-77",
+    "78-79"
+  ],
+  "expected_buckets": [
+    "76-77",
+    "78-79",
+    "80-81"
+  ],
+  "notes": [
+    "Atlanta 2026-03-23 using actual model_snapshot_log.json values.",
+    "Prior day (2026-03-22) resolved to 82-83 on Polymarket.",
+    "Trusted models (hit 82-83): ncep_nbm_conus(83), gfs_seamless(83), icon_seamless(82), gem_seamless(83).",
+    "Untrusted: gem_global(84), ecmwf_ifs025(80), ncep_aigfs025(81).",
+    "Trusted range for 2026-03-23: 76-80 -> buckets 76-77, 78-79, 80-81.",
+    "Market resolved to 80-81 -> PRIME_ALPHA would have won.",
+    "TRUE_ALPHA incorrectly bet on 72-73 and 74-75 by including ECMWF (wrong 11 days running)."
+  ]
+}

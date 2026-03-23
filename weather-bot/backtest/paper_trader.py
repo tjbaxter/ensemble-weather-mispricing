@@ -67,6 +67,7 @@ class ShadowTrader:
         "PURDEY_MK2":    "shadow_purdey2",
         "CAVENDISH_MK3": "shadow_cavendish3",
         "TRUE_ALPHA":    "shadow_true_alpha",
+        "PRIME_ALPHA":   "shadow_prime_alpha",
         "PROPS_KELLY":   "shadow_props_kelly",
     }
 
@@ -86,7 +87,7 @@ class ShadowTrader:
         self._log = logging.getLogger(f"weather-bot.{slug}")
 
     _PURDEY_CAVENDISH_VARIANTS = {"PURDEY_MK1", "CAVENDISH_MK1"}
-    _MK2_ACE_VARIANTS = {"PURDEY_MK2", "CAVENDISH_MK3", "TRUE_ALPHA", "PROPS_KELLY"}
+    _MK2_ACE_VARIANTS = {"PURDEY_MK2", "CAVENDISH_MK3", "TRUE_ALPHA", "PRIME_ALPHA", "PROPS_KELLY"}
 
     def run_once(
         self,
@@ -94,18 +95,19 @@ class ShadowTrader:
         forecasts: dict,
         bankroll: float,
         run_id: str | None = None,
+        market_scan_id: str | None = None,
     ) -> None:
         """Execute one scan using shared market + forecast data."""
         if run_id is None:
             run_id = self.audit.new_run_id(f"shadow-{self.variant.lower()}")
         if self.variant in self._MK2_ACE_VARIANTS:
-            set_signal_observability_context("")
+            set_signal_observability_context(market_scan_id, mode="paper")
             all_shadows = generate_mk2_ace_signals(markets, forecasts, bankroll)
         elif self.variant in self._PURDEY_CAVENDISH_VARIANTS:
-            set_signal_observability_context("")
+            set_signal_observability_context(market_scan_id, mode="paper")
             all_shadows = generate_purdey_cavendish_signals(markets, forecasts, bankroll)
         else:
-            set_signal_observability_context("")
+            set_signal_observability_context(market_scan_id, mode="paper")
             all_shadows = generate_top2_shadow_signals(markets, forecasts, bankroll)
         signals = [s for s in all_shadows if s.strategy == self.variant]
 
@@ -184,10 +186,11 @@ class ShadowTrader:
                 continue
             sig["size_usd"] = decision.size_usd
             result = self.order_manager.place_order(sig)
-            self.deep_obs.log_execution(
+            execution_id = self.deep_obs.log_execution(
                 {
                     "execution_id": "",
                     "decision_id": sig.get("decision_id", ""),
+                    "market_scan_id": sig.get("market_scan_id", market_scan_id or ""),
                     "timestamp_utc": datetime.now(UTC).isoformat(),
                     "strategy": sig.get("strategy", self.variant),
                     "city": sig.get("city", ""),
@@ -216,6 +219,7 @@ class ShadowTrader:
                         "reason": decision.reason,
                     },
                     execution_result={
+                        "execution_id": execution_id,
                         "status": result.status,
                         "fill_price": result.fill_price,
                         "size_usd": result.size_usd,
@@ -243,6 +247,7 @@ class ShadowTrader:
                     "reason": decision.reason,
                 },
                 execution_result={
+                    "execution_id": execution_id,
                     "status": result.status,
                     "fill_price": result.fill_price,
                     "size_usd": result.size_usd,
@@ -323,6 +328,7 @@ class PaperTrader:
         # Latest hydrated markets — updated after every successful discovery run.
         # Shared with _run_shadows_from_cache so shadows can execute independently.
         self._cached_markets: list[dict] = []
+        self._last_market_scan_id = ""
         self.shadows = [
             ShadowTrader("TOP2_EQUAL"),
             ShadowTrader("TOP2_COND"),
@@ -332,6 +338,7 @@ class PaperTrader:
             ShadowTrader("PURDEY_MK2"),
             ShadowTrader("CAVENDISH_MK3"),
             ShadowTrader("TRUE_ALPHA"),
+            ShadowTrader("PRIME_ALPHA"),
             ShadowTrader("PROPS_KELLY"),
         ]
 
@@ -385,7 +392,8 @@ class PaperTrader:
                 "markets": markets,
             }
         )
-        set_signal_observability_context(market_scan_id)
+        self._last_market_scan_id = market_scan_id
+        set_signal_observability_context(market_scan_id, mode="paper")
 
         await self._log_accuweather_snapshots(markets)
 
@@ -505,10 +513,11 @@ class PaperTrader:
                 continue
             sig["size_usd"] = decision.size_usd
             result = self.order_manager.place_order(sig)
-            self.deep_obs.log_execution(
+            execution_id = self.deep_obs.log_execution(
                 {
                     "execution_id": "",
                     "decision_id": sig.get("decision_id", ""),
+                    "market_scan_id": sig.get("market_scan_id", market_scan_id),
                     "timestamp_utc": datetime.now(UTC).isoformat(),
                     "strategy": sig.get("strategy", "SINGLE"),
                     "city": sig.get("city", ""),
@@ -538,6 +547,7 @@ class PaperTrader:
                         "reason": decision.reason,
                     },
                     execution_result={
+                        "execution_id": execution_id,
                         "status": result.status,
                         "fill_price": result.fill_price,
                         "size_usd": result.size_usd,
@@ -566,6 +576,7 @@ class PaperTrader:
                     "reason": decision.reason,
                 },
                 execution_result={
+                    "execution_id": execution_id,
                     "status": result.status,
                     "fill_price": result.fill_price,
                     "size_usd": result.size_usd,
@@ -741,6 +752,18 @@ class PaperTrader:
         if not self._cached_markets or not self.forecasts:
             self.logger.info("SHADOW_SKIP no cached markets or forecasts yet")
             return
+        market_scan_id = self._last_market_scan_id
+        if not market_scan_id:
+            market_scan_id = self.deep_obs.log_market_state(
+                {
+                    "market_scan_id": "",
+                    "timestamp_utc": datetime.now(UTC).isoformat(),
+                    "scan_trigger": "paper_run_shadows_now",
+                    "markets_count": len(self._cached_markets),
+                    "markets": self._cached_markets,
+                }
+            )
+            self._last_market_scan_id = market_scan_id
         run_id = self.audit.new_run_id("paper-shadows")
         for shadow in self.shadows:
             try:
@@ -749,6 +772,7 @@ class PaperTrader:
                     self.forecasts,
                     shadow.portfolio.current_cash,
                     run_id=run_id,
+                    market_scan_id=market_scan_id,
                 )
             except Exception as exc:
                 self.logger.warning(f"Shadow {shadow.variant} failed: {exc}")
@@ -809,7 +833,7 @@ class PaperTrader:
                     (_ROOT / "data" / "positions_shadow_purdey2.json", "PURDEY_MK2"),
                     (_ROOT / "data" / "positions_shadow_cavendish3.json", "CAVENDISH_MK3"),
                     (_ROOT / "data" / "positions_shadow_true_alpha.json", "TRUE_ALPHA"),
-                    (_ROOT / "data" / "positions_shadow_props_kelly.json", "PROPS_KELLY"),
+                    (_ROOT / "data" / "positions_shadow_prime_alpha.json", "PRIME_ALPHA"),
                     (_ROOT / "data" / "positions_shadow_props_kelly.json", "PROPS_KELLY"),
                 ]
 

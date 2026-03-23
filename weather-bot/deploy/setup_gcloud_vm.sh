@@ -11,6 +11,24 @@ TAG="${TAG:-weather-bot}"
 REMOTE_USER="${REMOTE_USER:-$USER}"
 BOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REMOTE_WORKDIR="/home/${REMOTE_USER}/weather-bot"
+ARCHIVE_EXCLUDES=(
+  --exclude="./.env"
+  --exclude="./.venv"
+  --exclude="./venv"
+  --exclude="./logs"
+  --exclude="./__pycache__"
+  --exclude="*.pyc"
+  --exclude="./data/*.json"
+  --exclude="./data/*.db"
+  --exclude="./data/*.db-*"
+  --exclude="./data/*.sqlite"
+  --exclude="./data/*.sqlite3"
+  --exclude="./data/*.csv"
+  --exclude="./data/*.jsonl"
+  --exclude="./data/*.parquet"
+  --exclude="./data/*.tmp"
+  --exclude="./data/*.lock"
+)
 
 if ! command -v gcloud >/dev/null 2>&1; then
   echo "gcloud CLI is required. Install it first."
@@ -35,22 +53,20 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   sudo apt-get update && \
   sudo apt-get install -y python3 python3-pip python3-venv git tmux logrotate"
 
-echo "==> Copying weather-bot directory (excluding local venv/logs/cache)"
+echo "==> Copying code bundle (preserving remote runtime data)"
 TMP_ARCHIVE="/tmp/weather-bot-deploy-$$.tgz"
 trap 'rm -f "${TMP_ARCHIVE}"' EXIT
 tar -C "${BOT_DIR}" \
-  --exclude=".venv" \
-  --exclude="venv" \
-  --exclude="logs" \
-  --exclude="__pycache__" \
-  --exclude="*.pyc" \
+  "${ARCHIVE_EXCLUDES[@]}" \
   -czf "${TMP_ARCHIVE}" .
 gcloud compute scp --zone "${ZONE}" "${TMP_ARCHIVE}" "${VM_NAME}:~/weather-bot.tgz"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
-  rm -rf '${REMOTE_WORKDIR}' && \
+  set -euo pipefail && \
+  REMOTE_STAGE=\$(mktemp -d /tmp/weather-bot-stage-XXXXXX) && \
   mkdir -p '${REMOTE_WORKDIR}' && \
-  tar -xzf ~/weather-bot.tgz -C '${REMOTE_WORKDIR}' && \
-  rm -f ~/weather-bot.tgz"
+  tar -xzf ~/weather-bot.tgz -C \"\${REMOTE_STAGE}\" && \
+  python3 \"\${REMOTE_STAGE}/deploy/safe_remote_sync.py\" \"\${REMOTE_STAGE}\" '${REMOTE_WORKDIR}' && \
+  rm -rf \"\${REMOTE_STAGE}\" ~/weather-bot.tgz"
 
 echo "==> Setting up Python environment"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
@@ -68,6 +84,7 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   chmod +x '${REMOTE_WORKDIR}/deploy/healthcheck.sh' '${REMOTE_WORKDIR}/deploy/redeploy.sh' '${REMOTE_WORKDIR}/deploy/setup_gcloud_vm.sh' '${REMOTE_WORKDIR}/deploy/install_cron_jobs.sh' '${REMOTE_WORKDIR}/deploy/install_dashboard_service.sh' || true && \
   sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-bot.service.template' | sudo tee /etc/systemd/system/weather-bot.service >/dev/null && \
   sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' -e 's#__PORT__#8501#g' '${REMOTE_WORKDIR}/deploy/weather-dashboard.service.template' | sudo tee /etc/systemd/system/weather-dashboard.service >/dev/null && \
+  sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-settlement-watcher.service.template' | sudo tee /etc/systemd/system/weather-settlement-watcher.service >/dev/null && \
   sed -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-bot-logrotate' | sudo tee /etc/logrotate.d/weather-bot >/dev/null"
 
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
@@ -80,6 +97,8 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
       'REQUIRE_VPN=true' \
       'STATION_PRIORITY_FILTER=HIGH,MEDIUM,LOW' \
       'CLOB_PREFILTER_PRIORITY=HIGH,MEDIUM,LOW' \
+      'SETTLEMENT_WATCHER_POLL_SECONDS=10' \
+      'SETTLEMENT_WATCHER_OFFICIAL_REFRESH_SECONDS=60' \
       'MET_OFFICE_API_KEY=' \
       'ACCUWEATHER_API_KEY=' | sudo tee /etc/weather-bot.env >/dev/null; \
   fi && \
@@ -88,8 +107,10 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   sudo systemctl daemon-reload && \
   sudo systemctl enable weather-bot && \
   sudo systemctl enable weather-dashboard && \
+  sudo systemctl enable weather-settlement-watcher && \
   sudo systemctl restart weather-bot && \
-  sudo systemctl restart weather-dashboard"
+  sudo systemctl restart weather-dashboard && \
+  sudo systemctl restart weather-settlement-watcher"
 
 echo "==> Installing cron suite"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
@@ -103,6 +124,7 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
 echo "==> Verifying service status"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   sudo systemctl status weather-bot --no-pager && \
+  sudo systemctl status weather-settlement-watcher --no-pager && \
   sudo systemctl status weather-dashboard --no-pager && \
   if ! sudo journalctl -u weather-bot --no-pager -n 300 | grep HEARTBEAT | tail -5; then \
     grep HEARTBEAT '${REMOTE_WORKDIR}/logs/bot.log' | tail -5 || true; \
@@ -115,7 +137,7 @@ Next:
 1) Set secrets on VM (not in repo):
    gcloud compute ssh ${VM_NAME} --zone ${ZONE} --command 'sudo nano /etc/weather-bot.env'
 2) Restart after editing:
-   gcloud compute ssh ${VM_NAME} --zone ${ZONE} --command 'sudo systemctl restart weather-bot'
+   gcloud compute ssh ${VM_NAME} --zone ${ZONE} --command 'sudo systemctl restart weather-bot weather-settlement-watcher'
 3) Open the private dashboard tunnel:
    gcloud compute ssh ${VM_NAME} --zone ${ZONE} --project weather-488111 -- -N -L 8501:127.0.0.1:8501
 EOF

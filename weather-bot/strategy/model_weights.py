@@ -99,11 +99,11 @@ def compute_weights(
     """Return {model_name: weight} — higher means more trusted.
 
     Weight factors:
-      • Yesterday within 1°F  → +3.0
-      • Yesterday within 2°F  → +2.0
+      • Yesterday within 1°F  → +1.5
+      • Yesterday within 2°F  → +1.0
       • Yesterday within 3°F  → +0.5
       • Yesterday > 4°F off   → -0.5
-      • Recent proportion within 2°F → up to +2.0
+      • Recent proportion within 2°F → up to +1.0
       • Recent mean error penalty → up to -1.5
       • Calibration baseline (gfs/ecmwf/icon only) → ±0.5
     """
@@ -166,16 +166,16 @@ def compute_weights(
             if yest:
                 best = min(yest)
                 if best <= 1.0:
-                    w += 3.0
+                    w += 1.5
                 elif best <= 2.0:
-                    w += 2.0
+                    w += 1.0
                 elif best <= 3.0:
                     w += 0.5
                 else:
                     w -= 0.5
 
             # Week proportion within 2°F
-            w += (n_within_2 / n) * 2.0
+            w += (n_within_2 / n) * 1.0
 
             # Mean error penalty
             w -= min(mean_err / 3.0, 1.5)

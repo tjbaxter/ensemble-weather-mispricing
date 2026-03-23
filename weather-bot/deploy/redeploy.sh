@@ -12,23 +12,39 @@ ZONE="${ZONE:-us-east1-b}"
 REMOTE_USER="${REMOTE_USER:-$USER}"
 BOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REMOTE_WORKDIR="/home/${REMOTE_USER}/weather-bot"
+ARCHIVE_EXCLUDES=(
+  --exclude="./.env"
+  --exclude="./.venv"
+  --exclude="./venv"
+  --exclude="./logs"
+  --exclude="./__pycache__"
+  --exclude="*.pyc"
+  --exclude="./data/*.json"
+  --exclude="./data/*.db"
+  --exclude="./data/*.db-*"
+  --exclude="./data/*.sqlite"
+  --exclude="./data/*.sqlite3"
+  --exclude="./data/*.csv"
+  --exclude="./data/*.jsonl"
+  --exclude="./data/*.parquet"
+  --exclude="./data/*.tmp"
+  --exclude="./data/*.lock"
+)
 
-echo "==> Syncing repo to VM (excluding local venv/logs/cache)"
+echo "==> Syncing code bundle to VM (preserving remote runtime data)"
 TMP_ARCHIVE="/tmp/weather-bot-redeploy-$$.tgz"
 trap 'rm -f "${TMP_ARCHIVE}"' EXIT
 tar -C "${BOT_DIR}" \
-  --exclude=".venv" \
-  --exclude="venv" \
-  --exclude="logs" \
-  --exclude="__pycache__" \
-  --exclude="*.pyc" \
+  "${ARCHIVE_EXCLUDES[@]}" \
   -czf "${TMP_ARCHIVE}" .
 gcloud compute scp --zone "${ZONE}" "${TMP_ARCHIVE}" "${VM_NAME}:~/weather-bot.tgz"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
-  rm -rf '${REMOTE_WORKDIR}' && \
+  set -euo pipefail && \
+  REMOTE_STAGE=\$(mktemp -d /tmp/weather-bot-stage-XXXXXX) && \
   mkdir -p '${REMOTE_WORKDIR}' && \
-  tar -xzf ~/weather-bot.tgz -C '${REMOTE_WORKDIR}' && \
-  rm -f ~/weather-bot.tgz"
+  tar -xzf ~/weather-bot.tgz -C \"\${REMOTE_STAGE}\" && \
+  python3 \"\${REMOTE_STAGE}/deploy/safe_remote_sync.py\" \"\${REMOTE_STAGE}\" '${REMOTE_WORKDIR}' && \
+  rm -rf \"\${REMOTE_STAGE}\" ~/weather-bot.tgz"
 
 echo "==> Installing/updating dependencies and restarting service"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
@@ -39,11 +55,18 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   source venv/bin/activate && \
   pip install --upgrade pip && \
   pip install -r requirements.txt && \
+  sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-settlement-watcher.service.template' | sudo tee /etc/systemd/system/weather-settlement-watcher.service >/dev/null && \
   sudo systemctl daemon-reload && \
   sudo systemctl restart weather-bot && \
+  sudo systemctl restart weather-settlement-watcher && \
   sudo systemctl status weather-bot --no-pager"
 
 echo "==> Recent heartbeat lines"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   (sudo journalctl -u weather-bot --no-pager -n 300 | grep HEARTBEAT | tail -10) || \
   (grep HEARTBEAT '${REMOTE_WORKDIR}/logs/bot.log' | tail -10) || true"
+
+echo "==> Settlement watcher status"
+gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
+  sudo systemctl status weather-settlement-watcher --no-pager && \
+  tail -n 20 '${REMOTE_WORKDIR}/logs/settlement_watcher.log' || true"

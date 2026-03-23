@@ -15,8 +15,9 @@ from config.settings import load_runtime_overrides
 from data.forecast import StationForecaster
 from data.polymarket import PolymarketDataClient
 from execution.order_manager import OrderManager
+from monitoring.deep_observability import get_deep_observability
 from monitoring.trade_audit import TradeAuditStore, forecast_bundle_for_signal, market_snapshot_for_signal
-from strategy.signals import generate_signals
+from strategy.signals import generate_signals, set_signal_observability_context
 from scripts.metar_scanner import run_metar_scanner
 from scripts.ws_price_monitor import run_ws_price_monitor
 
@@ -56,7 +57,7 @@ async def startup_checks() -> None:
 
 async def run_live(bankroll: float) -> None:
     """Single-pass live trading run. Called by cron at 18:30 UTC."""
-    from datetime import date, timedelta
+    from datetime import UTC, date, datetime, timedelta
     from execution.portfolio import Portfolio
     from config.settings import (
         MAX_DAILY_EXPOSURE, MAX_DRAWDOWN_PCT, MAX_POSITIONS_PER_MARKET,
@@ -87,6 +88,7 @@ async def run_live(bankroll: float) -> None:
 
     logger = BotLogger(output_dir="logs")
     audit = TradeAuditStore()
+    deep_obs = get_deep_observability()
     run_id = audit.new_run_id("live-main")
     portfolio = Portfolio(initial_bankroll=bankroll, positions_path="data/positions_live.json")
 
@@ -102,6 +104,17 @@ async def run_live(bankroll: float) -> None:
         markets = await market_client.discover_weather_markets()
         hydrated = await market_client.hydrate_prices(markets)
         print(f"  Found {len(hydrated)} markets with prices.")
+        market_scan_id = deep_obs.log_market_state(
+            {
+                "market_scan_id": "",
+                "timestamp_utc": datetime.now(UTC).isoformat(),
+                "scan_trigger": "live_run_once",
+                "markets_count": len(hydrated),
+                "markets": hydrated,
+            },
+            mode="live",
+        )
+        set_signal_observability_context(market_scan_id, mode="live")
 
         print("Fetching forecasts for all cities...")
         target_date = date.today() + timedelta(days=1)
@@ -216,6 +229,24 @@ async def run_live(bankroll: float) -> None:
 
             sig["size_usd"] = decision.size_usd
             result = order_manager.place_order(sig)
+            execution_id = deep_obs.log_execution(
+                {
+                    "execution_id": "",
+                    "decision_id": sig.get("decision_id", ""),
+                    "market_scan_id": sig.get("market_scan_id", market_scan_id),
+                    "timestamp_utc": datetime.now(UTC).isoformat(),
+                    "strategy": sig.get("strategy", ""),
+                    "city": sig.get("city", ""),
+                    "target_date": sig.get("date", ""),
+                    "bucket": sig.get("bucket", ""),
+                    "side": sig.get("side", ""),
+                    "price": result.fill_price,
+                    "size_usd": result.size_usd,
+                    "status": result.status,
+                    "details": result.details,
+                },
+                mode="live",
+            )
 
             if result.status in ("filled", "submitted", "matched", "live"):
                 pos = portfolio.open_position(sig, result.fill_price)
@@ -235,6 +266,7 @@ async def run_live(bankroll: float) -> None:
                         "reason": decision.reason,
                     },
                     execution_result={
+                        "execution_id": execution_id,
                         "status": result.status,
                         "fill_price": result.fill_price,
                         "size_usd": result.size_usd,
@@ -271,6 +303,7 @@ async def run_live(bankroll: float) -> None:
                         "reason": decision.reason,
                     },
                     execution_result={
+                        "execution_id": execution_id,
                         "status": result.status,
                         "fill_price": result.fill_price,
                         "size_usd": result.size_usd,

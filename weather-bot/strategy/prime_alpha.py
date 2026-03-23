@@ -1,0 +1,508 @@
+"""Deterministic PRIME_ALPHA range selection.
+
+PRIME_ALPHA is designed to be replayable and auditable:
+- trust yesterday's market-hit models first
+- include the flagship ensemble only if it also hit yesterday
+- build one contiguous bucket window from today's trusted range
+- cap the window width to avoid spraying extra buckets
+"""
+
+from __future__ import annotations
+
+import csv
+import json
+import logging
+import math
+from dataclasses import dataclass
+from datetime import date, timedelta
+from pathlib import Path
+from typing import Any
+
+from data.probability import parse_bucket_bounds
+
+_ROOT = Path(__file__).resolve().parents[1]
+_ACCURACY_CACHE_PATH = _ROOT / "data" / "accuracy_rows_cache.json"
+_MODEL_ACCURACY_LOG_PATH = _ROOT / "data" / "model_accuracy_log.json"
+_MODEL_SNAPSHOT_LOG_PATH = _ROOT / "data" / "model_snapshot_log.json"
+_POLYMARKET_CACHE_PATH = _ROOT / "data" / "polymarket_cache.json"
+_LOG = logging.getLogger("weather-bot.prime_alpha")
+
+PRIME_ALPHA_MAX_BUCKETS = 3
+PRIME_ALPHA_MIN_TRUSTED_SOURCES = 2
+PRIME_ALPHA_FALLBACK_TOP_MODELS = 3
+PRIME_ALPHA_FLAGSHIP_KEY = "flagship_ensemble"
+
+
+@dataclass
+class PrimeAlphaPlan:
+    city: str
+    station_icao: str
+    target_date: str
+    prior_date: str
+    prior_resolved_bucket: str | None
+    trust_source: str
+    fallback_used: str | None
+    trusted_models: list[str]
+    fallback_models: list[str]
+    trusted_flagship: bool
+    current_display_by_source: dict[str, int]
+    bucket_support: dict[str, float]
+    initial_selected_buckets: list[str]
+    selected_buckets: list[str]
+    range_low: int | None
+    range_high: int | None
+    notes: list[str]
+
+    def to_strategy_context(self) -> dict[str, Any]:
+        return {
+            "selection_path": "prime_alpha",
+            "prior_date": self.prior_date,
+            "prior_resolved_bucket": self.prior_resolved_bucket,
+            "trust_source": self.trust_source,
+            "fallback_used": self.fallback_used,
+            "trusted_models": self.trusted_models,
+            "fallback_models": self.fallback_models,
+            "trusted_flagship": self.trusted_flagship,
+            "current_display_by_source": self.current_display_by_source,
+            "bucket_support": self.bucket_support,
+            "initial_selected_buckets": self.initial_selected_buckets,
+            "selected_buckets": self.selected_buckets,
+            "range_low": self.range_low,
+            "range_high": self.range_high,
+            "notes": self.notes,
+        }
+
+
+def build_prime_alpha_plan(
+    *,
+    city: str,
+    station_icao: str,
+    target_date: str,
+    bucket_labels: list[str],
+    current_model_values: dict[str, float],
+    predicted_display_temp: float | int | None,
+    unit: str,
+    model_weights: dict[str, float] | None = None,
+    trust_overrides: dict[str, bool | None] | None = None,
+    prior_resolved_bucket: str | None = None,
+) -> PrimeAlphaPlan:
+    """Build the deterministic PRIME_ALPHA bucket plan for one city-date."""
+    ordered_buckets = sorted(dict.fromkeys(bucket_labels), key=_bucket_sort_key)
+    prior_date = (date.fromisoformat(target_date) - timedelta(days=1)).isoformat()
+    notes: list[str] = []
+
+    trust_lookup, trust_source, prior_bucket = _resolve_trust_lookup(
+        city=city,
+        station_icao=station_icao,
+        prior_date=prior_date,
+        current_model_values=current_model_values,
+        unit=unit,
+        trust_overrides=trust_overrides,
+        prior_resolved_bucket=prior_resolved_bucket,
+    )
+    if prior_bucket:
+        notes.append(f"prior_bucket={prior_bucket}")
+
+    trusted_models = sorted(
+        [
+            model
+            for model in current_model_values
+            if trust_lookup.get(model) is True
+        ]
+    )
+    trusted_flagship = bool(trust_lookup.get(PRIME_ALPHA_FLAGSHIP_KEY) is True)
+
+    current_display_by_source: dict[str, int] = {}
+    for model in trusted_models:
+        current_display_by_source[model] = _market_display_temp(current_model_values[model], unit)
+    if trusted_flagship and predicted_display_temp is not None:
+        current_display_by_source[PRIME_ALPHA_FLAGSHIP_KEY] = _market_display_temp(
+            predicted_display_temp,
+            unit,
+        )
+
+    fallback_models: list[str] = []
+    fallback_used: str | None = None
+
+    if len(current_display_by_source) < PRIME_ALPHA_MIN_TRUSTED_SOURCES:
+        if model_weights is None:
+            from strategy.model_weights import compute_weights
+
+            model_weights = compute_weights(station_icao, list(current_model_values.keys()))
+        ranked_models = [
+            model
+            for model, _weight in sorted(
+                model_weights.items(),
+                key=lambda item: (-float(item[1]), item[0]),
+            )
+            if model in current_model_values
+        ]
+        for model in ranked_models:
+            if model in current_display_by_source:
+                continue
+            fallback_models.append(model)
+            current_display_by_source[model] = _market_display_temp(current_model_values[model], unit)
+            if len(current_display_by_source) >= max(PRIME_ALPHA_MIN_TRUSTED_SOURCES, PRIME_ALPHA_FALLBACK_TOP_MODELS):
+                break
+        if fallback_models:
+            fallback_used = "top_weighted_models"
+            notes.append(f"fallback_models={','.join(fallback_models)}")
+
+    if not current_display_by_source and predicted_display_temp is not None:
+        current_display_by_source[PRIME_ALPHA_FLAGSHIP_KEY] = _market_display_temp(
+            predicted_display_temp,
+            unit,
+        )
+        fallback_used = fallback_used or "flagship_only"
+        notes.append("fallback_flagship_only")
+
+    displays = list(current_display_by_source.values())
+    range_low = min(displays) if displays else None
+    range_high = max(displays) if displays else None
+
+    bucket_support = _bucket_support_map(
+        ordered_buckets,
+        current_display_by_source=current_display_by_source,
+        model_weights=model_weights or {},
+    )
+
+    initial_selected_buckets: list[str] = []
+    if range_low is not None and range_high is not None:
+        initial_selected_buckets = [
+            bucket
+            for bucket in ordered_buckets
+            if _bucket_overlaps_display_range(bucket, range_low, range_high)
+        ]
+
+    selected_buckets = list(initial_selected_buckets)
+    if len(selected_buckets) > PRIME_ALPHA_MAX_BUCKETS:
+        trimmed = _choose_dense_bucket_window(
+            ordered_buckets=ordered_buckets,
+            selected_buckets=selected_buckets,
+            bucket_support=bucket_support,
+            flagship_bucket=_display_bucket_for_source(
+                ordered_buckets,
+                current_display_by_source.get(PRIME_ALPHA_FLAGSHIP_KEY),
+            ),
+            max_buckets=PRIME_ALPHA_MAX_BUCKETS,
+        )
+        if trimmed != selected_buckets:
+            notes.append(
+                f"trimmed_window={','.join(selected_buckets)}->"
+                f"{','.join(trimmed)}"
+            )
+        selected_buckets = trimmed
+
+    return PrimeAlphaPlan(
+        city=city,
+        station_icao=station_icao,
+        target_date=target_date,
+        prior_date=prior_date,
+        prior_resolved_bucket=prior_bucket,
+        trust_source=trust_source,
+        fallback_used=fallback_used,
+        trusted_models=trusted_models,
+        fallback_models=fallback_models,
+        trusted_flagship=trusted_flagship,
+        current_display_by_source=current_display_by_source,
+        bucket_support=bucket_support,
+        initial_selected_buckets=initial_selected_buckets,
+        selected_buckets=selected_buckets,
+        range_low=range_low,
+        range_high=range_high,
+        notes=notes,
+    )
+
+
+def _resolve_trust_lookup(
+    *,
+    city: str,
+    station_icao: str,
+    prior_date: str,
+    current_model_values: dict[str, float],
+    unit: str,
+    trust_overrides: dict[str, bool | None] | None,
+    prior_resolved_bucket: str | None,
+) -> tuple[dict[str, bool | None], str, str | None]:
+    if trust_overrides:
+        return dict(trust_overrides), "override", prior_resolved_bucket
+
+    cache_row = _load_accuracy_cache_row(city, prior_date)
+    if cache_row:
+        trust_lookup: dict[str, bool | None] = {}
+        for model in current_model_values:
+            hit_key = f"{model}_d1_win"
+            trust_lookup[model] = cache_row.get(hit_key) if hit_key in cache_row else None
+        trust_lookup[PRIME_ALPHA_FLAGSHIP_KEY] = cache_row.get("best_ens_d1_win")
+        prior_bucket = str(cache_row.get("resolved") or "") or prior_resolved_bucket
+        return trust_lookup, "accuracy_cache", prior_bucket or None
+
+    snapshot_preds = _load_snapshot_log_preds(city, prior_date)
+    if snapshot_preds:
+        pm_bucket = _load_polymarket_resolved_bucket(city, prior_date)
+        resolved = pm_bucket or prior_resolved_bucket or _load_prior_day_winner_bucket(
+            station_icao=station_icao, prior_date=prior_date,
+        )
+        if resolved:
+            trust_lookup: dict[str, bool | None] = {}
+            for model in current_model_values:
+                pred = snapshot_preds.get(model)
+                if pred is None:
+                    trust_lookup[model] = None
+                    continue
+                trust_lookup[model] = _bucket_contains_display(
+                    resolved, _market_display_temp(pred, unit),
+                )
+            ensemble_hit = _infer_flagship_hit_from_preds(resolved, snapshot_preds, unit)
+            trust_lookup[PRIME_ALPHA_FLAGSHIP_KEY] = ensemble_hit
+            return trust_lookup, "resolved_bucket+snapshot_log", resolved
+
+    prior_bucket = prior_resolved_bucket or _load_prior_day_winner_bucket(
+        station_icao=station_icao,
+        prior_date=prior_date,
+    )
+    model_log_entry = _load_model_accuracy_entry(station_icao, prior_date)
+    preds = model_log_entry.get("preds", {}) if isinstance(model_log_entry, dict) else {}
+    actual = model_log_entry.get("actual") if isinstance(model_log_entry, dict) else None
+
+    trust_lookup = {}
+    if prior_bucket and preds:
+        for model in current_model_values:
+            pred = preds.get(model)
+            if pred is None:
+                trust_lookup[model] = None
+                continue
+            trust_lookup[model] = _bucket_contains_display(
+                prior_bucket,
+                _market_display_temp(pred, unit),
+            )
+        ensemble_hit = _infer_flagship_hit_from_preds(prior_bucket, preds, unit)
+        trust_lookup[PRIME_ALPHA_FLAGSHIP_KEY] = ensemble_hit
+        return trust_lookup, "resolved_bucket+model_accuracy_log", prior_bucket
+
+    if actual is not None and preds:
+        actual_display = _market_display_temp(actual, unit)
+        for model in current_model_values:
+            pred = preds.get(model)
+            if pred is None:
+                trust_lookup[model] = None
+                continue
+            trust_lookup[model] = _market_display_temp(pred, unit) == actual_display
+        trust_lookup[PRIME_ALPHA_FLAGSHIP_KEY] = _infer_flagship_display_hit(
+            actual_display=actual_display,
+            preds=preds,
+            unit=unit,
+        )
+        return trust_lookup, "actual_display+model_accuracy_log", prior_bucket
+
+    return {}, "none", prior_bucket
+
+
+def _load_accuracy_cache_row(city: str, row_date: str) -> dict[str, Any] | None:
+    cache = _load_json_dict(_ACCURACY_CACHE_PATH)
+    if not cache:
+        return None
+    rows = cache.get(city)
+    if not isinstance(rows, list):
+        for key, value in cache.items():
+            if str(key).strip().lower() == city.strip().lower() and isinstance(value, list):
+                rows = value
+                break
+    if not isinstance(rows, list):
+        return None
+    for row in rows:
+        if isinstance(row, dict) and str(row.get("date", "")) == row_date:
+            return row
+    return None
+
+
+def _load_model_accuracy_entry(station_icao: str, row_date: str) -> dict[str, Any]:
+    log = _load_json_dict(_MODEL_ACCURACY_LOG_PATH)
+    entry = log.get(f"{station_icao}/{row_date}")
+    return entry if isinstance(entry, dict) else {}
+
+
+def _load_prior_day_winner_bucket(*, station_icao: str, prior_date: str) -> str | None:
+    logs_dir = _ROOT / "logs"
+    if not logs_dir.exists():
+        return None
+    for csv_path in sorted(logs_dir.glob("resolved*.csv")):
+        try:
+            with csv_path.open(encoding="utf-8") as handle:
+                for row in csv.DictReader(handle):
+                    if row.get("station_icao") != station_icao:
+                        continue
+                    if row.get("target_date") != prior_date:
+                        continue
+                    if row.get("outcome") != "WIN":
+                        continue
+                    bucket = str(row.get("bucket", "") or "").strip()
+                    if bucket:
+                        return bucket
+        except OSError:
+            continue
+    return None
+
+
+def _load_snapshot_log_preds(city: str, target_date: str) -> dict[str, float]:
+    """Load all model predictions from model_snapshot_log.json for city/date.
+
+    The snapshot log typically covers more models than model_accuracy_log.json,
+    making it a better source for trust resolution across all city models.
+    """
+    log = _load_json_dict(_MODEL_SNAPSHOT_LOG_PATH)
+    city_data = log.get(city)
+    if not isinstance(city_data, dict):
+        return {}
+    entry = city_data.get(target_date)
+    if not isinstance(entry, dict):
+        return {}
+    preds = entry.get("preds", {})
+    if not isinstance(preds, dict):
+        return {}
+    return {str(k): float(v) for k, v in preds.items() if v is not None}
+
+
+def _load_polymarket_resolved_bucket(city: str, date_str: str) -> str | None:
+    """Load the Polymarket-resolved bucket from polymarket_cache.json."""
+    cache = _load_json_dict(_POLYMARKET_CACHE_PATH)
+    city_data = cache.get(city)
+    if not isinstance(city_data, dict):
+        return None
+    entry = city_data.get(date_str)
+    if not isinstance(entry, (list, tuple)) or len(entry) < 1:
+        return None
+    label = str(entry[0])
+    clean = label.replace("°F", "").replace("°C", "").strip()
+    return clean if clean else None
+
+
+def _infer_flagship_hit_from_preds(
+    prior_bucket: str,
+    preds: dict[str, Any],
+    unit: str,
+) -> bool | None:
+    values = [float(value) for value in preds.values() if value is not None]
+    if not values:
+        return None
+    ensemble_value = sum(values) / len(values)
+    return _bucket_contains_display(prior_bucket, _market_display_temp(ensemble_value, unit))
+
+
+def _infer_flagship_display_hit(
+    *,
+    actual_display: int,
+    preds: dict[str, Any],
+    unit: str,
+) -> bool | None:
+    values = [float(value) for value in preds.values() if value is not None]
+    if not values:
+        return None
+    ensemble_value = sum(values) / len(values)
+    return _market_display_temp(ensemble_value, unit) == actual_display
+
+
+def _bucket_support_map(
+    ordered_buckets: list[str],
+    *,
+    current_display_by_source: dict[str, int],
+    model_weights: dict[str, float],
+) -> dict[str, float]:
+    support: dict[str, float] = {}
+    for bucket in ordered_buckets:
+        total = 0.0
+        for source, display in current_display_by_source.items():
+            if not _bucket_contains_display(bucket, display):
+                continue
+            if source == PRIME_ALPHA_FLAGSHIP_KEY:
+                total += 1.25
+            else:
+                total += float(model_weights.get(source, 1.0) or 1.0)
+        if total > 0:
+            support[bucket] = round(total, 3)
+    return support
+
+
+def _display_bucket_for_source(
+    ordered_buckets: list[str],
+    display: int | None,
+) -> str | None:
+    if display is None:
+        return None
+    for bucket in ordered_buckets:
+        if _bucket_contains_display(bucket, display):
+            return bucket
+    return None
+
+
+def _choose_dense_bucket_window(
+    *,
+    ordered_buckets: list[str],
+    selected_buckets: list[str],
+    bucket_support: dict[str, float],
+    flagship_bucket: str | None,
+    max_buckets: int,
+) -> list[str]:
+    if len(selected_buckets) <= max_buckets:
+        return selected_buckets
+    try:
+        left = ordered_buckets.index(selected_buckets[0])
+        right = ordered_buckets.index(selected_buckets[-1])
+    except ValueError:
+        return selected_buckets[:max_buckets]
+
+    best_window = selected_buckets[:max_buckets]
+    best_key: tuple[float, int, int, float] | None = None
+
+    for start in range(left, right - max_buckets + 2):
+        window = ordered_buckets[start : start + max_buckets]
+        if len(window) < max_buckets:
+            continue
+        support_sum = sum(float(bucket_support.get(bucket, 0.0)) for bucket in window)
+        coverage = sum(1 for bucket in selected_buckets if bucket in window)
+        contains_flagship = 1 if flagship_bucket and flagship_bucket in window else 0
+        middle_index = start + (len(window) - 1) / 2.0
+        distance_from_center = abs(((left + right) / 2.0) - middle_index)
+        key = (support_sum, coverage, contains_flagship, -distance_from_center)
+        if best_key is None or key > best_key:
+            best_key = key
+            best_window = window
+    return best_window
+
+
+def _bucket_contains_display(bucket: str, display_temp: int) -> bool:
+    low, high = parse_bucket_bounds(bucket)
+    return low <= float(display_temp) < high
+
+
+def _bucket_overlaps_display_range(bucket: str, low_display: int, high_display: int) -> bool:
+    bucket_low, bucket_high = parse_bucket_bounds(bucket)
+    return bucket_low <= float(high_display) and bucket_high > float(low_display)
+
+
+def _bucket_sort_key(bucket: str) -> float:
+    low, _high = parse_bucket_bounds(bucket)
+    return low
+
+
+def _market_display_temp(raw_temp: float | int, unit: str) -> int:
+    value = float(raw_temp)
+    if str(unit).upper() == "F":
+        return _round_half_up(value)
+    temp_f = value * 9.0 / 5.0 + 32.0
+    temp_f_rounded = _round_half_up(temp_f)
+    temp_c_back = (temp_f_rounded - 32.0) * 5.0 / 9.0
+    return _round_half_up(temp_c_back)
+
+
+def _round_half_up(value: float) -> int:
+    return int(math.floor(float(value) + 0.5))
+
+
+def _load_json_dict(path: Path) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    except Exception as exc:  # pragma: no cover - defensive file IO
+        _LOG.debug("Failed to load %s: %s", path, exc)
+        return {}
+    return payload if isinstance(payload, dict) else {}

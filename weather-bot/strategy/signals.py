@@ -90,6 +90,9 @@ class Signal:
     # SINGLE    = non-ladder directional pick
     strategy: str = "SINGLE"
     decision_id: str = ""
+    market_scan_id: str = ""
+    snapshot_id: str = ""
+    prob_calc_id: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -104,11 +107,26 @@ def _kelly_position_cap(bankroll: float) -> float:
 
 _DEEP_OBS = get_deep_observability()
 _OBS_MARKET_SCAN_ID = ""
+_OBS_MODE = "paper"
 
 
-def set_signal_observability_context(market_scan_id: str | None) -> None:
-    global _OBS_MARKET_SCAN_ID
+def set_signal_observability_context(
+    market_scan_id: str | None,
+    mode: str | None = None,
+) -> None:
+    global _OBS_MARKET_SCAN_ID, _OBS_MODE
     _OBS_MARKET_SCAN_ID = market_scan_id or ""
+    if mode:
+        _OBS_MODE = mode
+
+
+def _signal_observability_fields(forecast_bundle: dict | None) -> dict[str, str]:
+    bundle = forecast_bundle or {}
+    return {
+        "market_scan_id": _OBS_MARKET_SCAN_ID,
+        "snapshot_id": str(bundle.get("__snapshot_id", "") or ""),
+        "prob_calc_id": str(bundle.get("__prob_calc_id", "") or ""),
+    }
 
 
 def _log_signal_eval(
@@ -150,7 +168,8 @@ def _log_signal_eval(
             "market_scan_id": _OBS_MARKET_SCAN_ID,
             "gate_results": gate_results,
             "strategy_context": strategy_context,
-        }
+        },
+        mode=_OBS_MODE,
     )
 
 
@@ -300,6 +319,7 @@ def generate_signals(
                                 hours_to_resolution=round(hours_to_resolution, 1),
                                 temporal_discount=temporal_discount,
                                 strategy="LADDER",
+                                **_signal_observability_fields(forecast_bundle),
                             )
                         )
                         total_cost += each_size
@@ -372,6 +392,7 @@ def generate_signals(
                                 hours_to_resolution=round(hours_to_resolution, 1),
                                 temporal_discount=temporal_discount,
                                 strategy="CONVICTION",
+                                **_signal_observability_fields(forecast_bundle),
                             )
                         )
                     continue
@@ -583,6 +604,7 @@ def generate_signals(
                     hours_to_resolution=round(hours_to_resolution, 1),
                     temporal_discount=temporal_discount,
                     strategy="SINGLE",
+                    **_signal_observability_fields(forecast_bundle),
                 )
             sig_obj.decision_id = _log_signal_eval(
                 strategy="SINGLE",
@@ -1016,6 +1038,7 @@ def generate_top2_shadow_signals(
                 hours_to_resolution=round(hours_to_res, 1),
                 temporal_discount=temporal_discount,
                 strategy=strategy,
+                **_signal_observability_fields(forecast_bundle),
             )
             sig.decision_id = _log_signal_eval(
                 strategy=strategy,
@@ -1286,6 +1309,7 @@ def generate_purdey_cavendish_signals(
                 hours_to_resolution=round(hours_to_res, 1),
                 temporal_discount=temporal_discount,
                 strategy=strategy,
+                **_signal_observability_fields(forecast_bundle),
             )
             sig.decision_id = _log_signal_eval(
                 strategy=strategy,
@@ -1399,7 +1423,7 @@ def generate_mk2_ace_signals(
     forecasts: dict[str, dict[str, dict]],
     bankroll: float,
 ) -> list["Signal"]:
-    """Generate PURDEY_MK2, CAVENDISH_MK3, TRUE_ALPHA, and PROPS_KELLY signals.
+    """Generate PURDEY_MK2, CAVENDISH_MK3, TRUE_ALPHA, PRIME_ALPHA, and PROPS_KELLY signals.
 
     All use recency-weighted model accuracy. Models that nailed yesterday's
     temperature get higher weight, shifting the distribution toward their
@@ -1419,6 +1443,11 @@ def generate_mk2_ace_signals(
         model). Not restricted to adjacent flanks — picks best supported
         buckets anywhere. Proportional Kelly sizing.
 
+    PRIME_ALPHA — Hard cap of 3 bets per city-date.
+        Deterministic contiguous range built from today's temperatures of the
+        models that hit the settled market yesterday, with the flagship
+        ensemble included only when it also hit yesterday.
+
     PROPS_KELLY — Hard cap of 3 bets per city-date.
         Peak + earned adjacent flanks (same gates as MK3) with proportional
         Kelly sizing so the peak gets the largest share.
@@ -1429,6 +1458,7 @@ def generate_mk2_ace_signals(
         models_in_bucket,
         weighted_bucket_probs,
     )
+    from strategy.prime_alpha import build_prime_alpha_plan
 
     _log = logging.getLogger("weather-bot.signals")
 
@@ -1569,6 +1599,7 @@ def generate_mk2_ace_signals(
             continue
 
         ranked.sort(key=lambda c: c["model_prob"], reverse=True)
+        cand_by_bucket = {cand["bucket"]: cand for cand in ranked}
         top1 = ranked[0]
         top2 = ranked[1] if len(ranked) >= 2 else None
 
@@ -1594,7 +1625,12 @@ def generate_mk2_ace_signals(
                 )
             return KELLY_MIN_BET_USD
 
-        def _make_sig(cand: dict, strategy: str, _override_sz: float | None = None) -> Signal:
+        def _make_sig(
+            cand: dict,
+            strategy: str,
+            _override_sz: float | None = None,
+            _strategy_context: dict | None = None,
+        ) -> Signal:
             sz = _override_sz if _override_sz is not None else _kelly_for(cand)
             mp = max(cand["market_prob"], 0.01)
             wp_ = cand["model_prob"]
@@ -1622,7 +1658,14 @@ def generate_mk2_ace_signals(
                 hours_to_resolution=round(hours_to_res, 1),
                 temporal_discount=temporal_discount,
                 strategy=strategy,
+                **_signal_observability_fields(forecast_bundle),
             )
+            strategy_context_payload = {
+                "selection_path": "mk2_ace",
+                "n_models": cand.get("n_models", None),
+            }
+            if _strategy_context:
+                strategy_context_payload.update(_strategy_context)
             sig.decision_id = _log_signal_eval(
                 strategy=strategy,
                 city=city,
@@ -1638,7 +1681,7 @@ def generate_mk2_ace_signals(
                 rejection_reason=None,
                 gate_results={"mk2_candidate": {"passed": True}},
                 forecast_bundle=forecast_bundle,
-                strategy_context={"selection_path": "mk2_ace", "n_models": cand.get("n_models", None)},
+                strategy_context=strategy_context_payload,
             )
             return sig
 
@@ -1739,6 +1782,67 @@ def generate_mk2_ace_signals(
             + " | ".join(f"{b['bucket']}(w={b['model_prob']:.2f},nm={b['n_models']})" for b in ta_bets)
         )
 
+        prime_plan = build_prime_alpha_plan(
+            city=city,
+            station_icao=station_icao,
+            target_date=date_str,
+            bucket_labels=sorted_buckets,
+            current_model_values=det_model_values,
+            predicted_display_temp=pred_display,
+            unit=str(STATIONS.get(station_icao, {}).get("resolution_unit", "F")),
+            model_weights=model_weights,
+        )
+        prime_context = prime_plan.to_strategy_context()
+        prime_bets: list[dict] = []
+        for bucket in prime_plan.selected_buckets:
+            cand = cand_by_bucket.get(bucket)
+            if cand is None:
+                _log_signal_eval(
+                    strategy="PRIME_ALPHA",
+                    city=city,
+                    station_icao=station_icao,
+                    target_date=date_str,
+                    bucket=bucket,
+                    side="BUY_YES",
+                    forecast_prob=0.0,
+                    market_prob=0.0,
+                    edge=0.0,
+                    size_usd=0.0,
+                    decision="REJECT",
+                    rejection_reason="prime_alpha_selected_bucket_not_viable",
+                    gate_results={"prime_alpha_selected_bucket": {"passed": False}},
+                    forecast_bundle=forecast_bundle,
+                    strategy_context=prime_context,
+                )
+                continue
+            prime_bets.append(cand)
+        if prime_bets:
+            prime_total_wp = sum(b["model_prob"] for b in prime_bets)
+            for bet in prime_bets:
+                prop = prime_total_wp and (bet["model_prob"] / prime_total_wp) or (1.0 / len(prime_bets))
+                raw_k = _kelly_for(bet)
+                sz = round(max(raw_k * prop * len(prime_bets), KELLY_MIN_BET_USD), 2)
+                signals.append(
+                    _make_sig(
+                        bet,
+                        "PRIME_ALPHA",
+                        _override_sz=sz,
+                        _strategy_context=prime_context,
+                    )
+                )
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: {len(prime_bets)} bets → "
+                + " | ".join(
+                    f"{b['bucket']}(w={b['model_prob']:.2f},nm={b['n_models']})"
+                    for b in prime_bets
+                )
+            )
+        else:
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: no viable buckets "
+                f"(selected={prime_plan.selected_buckets})"
+            )
+
         # ── PROPS_KELLY: peak + earned flanks, proportional Kelly sizing ─
         PROPS_KELLY_FLANK_MIN_WP = 0.05
         pk_bets: list[dict] = [top1]
@@ -1773,8 +1877,12 @@ def generate_mk2_ace_signals(
     n_p2 = sum(1 for s in signals if s.strategy == "PURDEY_MK2")
     n_c3 = sum(1 for s in signals if s.strategy == "CAVENDISH_MK3")
     n_ta = sum(1 for s in signals if s.strategy == "TRUE_ALPHA")
+    n_pa = sum(1 for s in signals if s.strategy == "PRIME_ALPHA")
     n_pk = sum(1 for s in signals if s.strategy == "PROPS_KELLY")
-    _log.info(f"PURDEY_MK2={n_p2} | CAVENDISH_MK3={n_c3} | TRUE_ALPHA={n_ta} | PROPS_KELLY={n_pk} signals")
+    _log.info(
+        f"PURDEY_MK2={n_p2} | CAVENDISH_MK3={n_c3} | "
+        f"TRUE_ALPHA={n_ta} | PRIME_ALPHA={n_pa} | PROPS_KELLY={n_pk} signals"
+    )
     return signals
 
 

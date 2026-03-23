@@ -261,6 +261,15 @@ def _env_float(name: str, default: float) -> float:
         return default
 
 
+SETTLEMENT_WATCHER_POLL_SECONDS = max(5, int(_env_float("SETTLEMENT_WATCHER_POLL_SECONDS", 10.0)))
+SETTLEMENT_WATCHER_OFFICIAL_REFRESH_SECONDS = max(
+    30,
+    int(_env_float("SETTLEMENT_WATCHER_OFFICIAL_REFRESH_SECONDS", 60.0)),
+)
+SETTLEMENT_WATCHER_FINAL_PRICE_THRESHOLD = _env_float("SETTLEMENT_WATCHER_FINAL_PRICE_THRESHOLD", 0.995)
+SETTLEMENT_WATCHER_SPLIT_PRICE_TOLERANCE = _env_float("SETTLEMENT_WATCHER_SPLIT_PRICE_TOLERANCE", 0.05)
+
+
 def load_runtime_overrides() -> dict[str, float | bool]:
     """Optionally override key runtime config values via environment variables."""
     return {
