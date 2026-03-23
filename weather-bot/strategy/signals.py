@@ -1793,7 +1793,7 @@ def generate_mk2_ace_signals(
             model_weights=model_weights,
         )
         prime_context = prime_plan.to_strategy_context()
-        prime_bets: list[dict] = []
+        prime_cands: list[dict] = []
         for bucket in prime_plan.selected_buckets:
             cand = cand_by_bucket.get(bucket)
             if cand is None:
@@ -1815,28 +1815,65 @@ def generate_mk2_ace_signals(
                     strategy_context=prime_context,
                 )
                 continue
-            prime_bets.append(cand)
-        if prime_bets:
-            prime_total_wp = sum(b["model_prob"] for b in prime_bets)
-            for bet in prime_bets:
-                prop = prime_total_wp and (bet["model_prob"] / prime_total_wp) or (1.0 / len(prime_bets))
-                raw_k = _kelly_for(bet)
-                sz = round(max(raw_k * prop * len(prime_bets), KELLY_MIN_BET_USD), 2)
-                signals.append(
-                    _make_sig(
-                        bet,
-                        "PRIME_ALPHA",
-                        _override_sz=sz,
-                        _strategy_context=prime_context,
+            prime_cands.append(cand)
+
+        if prime_cands:
+            combined_model_prob = min(0.95, sum(c["model_prob"] for c in prime_cands))
+            combined_market_cost = sum(c["market_prob"] for c in prime_cands)
+            combined_edge = combined_model_prob - combined_market_cost
+            prime_context["paired_bet"] = {
+                "combined_model_prob": round(combined_model_prob, 4),
+                "combined_market_cost": round(combined_market_cost, 4),
+                "combined_edge": round(combined_edge, 4),
+            }
+
+            if combined_edge > 0:
+                nm_total = sum(c.get("n_models", 1) for c in prime_cands)
+                conf = "HIGH" if nm_total >= 5 else ("MEDIUM" if nm_total >= 3 else "LOW")
+                total_kelly = max(
+                    kelly_size(
+                        market_price=combined_market_cost,
+                        win_prob=combined_model_prob,
+                        bankroll=bankroll,
+                        edge=combined_edge,
+                        kelly_fraction=city_kelly,
+                        max_position=_kelly_position_cap(bankroll),
+                        rounding_confidence=conf,
+                    ),
+                    KELLY_MIN_BET_USD,
+                )
+                support_scores = {
+                    c["bucket"]: prime_plan.bucket_support.get(c["bucket"], 1.0)
+                    for c in prime_cands
+                }
+                total_support = sum(support_scores.values()) or 1.0
+
+                for cand in prime_cands:
+                    weight = support_scores[cand["bucket"]] / total_support
+                    sz = round(max(total_kelly * weight, KELLY_MIN_BET_USD), 2)
+                    signals.append(
+                        _make_sig(
+                            cand,
+                            "PRIME_ALPHA",
+                            _override_sz=sz,
+                            _strategy_context=prime_context,
+                        )
+                    )
+                _log.info(
+                    f"PRIME_ALPHA {city} {date_str}: paired bet "
+                    f"P(any)={combined_model_prob:.1%} cost={combined_market_cost:.1%} "
+                    f"edge={combined_edge:+.1%} total=${total_kelly:.2f} → "
+                    + " | ".join(
+                        f"{c['bucket']}(${round(max(total_kelly * (support_scores[c['bucket']]/total_support), KELLY_MIN_BET_USD), 2)})"
+                        for c in prime_cands
                     )
                 )
-            _log.info(
-                f"PRIME_ALPHA {city} {date_str}: {len(prime_bets)} bets → "
-                + " | ".join(
-                    f"{b['bucket']}(w={b['model_prob']:.2f},nm={b['n_models']})"
-                    for b in prime_bets
+            else:
+                _log.info(
+                    f"PRIME_ALPHA {city} {date_str}: no paired edge "
+                    f"P(any)={combined_model_prob:.1%} cost={combined_market_cost:.1%} "
+                    f"edge={combined_edge:+.1%}"
                 )
-            )
         else:
             _log.info(
                 f"PRIME_ALPHA {city} {date_str}: no viable buckets "
