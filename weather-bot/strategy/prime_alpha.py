@@ -95,6 +95,12 @@ def build_prime_alpha_plan(
     prior_resolved_bucket: str | None = None,
 ) -> PrimeAlphaPlan:
     """Build the deterministic PRIME_ALPHA bucket plan for one city-date."""
+    snapshot_preds = _load_snapshot_log_preds(city, target_date)
+    if snapshot_preds:
+        merged = dict(snapshot_preds)
+        merged.update(current_model_values)
+        current_model_values = merged
+
     ordered_buckets = sorted(dict.fromkeys(bucket_labels), key=_bucket_sort_key)
     prior_date = (date.fromisoformat(target_date) - timedelta(days=1)).isoformat()
     notes: list[str] = []
