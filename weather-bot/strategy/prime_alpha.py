@@ -30,6 +30,7 @@ _LOG = logging.getLogger("weather-bot.prime_alpha")
 PRIME_ALPHA_MAX_BUCKETS = 3
 PRIME_ALPHA_MIN_TRUSTED_SOURCES = 2
 PRIME_ALPHA_FALLBACK_TOP_MODELS = 3
+PRIME_ALPHA_MIN_EDGE_CORROBORATION = 2
 PRIME_ALPHA_FLAGSHIP_KEY = "flagship_ensemble"
 
 
@@ -174,7 +175,20 @@ def build_prime_alpha_plan(
             if _bucket_overlaps_display_range(bucket, range_low, range_high)
         ]
 
-    selected_buckets = list(initial_selected_buckets)
+    all_displays = {
+        model: _market_display_temp(val, unit)
+        for model, val in current_model_values.items()
+    }
+    if predicted_display_temp is not None:
+        all_displays[PRIME_ALPHA_FLAGSHIP_KEY] = _market_display_temp(
+            predicted_display_temp, unit,
+        )
+    selected_buckets = _drop_uncorroborated_edges(
+        initial_selected_buckets,
+        current_display_by_source=all_displays,
+        min_sources=PRIME_ALPHA_MIN_EDGE_CORROBORATION,
+        notes=notes,
+    )
     if len(selected_buckets) > PRIME_ALPHA_MAX_BUCKETS:
         trimmed = _choose_dense_bucket_window(
             ordered_buckets=ordered_buckets,
@@ -468,6 +482,50 @@ def _choose_dense_bucket_window(
             best_key = key
             best_window = window
     return best_window
+
+
+def _drop_uncorroborated_edges(
+    selected_buckets: list[str],
+    *,
+    current_display_by_source: dict[str, int],
+    min_sources: int,
+    notes: list[str],
+) -> list[str]:
+    """Remove edge buckets that only have a single model's support.
+
+    If a bucket at the low or high end of the range is predicted by just one
+    model while every other model clusters elsewhere, it's a lone-wolf outlier.
+    Dropping it tightens the range and avoids wasting a bet.  Interior buckets
+    are never removed (they bridge two corroborated edges).
+
+    The filter only activates when there are enough total sources to make
+    "lone wolf" meaningful (>= 2 * min_sources).  With a small model set
+    (e.g. 4 trusted models), one model per bucket is normal, not an outlier.
+    """
+    if len(selected_buckets) <= 1:
+        return list(selected_buckets)
+
+    total_sources = len(current_display_by_source)
+    if total_sources < min_sources * 2:
+        return list(selected_buckets)
+
+    def _count_sources(bucket: str) -> int:
+        return sum(
+            1 for display in current_display_by_source.values()
+            if _bucket_contains_display(bucket, display)
+        )
+
+    result = list(selected_buckets)
+
+    while len(result) > 1 and _count_sources(result[-1]) < min_sources:
+        notes.append(f"dropped_high={result[-1]}(lone_wolf)")
+        result.pop()
+
+    while len(result) > 1 and _count_sources(result[0]) < min_sources:
+        notes.append(f"dropped_low={result[0]}(lone_wolf)")
+        result.pop(0)
+
+    return result
 
 
 def _bucket_contains_display(bucket: str, display_temp: int) -> bool:
