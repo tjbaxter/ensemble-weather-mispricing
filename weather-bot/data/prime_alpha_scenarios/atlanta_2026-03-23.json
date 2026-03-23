@@ -20,6 +20,16 @@
     "ncep_aigfs025": 76.8,
     "ecmwf_ifs025": 73.2
   },
+  "trust_overrides": {
+    "flagship_ensemble": 0.57,
+    "ncep_nbm_conus": 0.57,
+    "icon_seamless": 0.43,
+    "gem_seamless": 0.43,
+    "gfs_seamless": 0.57,
+    "gem_global": 0.14,
+    "ncep_aigfs025": 0.14,
+    "ecmwf_ifs025": 0.0
+  },
   "prior_resolved_bucket": "82-83",
   "current_true_alpha_buckets": [
     "72-73",
@@ -33,12 +43,11 @@
     "80-81"
   ],
   "notes": [
-    "Atlanta 2026-03-23 using actual model_snapshot_log.json values.",
-    "Prior day (2026-03-22) resolved to 82-83 on Polymarket.",
-    "Trusted models (hit 82-83): ncep_nbm_conus(83), gfs_seamless(83), icon_seamless(82), gem_seamless(83).",
-    "Untrusted: gem_global(84), ecmwf_ifs025(80), ncep_aigfs025(81).",
-    "Trusted range for 2026-03-23: 76-80 -> buckets 76-77, 78-79, 80-81.",
-    "Market resolved to 80-81 -> PRIME_ALPHA would have won.",
-    "TRUE_ALPHA incorrectly bet on 72-73 and 74-75 by including ECMWF (wrong 11 days running)."
+    "Atlanta 2026-03-23 with rolling 7-day trust scores.",
+    "ECMWF has 0% hit rate (wrong 7+ days) -> excluded entirely.",
+    "GEM Global and NCEP AIGFS at 14% -> below 25% threshold, excluded.",
+    "Trusted: NCEP NBM(57%), GFS(57%), ICON(43%), GEM Seamless(43%), flagship(57%).",
+    "Trusted range 76-80 -> buckets 76-77, 78-79, 80-81.",
+    "Market resolved to 80-81 -> PRIME_ALPHA would have won."
   ]
 }
