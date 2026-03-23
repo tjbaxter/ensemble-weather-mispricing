@@ -45,4 +45,5 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
 
 echo "==> Recent heartbeat lines"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
-  grep HEARTBEAT '${REMOTE_WORKDIR}/logs/bot.log' | tail -10 || true"
+  (sudo journalctl -u weather-bot --no-pager -n 300 | grep HEARTBEAT | tail -10) || \
+  (grep HEARTBEAT '${REMOTE_WORKDIR}/logs/bot.log' | tail -10) || true"

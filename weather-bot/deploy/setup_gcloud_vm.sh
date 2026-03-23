@@ -104,7 +104,9 @@ echo "==> Verifying service status"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   sudo systemctl status weather-bot --no-pager && \
   sudo systemctl status weather-dashboard --no-pager && \
-  grep HEARTBEAT '${REMOTE_WORKDIR}/logs/bot.log' | tail -5 || true"
+  if ! sudo journalctl -u weather-bot --no-pager -n 300 | grep HEARTBEAT | tail -5; then \
+    grep HEARTBEAT '${REMOTE_WORKDIR}/logs/bot.log' | tail -5 || true; \
+  fi"
 
 cat <<EOF
 

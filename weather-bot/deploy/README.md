@@ -3,7 +3,7 @@
 This deploy bundle is designed to be safe and reproducible:
 - No API secrets are stored in git.
 - `systemd` service user/workdir are templated at install time.
-- Healthcheck restarts the service if `HEARTBEAT` goes stale.
+- Healthcheck restarts the service if recent bot activity goes stale in `journald` or `bot.log`.
 - Log rotation prevents unbounded log growth.
 
 ## Files
@@ -28,9 +28,10 @@ This deploy bundle is designed to be safe and reproducible:
 
 ## Observability
 - Service logs: `sudo journalctl -u weather-bot -f`
-- File logs: `tail -f ~/weather-bot/logs/bot.log`
+- File logs: `tail -f ~/weather-bot/logs/bot.log` if your installed service writes to files
 - Healthcheck log: `tail -f ~/weather-bot/logs/healthcheck.log`
-- Last heartbeat: `rg HEARTBEAT ~/weather-bot/logs/bot.log | tail -1`
+- Last heartbeat: `sudo journalctl -u weather-bot --no-pager -n 300 | grep HEARTBEAT | tail -1`
+- Fallback heartbeat: `rg HEARTBEAT ~/weather-bot/logs/bot.log | tail -1`
 
 ## Daily Operations
 - `./deploy/ops.sh status`

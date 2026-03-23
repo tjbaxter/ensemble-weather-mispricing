@@ -30,19 +30,25 @@ ssh_cmd() {
   gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --project "${PROJECT}" --command "$1"
 }
 
+remote_log_query() {
+  local pattern="$1"
+  local lines="${2:-40}"
+  ssh_cmd "(sudo journalctl -u ${SERVICE} --no-pager -n 400 | grep -E '${pattern}' | tail -n ${lines}) || (tail -n 300 ${WORKDIR}/logs/bot.log | grep -E '${pattern}' | tail -n ${lines}) || true"
+}
+
 cmd="${1:-}"
 case "${cmd}" in
   status)
     ssh_cmd "sudo systemctl status ${SERVICE} --no-pager"
     ;;
   heartbeat)
-    ssh_cmd "tail -n 300 ${WORKDIR}/logs/bot.log | grep -E 'HEARTBEAT|DISCOVERY|SCAN_MODE' | tail -n 40 || true"
+    remote_log_query "HEARTBEAT|DISCOVERY|SCAN_MODE" 40
     ;;
   trades)
-    ssh_cmd "tail -n 300 ${WORKDIR}/logs/bot.log | grep -E 'PAPER TRADE|SIGNAL' | tail -n 60 || true"
+    remote_log_query "PAPER TRADE|SIGNAL" 60
     ;;
   logs)
-    ssh_cmd "echo '--- bot.log ---'; tail -n 120 ${WORKDIR}/logs/bot.log || true; echo '--- bot_error.log ---'; tail -n 120 ${WORKDIR}/logs/bot_error.log || true"
+    ssh_cmd "echo '--- journald ---'; sudo journalctl -u ${SERVICE} -n 120 --no-pager || true; echo '--- bot.log ---'; tail -n 120 ${WORKDIR}/logs/bot.log || true; echo '--- bot_error.log ---'; tail -n 120 ${WORKDIR}/logs/bot_error.log || true"
     ;;
   follow)
     ssh_cmd "sudo journalctl -u ${SERVICE} -f"

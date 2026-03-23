@@ -15,8 +15,9 @@ ExecStart=__WORKDIR__/venv/bin/python3 __WORKDIR__/main.py
 Restart=always
 RestartSec=20
 TimeoutStopSec=20
-StandardOutput=append:__WORKDIR__/logs/bot.log
-StandardError=append:__WORKDIR__/logs/bot_error.log
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=weather-bot
 
 # Soft resource guards; tune upward if needed.
 MemoryMax=768M
