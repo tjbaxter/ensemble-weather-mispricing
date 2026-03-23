@@ -410,6 +410,12 @@ def _load_prior_day_winner_bucket(*, station_icao: str, prior_date: str) -> str 
     return None
 
 
+_CITY_NAME_ALIASES: dict[str, list[str]] = {
+    "NYC": ["New York", "NYC"],
+    "New York": ["New York", "NYC"],
+}
+
+
 def _load_snapshot_log_preds(city: str, target_date: str) -> dict[str, float]:
     """Load all model predictions from model_snapshot_log.json for city/date.
 
@@ -417,7 +423,15 @@ def _load_snapshot_log_preds(city: str, target_date: str) -> dict[str, float]:
     making it a better source for trust resolution across all city models.
     """
     log = _load_json_dict(_MODEL_SNAPSHOT_LOG_PATH)
-    city_data = log.get(city)
+    names_to_try = _CITY_NAME_ALIASES.get(city, [city])
+    city_data: dict | None = None
+    for name in names_to_try:
+        candidate = log.get(name)
+        if isinstance(candidate, dict):
+            city_data = candidate
+            break
+    if city_data is None:
+        city_data = log.get(city)
     if not isinstance(city_data, dict):
         return {}
     entry = city_data.get(target_date)

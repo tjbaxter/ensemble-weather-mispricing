@@ -33,205 +33,28 @@ ROOT     = Path(__file__).resolve().parents[1]
 LOG_PATH = ROOT / "data" / "model_snapshot_log.json"
 LOCK_HOUR_UTC = 19  # After this hour the snapshot is frozen (canonical 12Z)
 
-# All cities and their Open-Meteo config
-CITIES: dict[str, dict] = {
-    "London": {
-        "lat": 51.5053, "lon": 0.0553,
-        "timezone": "Europe/London",
-        "unit": "celsius",
-        "models": [
-            "meteofrance_arome_france",
-            "meteofrance_seamless",
-            "meteofrance_arome_france_hd",
-            "icon_seamless",
-            "dmi_seamless",
-            "ecmwf_ifs025",
-            "kma_seamless",
-            "ukmo_uk_deterministic_2km",
-            "ukmo_seamless",
-            "ukmo_global_deterministic_10km",
-            "ncep_aigfs025",
-            "ncep_hgefs025_ensemble_mean",
-            "kma_gdps",
-        ],
-    },
-    "Seoul": {
-        "lat": 37.4492, "lon": 126.451,
-        "timezone": "Asia/Seoul",
-        "unit": "celsius",
-        "models": [
-            "ncep_aigfs025",
-            "gfs_graphcast025",
-            "ecmwf_ifs025",
-            "ncep_hgefs025_ensemble_mean",
-            "kma_gdps",
-            "kma_seamless",
-            "icon_seamless",
-            "meteofrance_seamless",
-        ],
-    },
-    "New York": {
-        "lat": 40.7769, "lon": -73.874,
-        "timezone": "America/New_York",
-        "unit": "fahrenheit",
-        "models": [
-            "ncep_nbm_conus",
-            "gfs_graphcast025",
-            "icon_seamless",
-            "kma_seamless",
-            "gem_seamless",
-            "kma_gdps",
-            "gem_hrdps_continental",
-            "ncep_aigfs025",
-        ],
-    },
-    "Atlanta": {
-        "lat": 33.6407, "lon": -84.4277,
-        "timezone": "America/New_York",
-        "unit": "fahrenheit",
-        "models": [
-            "ncep_nbm_conus",
-            "icon_seamless",
-            "gem_global",
-            "ncep_aigfs025",
-            "gem_seamless",
-            "ecmwf_ifs025",
-            "gfs_seamless",
-        ],
-    },
-    "Chicago": {
-        "lat": 41.9742, "lon": -87.9073,
-        "timezone": "America/Chicago",
-        "unit": "fahrenheit",
-        "models": [
-            "ncep_nbm_conus",
-            "ncep_aigfs025",
-            "gem_seamless",
-            "best_match",
-            "icon_seamless",
-            "ecmwf_ifs025",
-            "gfs_seamless",
-        ],
-    },
-    "Miami": {
-        "lat": 25.7959, "lon": -80.287,
-        "timezone": "America/New_York",
-        "unit": "fahrenheit",
-        "models": [
-            "gem_global",
-            "ncep_aigfs025",
-            "gem_seamless",
-            "gem_regional",
-            "gfs_graphcast025",
-            "ncep_nbm_conus",
-            "ecmwf_ifs025",
-            "gfs_seamless",
-            "icon_seamless",
-        ],
-    },
-    "Dallas": {
-        "lat": 32.8481, "lon": -96.8512,
-        "timezone": "America/Chicago",
-        "unit": "fahrenheit",
-        "models": [
-            "icon_seamless",
-            "gem_seamless",
-            "gem_regional",
-            "gfs_seamless",
-            "gfs_hrrr",
-            "ncep_aigfs025",
-            "ecmwf_ifs025",
-            "ncep_nbm_conus",
-        ],
-    },
-    "Buenos Aires": {
-        "lat": -34.8222, "lon": -58.5358,
-        "timezone": "America/Argentina/Buenos_Aires",
-        "unit": "celsius",
-        "models": [
-            "ukmo_seamless",
-            "ecmwf_ifs025",
-            "best_match",
-            "icon_seamless",
-            "ncep_aigfs025",
-            "meteofrance_seamless",
-            "gfs_seamless",
-        ],
-    },
-    "Paris": {
-        "lat": 49.0097, "lon": 2.5479,
-        "timezone": "Europe/Paris",
-        "unit": "celsius",
-        "models": [
-            "ukmo_seamless",
-            "ukmo_uk_deterministic_2km",
-            "metno_seamless",
-            "ecmwf_ifs025",
-            "meteofrance_seamless",
-            "jma_seamless",
-            "ncep_aigfs025",
-            "meteofrance_arome_france",
-            "icon_seamless",
-            "dmi_seamless",
-        ],
-    },
-    "Toronto": {
-        "lat": 43.6772, "lon": -79.6306,
-        "timezone": "America/Toronto",
-        "unit": "celsius",
-        "models": [
-            "ncep_nbm_conus",
-            "kma_gdps",
-            "meteofrance_arpege_world",
-            "gem_global",
-            "dmi_seamless",
-            "ncep_aigfs025",
-            "gem_regional",
-            "gfs_seamless",
-            "ecmwf_ifs025",
-        ],
-    },
-    "Seattle": {
-        "lat": 47.4502, "lon": -122.3088,
-        "timezone": "America/Los_Angeles",
-        "unit": "fahrenheit",
-        "models": [
-            "ncep_nbm_conus",
-            "gem_seamless",
-            "gem_hrdps_continental",
-            "knmi_seamless",
-            "dmi_seamless",
-            "icon_seamless",
-            "ecmwf_ifs025",
-            "gfs_seamless",
-        ],
-    },
-    "Ankara": {
-        "lat": 40.1281, "lon": 32.9951,
-        "timezone": "Europe/Istanbul",
-        "unit": "celsius",
-        "models": [
-            "icon_seamless",
-            "icon_global",
-            "ecmwf_ifs025",
-            "gfs_graphcast025",
-            "jma_seamless",
-            "meteofrance_arpege_world",
-        ],
-    },
-    "Wellington": {
-        "lat": -41.3272, "lon": 174.805,
-        "timezone": "Pacific/Auckland",
-        "unit": "celsius",
-        "models": [
-            "bom_access_global",
-            "ukmo_seamless",
-            "ecmwf_ifs025",
-            "icon_seamless",
-            "gfs_seamless",
-        ],
-    },
-}
+sys.path.insert(0, str(ROOT))
+from config.cities import STATIONS  # noqa: E402
+
+
+def _build_cities() -> dict[str, dict]:
+    """Auto-generate snapshot cities from the canonical STATIONS config."""
+    cities: dict[str, dict] = {}
+    for _icao, cfg in STATIONS.items():
+        city = cfg.get("market_label")
+        if not city or not cfg.get("ensemble_models"):
+            continue
+        cities[city] = {
+            "lat": cfg["lat"],
+            "lon": cfg["lon"],
+            "timezone": cfg["timezone"],
+            "unit": "fahrenheit" if cfg.get("resolution_unit") == "F" else "celsius",
+            "models": list(cfg["ensemble_models"]),
+        }
+    return cities
+
+
+CITIES = _build_cities()
 
 
 def _hround(x: float) -> float:
