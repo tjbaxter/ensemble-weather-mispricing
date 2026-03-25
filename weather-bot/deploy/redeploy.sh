@@ -51,13 +51,44 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   set -euo pipefail && \
   cd '${REMOTE_WORKDIR}' && \
   mkdir -p '${REMOTE_WORKDIR}/logs' && \
+  if [ ! -f /etc/weather-bot.env ]; then \
+    printf '%s\n' \
+      'PAPER_TRADING=true' \
+      'LIVE_TRADING=false' \
+      'INITIAL_BANKROLL=300' \
+      'REQUIRE_VPN=true' \
+      'STATION_PRIORITY_FILTER=HIGH,MEDIUM,LOW' \
+      'CLOB_PREFILTER_PRIORITY=HIGH,MEDIUM,LOW' \
+      'SETTLEMENT_WATCHER_POLL_SECONDS=10' \
+      'SETTLEMENT_WATCHER_OFFICIAL_REFRESH_SECONDS=60' \
+      'DASHBOARD_API_HOST=127.0.0.1' \
+      'DASHBOARD_API_PORT=8510' \
+      \"DASHBOARD_API_TOKEN=\$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')\" \
+      'MET_OFFICE_API_KEY=' \
+      'ACCUWEATHER_API_KEY=' | sudo tee /etc/weather-bot.env >/dev/null; \
+  fi && \
+  if ! sudo grep -q '^DASHBOARD_API_HOST=' /etc/weather-bot.env; then \
+    echo 'DASHBOARD_API_HOST=127.0.0.1' | sudo tee -a /etc/weather-bot.env >/dev/null; \
+  fi && \
+  if ! sudo grep -q '^DASHBOARD_API_PORT=' /etc/weather-bot.env; then \
+    echo 'DASHBOARD_API_PORT=8510' | sudo tee -a /etc/weather-bot.env >/dev/null; \
+  fi && \
+  if ! sudo grep -q '^DASHBOARD_API_TOKEN=' /etc/weather-bot.env; then \
+    printf 'DASHBOARD_API_TOKEN=%s\n' \"\$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')\" | sudo tee -a /etc/weather-bot.env >/dev/null; \
+  fi && \
+  sudo chmod 600 /etc/weather-bot.env && \
+  sudo chown root:root /etc/weather-bot.env && \
   python3 -m venv venv && \
   source venv/bin/activate && \
   pip install --upgrade pip && \
   pip install -r requirements.txt && \
+  sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-dashboard.service.template' | sudo tee /etc/systemd/system/weather-dashboard.service >/dev/null && \
+  sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-dashboard-api.service.template' | sudo tee /etc/systemd/system/weather-dashboard-api.service >/dev/null && \
   sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-settlement-watcher.service.template' | sudo tee /etc/systemd/system/weather-settlement-watcher.service >/dev/null && \
   sudo systemctl daemon-reload && \
   sudo systemctl restart weather-bot && \
+  sudo systemctl restart weather-dashboard && \
+  sudo systemctl restart weather-dashboard-api && \
   sudo systemctl restart weather-settlement-watcher && \
   sudo systemctl status weather-bot --no-pager"
 
@@ -69,4 +100,5 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
 echo "==> Settlement watcher status"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   sudo systemctl status weather-settlement-watcher --no-pager && \
+  sudo systemctl status weather-dashboard-api --no-pager && \
   tail -n 20 '${REMOTE_WORKDIR}/logs/settlement_watcher.log' || true"

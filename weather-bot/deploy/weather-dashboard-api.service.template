@@ -1,0 +1,29 @@
+[Unit]
+Description=Weather Dashboard API (read-only VM data bridge)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__WORKDIR__
+EnvironmentFile=-/etc/weather-bot.env
+Environment=PYTHONUNBUFFERED=1
+Environment=DASHBOARD_API_HOST=127.0.0.1
+Environment=DASHBOARD_API_PORT=8510
+ExecStartPre=/usr/bin/mkdir -p __WORKDIR__/logs
+ExecStart=__WORKDIR__/venv/bin/python3 __WORKDIR__/scripts/dashboard_api.py
+Restart=always
+RestartSec=15
+TimeoutStopSec=20
+StandardOutput=append:__WORKDIR__/logs/dashboard_api.log
+StandardError=append:__WORKDIR__/logs/dashboard_api_error.log
+
+# Keep the API lightweight so it can never starve the trading bot.
+MemoryMax=256M
+CPUQuota=20%
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

@@ -11,6 +11,7 @@ import shutil
 from collections import defaultdict
 from datetime import UTC, date as _date, datetime, timedelta
 from pathlib import Path
+from urllib.parse import quote
 
 import pandas as pd
 import plotly.express as px
@@ -66,7 +67,21 @@ DEFAULT_ENV = ROOT / ".env"
 VM_ENV = Path("/etc/weather-bot.env")
 
 _TRUTHY_VALUES = {"1", "true", "yes", "on"}
-_DASHBOARD_DATA_SOURCE_VALUES = {"auto", "local", "github"}
+_DASHBOARD_DATA_SOURCE_VALUES = {"auto", "local", "github", "api"}
+
+
+def _read_secret_value(name: str, default: str = "") -> str:
+    raw = os.getenv(name)
+    if raw is not None and str(raw).strip():
+        return str(raw).strip()
+    try:
+        if name in st.secrets:
+            value = st.secrets[name]
+            if value is not None and str(value).strip():
+                return str(value).strip()
+    except Exception:
+        pass
+    return default
 
 
 def _parse_truthy(raw: str | None, default: bool = False) -> bool:
@@ -76,22 +91,44 @@ def _parse_truthy(raw: str | None, default: bool = False) -> bool:
 
 
 def _dashboard_data_source_config() -> str:
-    raw = os.getenv("DASHBOARD_DATA_SOURCE", "auto").strip().lower()
+    raw = _read_secret_value("DASHBOARD_DATA_SOURCE", "auto").strip().lower()
     return raw if raw in _DASHBOARD_DATA_SOURCE_VALUES else "auto"
+
+
+def _dashboard_api_base_url() -> str:
+    return _read_secret_value("DASHBOARD_API_BASE_URL", "").rstrip("/")
+
+
+def _dashboard_api_token() -> str:
+    return _read_secret_value("DASHBOARD_API_TOKEN", "")
+
+
+def _dashboard_api_client_id() -> str:
+    return _read_secret_value("DASHBOARD_API_CLIENT_ID", "")
+
+
+def _dashboard_api_client_secret() -> str:
+    return _read_secret_value("DASHBOARD_API_CLIENT_SECRET", "")
+
+
+def _dashboard_api_verify_ssl() -> bool:
+    return _parse_truthy(_read_secret_value("DASHBOARD_API_VERIFY_SSL", "true"), default=True)
 
 
 def _dashboard_data_source() -> str:
     configured = _dashboard_data_source_config()
     if configured == "auto":
+        if _dashboard_api_base_url():
+            return "api"
         return "github" if shutil.which("gcloud") is None else "local"
     return configured
 
 
 def _dashboard_read_only() -> bool:
-    raw = os.getenv("DASHBOARD_READ_ONLY")
+    raw = _read_secret_value("DASHBOARD_READ_ONLY", "")
     if raw is not None:
         return _parse_truthy(raw, default=False)
-    return _dashboard_data_source() == "github"
+    return _dashboard_data_source() in {"github", "api"}
 
 
 def _dashboard_local_runtime_is_authoritative() -> bool:
@@ -108,12 +145,90 @@ def _dashboard_source_status() -> tuple[str, str]:
         return configured, "Authoritative local mode: reading VM runtime files directly."
     if effective == "local":
         return configured, "Local checkout mode: reads local files and can sync from the VM."
+    if effective == "api":
+        return configured, "API mode: reading dashboard data from the VM through a read-only HTTP API."
     return configured, "Mirror mode: reading the latest GitHub snapshot."
 
 
 def _prefer_github_data() -> bool:
     """Use GitHub raw/API data only when the dashboard is explicitly in mirror mode."""
     return _dashboard_data_source() == "github"
+
+
+def _prefer_api_data() -> bool:
+    return _dashboard_data_source() == "api"
+
+
+def _dashboard_api_headers() -> dict[str, str]:
+    headers = {"User-Agent": "weather-bot-dashboard"}
+    token = _dashboard_api_token()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    cf_client_id = _dashboard_api_client_id()
+    cf_client_secret = _dashboard_api_client_secret()
+    if cf_client_id and cf_client_secret:
+        headers["CF-Access-Client-Id"] = cf_client_id
+        headers["CF-Access-Client-Secret"] = cf_client_secret
+    return headers
+
+
+@st.cache_data(ttl=15, show_spinner=False)
+def _fetch_api_text(rel_path: str) -> str | None:
+    base_url = _dashboard_api_base_url()
+    if not base_url:
+        return None
+    url = f"{base_url}/raw/{quote(rel_path.lstrip('/'), safe='/')}"
+    try:
+        r = requests.get(
+            url,
+            headers=_dashboard_api_headers(),
+            timeout=12,
+            verify=_dashboard_api_verify_ssl(),
+        )
+        if r.status_code == 200:
+            return r.text
+    except Exception:
+        pass
+    return None
+
+
+@st.cache_data(ttl=15, show_spinner=False)
+def _list_api_log_files() -> list[str]:
+    base_url = _dashboard_api_base_url()
+    if not base_url:
+        return []
+    url = f"{base_url}/logs/index"
+    try:
+        r = requests.get(
+            url,
+            headers=_dashboard_api_headers(),
+            timeout=12,
+            verify=_dashboard_api_verify_ssl(),
+        )
+        if r.status_code == 200:
+            payload = r.json()
+            files = payload.get("files", []) if isinstance(payload, dict) else []
+            if isinstance(files, list):
+                return [str(item) for item in files if isinstance(item, str)]
+    except Exception:
+        pass
+    return []
+
+
+def _fetch_remote_text(rel_path: str) -> str | None:
+    if _prefer_api_data():
+        return _fetch_api_text(rel_path)
+    if _prefer_github_data():
+        return _fetch_github_text(rel_path)
+    return None
+
+
+def _list_remote_log_files() -> list[str]:
+    if _prefer_api_data():
+        return _list_api_log_files()
+    if _prefer_github_data():
+        return _list_github_log_files()
+    return []
 
 
 @st.cache_data(ttl=30, show_spinner=False)
@@ -163,8 +278,8 @@ def _list_github_log_files() -> list[str]:
 def _read_json_data(rel_path: str, local_path: Path) -> list[dict]:
     """Load JSON list/dict payload as list[dict], preferring GitHub in cloud mode."""
     payload = None
-    if _prefer_github_data():
-        txt = _fetch_github_text(rel_path)
+    if _prefer_api_data() or _prefer_github_data():
+        txt = _fetch_remote_text(rel_path)
         if txt:
             try:
                 payload = json.loads(txt)
@@ -185,8 +300,8 @@ def _read_json_data(rel_path: str, local_path: Path) -> list[dict]:
 @st.cache_data(ttl=30, show_spinner=False)
 def _read_json_object(rel_path: str, local_path: Path) -> dict:
     payload = None
-    if _prefer_github_data():
-        txt = _fetch_github_text(rel_path)
+    if _prefer_api_data() or _prefer_github_data():
+        txt = _fetch_remote_text(rel_path)
         if txt:
             try:
                 payload = json.loads(txt)
@@ -259,6 +374,64 @@ def load_settlement_snapshot_df() -> pd.DataFrame:
     return df.sort_values(["target_date_dt", "resolved_at", "signal_timestamp"], ascending=True)
 
 
+def _coerce_utc_datetime(raw: object) -> datetime | None:
+    if raw in (None, ""):
+        return None
+    try:
+        ts = pd.to_datetime(raw, errors="coerce", utc=True)
+    except Exception:
+        return None
+    if pd.isna(ts):
+        return None
+    return ts.to_pydatetime() if hasattr(ts, "to_pydatetime") else ts
+
+
+def _format_age(delta: timedelta) -> str:
+    total_seconds = max(0, int(delta.total_seconds()))
+    if total_seconds < 60:
+        return f"{total_seconds}s"
+    minutes, _ = divmod(total_seconds, 60)
+    if minutes < 60:
+        return f"{minutes}m"
+    hours, minutes = divmod(minutes, 60)
+    if hours < 24:
+        return f"{hours}h {minutes}m" if minutes else f"{hours}h"
+    days, hours = divmod(hours, 24)
+    return f"{days}d {hours}h" if hours else f"{days}d"
+
+
+def _resolved_match_key_series(df: pd.DataFrame) -> pd.Series:
+    if df.empty:
+        return pd.Series(dtype=str)
+    cols = {
+        "strategy": "",
+        "city": "",
+        "target_date": "",
+        "bucket": "",
+        "side": "",
+        "signal_timestamp": "",
+    }
+    parts: list[pd.Series] = []
+    for col, default in cols.items():
+        if col in df.columns:
+            parts.append(df[col].fillna(default).astype(str))
+        else:
+            parts.append(pd.Series([default] * len(df), index=df.index, dtype=str))
+    return (
+        parts[0]
+        + "|"
+        + parts[1]
+        + "|"
+        + parts[2]
+        + "|"
+        + parts[3]
+        + "|"
+        + parts[4]
+        + "|"
+        + parts[5]
+    )
+
+
 def current_main_mode_name() -> str:
     _, live_mode = current_dashboard_mode()
     return "live" if live_mode else "paper"
@@ -298,51 +471,28 @@ def _filter_rows_for_strategy(df: pd.DataFrame, strategy: str, main_mode: str) -
 
 
 def load_effective_resolved_df() -> pd.DataFrame:
-    snapshot_df = load_settlement_snapshot_df()
-    if snapshot_df.empty:
-        legacy = load_resolved_df().copy()
-        if not legacy.empty and "mode" not in legacy.columns:
-            legacy["mode"] = "paper"
-            legacy["settlement_phase"] = "official"
-            legacy["official_resolved"] = 1
-        return legacy
-
     legacy = load_resolved_df().copy()
     if not legacy.empty:
         legacy["bucket"] = legacy["bucket"].map(normalize_bucket_label)
         legacy["mode"] = "paper"
         legacy["settlement_phase"] = "official"
         legacy["official_resolved"] = 1
-        legacy_keys = (
-            legacy["strategy"].fillna("").astype(str)
-            + "|"
-            + legacy["city"].fillna("").astype(str)
-            + "|"
-            + legacy["target_date"].fillna("").astype(str)
-            + "|"
-            + legacy["bucket"].fillna("").astype(str)
-            + "|"
-            + legacy["side"].fillna("").astype(str)
-            + "|"
-            + legacy["signal_timestamp"].fillna("").astype(str)
+    snapshot_df = load_settlement_snapshot_df().copy()
+    if snapshot_df.empty:
+        return legacy
+
+    if legacy.empty:
+        combined = snapshot_df
+    else:
+        legacy_keys = set(_resolved_match_key_series(legacy).tolist())
+        snapshot_keys = _resolved_match_key_series(snapshot_df)
+        # Official resolver rows are canonical. Keep watcher rows only when the
+        # same trade has not landed in resolved.csv yet.
+        snapshot_overlay = snapshot_df.loc[~snapshot_keys.isin(legacy_keys)].copy()
+        combined = (
+            pd.concat([legacy, snapshot_overlay], ignore_index=True, sort=False)
+            if not snapshot_overlay.empty else legacy.copy()
         )
-        snapshot_keys = set(
-            (
-                snapshot_df["strategy"].fillna("").astype(str)
-                + "|"
-                + snapshot_df["city"].fillna("").astype(str)
-                + "|"
-                + snapshot_df["target_date"].fillna("").astype(str)
-                + "|"
-                + snapshot_df["bucket"].fillna("").astype(str)
-                + "|"
-                + snapshot_df["side"].fillna("").astype(str)
-                + "|"
-                + snapshot_df["signal_timestamp"].astype(str)
-            ).tolist()
-        )
-        legacy = legacy.loc[~legacy_keys.isin(snapshot_keys)].copy()
-    combined = pd.concat([legacy, snapshot_df], ignore_index=True, sort=False) if not legacy.empty else snapshot_df.copy()
     if combined.empty:
         return combined
     combined = combined.sort_values(["target_date_dt", "resolved_at", "signal_timestamp"], ascending=True)
@@ -509,6 +659,8 @@ def _log_commercial_forecast(
     This prevents an early dashboard load (e.g. 16:00 UTC) from freezing the
     snapshot and blocking the cron's more accurate evening reading.
     """
+    if _dashboard_read_only():
+        return
     if accu is None and wu is None:
         return
     try:
@@ -578,14 +730,8 @@ def _log_commercial_forecast(
 
 @st.cache_data(ttl=60, show_spinner=False)
 def _load_commercial_log() -> dict:
-    """Load the full commercial forecast log from disk."""
-    try:
-        if _COMMERCIAL_LOG_PATH.exists():
-            d = json.loads(_COMMERCIAL_LOG_PATH.read_text(encoding="utf-8"))
-            return d if isinstance(d, dict) else {}
-    except Exception:
-        pass
-    return {}
+    """Load the full commercial forecast log from local disk or remote source."""
+    return _read_json_object("data/commercial_forecast_log.json", _COMMERCIAL_LOG_PATH)
 
 
 # ---------------------------------------------------------------------------
@@ -605,6 +751,8 @@ def _log_model_snapshot(city: str, target_date: str, preds: dict) -> None:
     - Before 19:00 UTC: overwrite (morning/noon reads are pre-12Z drafts).
     - At/after 19:00 UTC: write-once (19:05 cron is the canonical 12Z snapshot).
     """
+    if _dashboard_read_only():
+        return
     clean = {k: v for k, v in preds.items() if not k.startswith("__")}
     if not clean:
         return
@@ -639,11 +787,10 @@ def _log_model_snapshot(city: str, target_date: str, preds: dict) -> None:
 def _load_model_snapshot(city: str, target_date: str) -> dict | None:
     """Return stored 12Z model predictions for target_date, or None if not saved yet."""
     try:
-        if _MODEL_SNAPSHOT_PATH.exists():
-            snap = json.loads(_MODEL_SNAPSHOT_PATH.read_text(encoding="utf-8"))
-            entry = snap.get(city, {}).get(target_date)
-            if entry and entry.get("preds"):
-                return entry["preds"], entry.get("logged_at", "?")
+        snap = _read_json_object("data/model_snapshot_log.json", _MODEL_SNAPSHOT_PATH)
+        entry = snap.get(city, {}).get(target_date)
+        if entry and entry.get("preds"):
+            return entry["preds"], entry.get("logged_at", "?")
     except Exception:
         pass
     return None
@@ -657,15 +804,16 @@ _ACCURACY_CACHE_PATH = ROOT / "data" / "accuracy_rows_cache.json"
 
 def _load_accuracy_disk_cache(city: str) -> list[dict]:
     try:
-        if _ACCURACY_CACHE_PATH.exists():
-            raw = json.loads(_ACCURACY_CACHE_PATH.read_text(encoding="utf-8"))
-            return raw.get(city, [])
+        raw = _read_json_object("data/accuracy_rows_cache.json", _ACCURACY_CACHE_PATH)
+        return raw.get(city, [])
     except Exception:
         pass
     return []
 
 
 def _save_accuracy_disk_cache(city: str, rows: list[dict]) -> None:
+    if _dashboard_read_only():
+        return
     try:
         _ACCURACY_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
         cache: dict = {}
@@ -912,8 +1060,8 @@ def _empty_signals_df() -> pd.DataFrame:
 @st.cache_data(ttl=15)
 def load_trades_df() -> pd.DataFrame:
     df = None
-    if _prefer_github_data():
-        txt = _fetch_github_text("logs/trades.csv")
+    if _prefer_api_data() or _prefer_github_data():
+        txt = _fetch_remote_text("logs/trades.csv")
         if txt:
             try:
                 df = pd.read_csv(io.StringIO(txt))
@@ -938,8 +1086,8 @@ def load_trades_df() -> pd.DataFrame:
 @st.cache_data(ttl=15)
 def load_signals_df() -> pd.DataFrame:
     df = None
-    if _prefer_github_data():
-        txt = _fetch_github_text("logs/signals.csv")
+    if _prefer_api_data() or _prefer_github_data():
+        txt = _fetch_remote_text("logs/signals.csv")
         if txt:
             try:
                 df = pd.read_csv(io.StringIO(txt))
@@ -970,11 +1118,11 @@ def load_resolved_df() -> pd.DataFrame:
     # current file + any archives, sorted so data is roughly chronological
     csv_paths = sorted(logs_dir.glob("resolved*.csv"))
 
-    if _prefer_github_data():
-        names = sorted([n for n in _list_github_log_files() if n.startswith("resolved") and n.endswith(".csv")])
+    if _prefer_api_data() or _prefer_github_data():
+        names = sorted([n for n in _list_remote_log_files() if n.startswith("resolved") and n.endswith(".csv")])
         for name in names:
             df_part = None
-            txt = _fetch_github_text(f"logs/{name}")
+            txt = _fetch_remote_text(f"logs/{name}")
             if txt:
                 try:
                     df_part = pd.read_csv(io.StringIO(txt), index_col=False)
@@ -1036,8 +1184,8 @@ def load_resolved_df() -> pd.DataFrame:
 def load_shadow_resolved_df(slug: str) -> pd.DataFrame:
     """Load resolved.csv for a shadow model (shadow_2a / shadow_2b / shadow_2c)."""
     df = None
-    if _prefer_github_data():
-        txt = _fetch_github_text(f"logs/{slug}/resolved.csv")
+    if _prefer_api_data() or _prefer_github_data():
+        txt = _fetch_remote_text(f"logs/{slug}/resolved.csv")
         if txt:
             try:
                 df = pd.read_csv(io.StringIO(txt), index_col=False)
@@ -2948,11 +3096,10 @@ def get_polymarket_for_city(city: str) -> dict:
 
     # Load disk cache
     disk: dict = {}
-    if _PM_CACHE_PATH.exists():
-        try:
-            disk = json.loads(_PM_CACHE_PATH.read_text()).get(city, {})
-        except Exception:
-            disk = {}
+    try:
+        disk = _read_json_object("data/polymarket_cache.json", _PM_CACHE_PATH).get(city, {})
+    except Exception:
+        disk = {}
 
     # Fetch all dates after the last hardcoded entry up to and including today.
     # We include today because markets often resolve by early evening; the
@@ -2983,14 +3130,15 @@ def get_polymarket_for_city(city: str) -> dict:
             )
             if resolved:
                 disk.update(resolved)
-                all_cache: dict = {}
-                if _PM_CACHE_PATH.exists():
-                    try:
-                        all_cache = json.loads(_PM_CACHE_PATH.read_text())
-                    except Exception:
-                        pass
-                all_cache[city] = disk
-                _PM_CACHE_PATH.write_text(json.dumps(all_cache, indent=2))
+                if not _dashboard_read_only():
+                    all_cache: dict = {}
+                    if _PM_CACHE_PATH.exists():
+                        try:
+                            all_cache = json.loads(_PM_CACHE_PATH.read_text())
+                        except Exception:
+                            pass
+                    all_cache[city] = disk
+                    _PM_CACHE_PATH.write_text(json.dumps(all_cache, indent=2))
 
     # Merge: hardcoded seed + disk cache (disk can override if we ever need to correct)
     merged = dict(hardcoded)
@@ -3092,7 +3240,7 @@ def fetch_accuracy_data(city: str) -> dict:
     # Load snapshot log for this city — used as fallback when Open-Meteo
     # previous_day1 API has a lag (typically 1-2 days behind for recent dates)
     try:
-        _snap_raw = json.loads(_MODEL_SNAPSHOT_PATH.read_text(encoding="utf-8")) if _MODEL_SNAPSHOT_PATH.exists() else {}
+        _snap_raw = _read_json_object("data/model_snapshot_log.json", _MODEL_SNAPSHOT_PATH)
     except Exception:
         _snap_raw = {}
     _city_snap: dict[str, dict] = _snap_raw.get(city, {})   # {date: {preds: {model_key: temp}}}
@@ -3613,10 +3761,16 @@ def main() -> None:
     gcloud_available = shutil.which("gcloud") is not None
     sync_status = load_dashboard_sync_status()
     settlement_status = load_settlement_status()
+    rendered_at = datetime.now(UTC)
+    mirror_sync_raw = sync_status.get("last_fast_sync_utc") if isinstance(sync_status, dict) else None
+    mirror_sync_dt = _coerce_utc_datetime(mirror_sync_raw)
+    mirror_sync_age = None if mirror_sync_dt is None else max(rendered_at - mirror_sync_dt, timedelta(0))
+    mirror_sync_age_text = _format_age(mirror_sync_age) if mirror_sync_age is not None else None
+    mirror_sync_is_stale = bool(mirror_sync_age is not None and mirror_sync_age >= timedelta(minutes=30))
 
     with st.sidebar:
         # Next model run trigger
-        now_utc = datetime.now(UTC)
+        now_utc = rendered_at
         next_dt, next_label = next_model_run_trigger(now_utc)
         mins_away = int((next_dt - now_utc).total_seconds() / 60)
         hours_away, mins_part = divmod(mins_away, 60)
@@ -3662,7 +3816,15 @@ def main() -> None:
         if settlement_status.get("last_error"):
             st.warning(f"Settlement watcher error: {settlement_status['last_error']}")
         if effective_source == "github" and sync_status.get("last_fast_sync_utc"):
-            st.caption(f"Last mirror sync: {sync_status['last_fast_sync_utc']}")
+            mirror_caption = f"Last mirror sync: {sync_status['last_fast_sync_utc']}"
+            if mirror_sync_age_text:
+                mirror_caption += f" ({mirror_sync_age_text} old)"
+            st.caption(mirror_caption)
+            if mirror_sync_is_stale:
+                st.warning(
+                    "GitHub mirror data is stale. Page auto-refresh only refreshes the browser; "
+                    "settled data will lag until a fresh mirror sync lands."
+                )
         elif effective_source == "local" and not local_runtime and sync_status.get("last_fast_sync_utc"):
             st.caption(f"Last local snapshot sync: {sync_status['last_fast_sync_utc']}")
         if dashboard_read_only:
@@ -3731,6 +3893,10 @@ def main() -> None:
         st.session_state["_last_vm_live_sync_ok"] = True
         st.session_state["_last_vm_live_sync_msg"] = "Mirror mode: reading latest logs/data directly from GitHub."
         st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
+    elif effective_source == "api":
+        st.session_state["_last_vm_live_sync_ok"] = True
+        st.session_state["_last_vm_live_sync_msg"] = "API mode: reading latest dashboard data directly from the VM API."
+        st.session_state["_last_vm_live_sync_at"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
     elif effective_source == "local" and local_runtime:
         st.session_state["_last_vm_live_sync_ok"] = True
         st.session_state["_last_vm_live_sync_msg"] = "Authoritative local mode: reading VM runtime files directly."
@@ -3747,7 +3913,7 @@ def main() -> None:
             else:
                 st.sidebar.warning(last_sync_msg)
 
-    now_stamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
+    now_stamp = rendered_at.strftime("%Y-%m-%d %H:%M:%S UTC")
 
     _, live_mode = current_dashboard_mode()
     mode_text = "LIVE MODE" if live_mode else "PAPER MODE"
@@ -3762,12 +3928,22 @@ def main() -> None:
   </div>
   <div style="text-align:right;">
     <div style="font-weight:700;color:{mode_color};">● {mode_text}</div>
-    <div class="muted">auto-refresh: {refresh_opt} · updated: {now_stamp}</div>
+    <div class="muted">auto-refresh: {refresh_opt} · page refreshed: {now_stamp}</div>
   </div>
 </div>
         """,
         unsafe_allow_html=True,
     )
+    if effective_source == "github" and mirror_sync_raw:
+        freshness_line = f"Mirror data timestamp: {mirror_sync_raw}"
+        if mirror_sync_age_text:
+            freshness_line += f" ({mirror_sync_age_text} old)"
+        if mirror_sync_is_stale:
+            st.warning(
+                f"{freshness_line}. This page refreshed successfully, but the mirrored data is stale."
+            )
+        else:
+            st.caption(freshness_line)
 
     (
         tab_ov, tab_single, tab_ladder, tab_conv,

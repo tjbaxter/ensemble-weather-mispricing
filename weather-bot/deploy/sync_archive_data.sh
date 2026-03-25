@@ -62,5 +62,9 @@ status_path.write_text(json.dumps(status, indent=2, sort_keys=True) + "\n", enco
 PY
 
 REPO_ROOT="${WEATHER_BOT_REPO_ROOT:-/home/tombaxter/repo/weather-bot}"
+SRC_ROOT="${WEATHER_BOT_SRC_ROOT:-/home/tombaxter/weather-bot}"
+LOG_PATH="${WEATHER_BOT_SYNC_LOG:-${SRC_ROOT}/logs/git_push.log}"
+mkdir -p "$(dirname "${LOG_PATH}")"
 cd "$(dirname "${REPO_ROOT}")"
-bash "${REPO_ROOT}/scripts/git_push_data.sh" >> /tmp/git_sync.log 2>&1
+printf '\n[%s] sync_archive_data start\n' "$(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> "${LOG_PATH}"
+bash "${REPO_ROOT}/scripts/git_push_data.sh" >> "${LOG_PATH}" 2>&1

@@ -81,14 +81,16 @@ echo "==> Installing systemd services + healthcheck + logrotate"
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   set -euo pipefail && \
   mkdir -p '${REMOTE_WORKDIR}/logs' && \
-  chmod +x '${REMOTE_WORKDIR}/deploy/healthcheck.sh' '${REMOTE_WORKDIR}/deploy/redeploy.sh' '${REMOTE_WORKDIR}/deploy/setup_gcloud_vm.sh' '${REMOTE_WORKDIR}/deploy/install_cron_jobs.sh' '${REMOTE_WORKDIR}/deploy/install_dashboard_service.sh' || true && \
+  chmod +x '${REMOTE_WORKDIR}/deploy/healthcheck.sh' '${REMOTE_WORKDIR}/deploy/redeploy.sh' '${REMOTE_WORKDIR}/deploy/setup_gcloud_vm.sh' '${REMOTE_WORKDIR}/deploy/install_cron_jobs.sh' '${REMOTE_WORKDIR}/deploy/install_dashboard_service.sh' '${REMOTE_WORKDIR}/deploy/install_dashboard_api_service.sh' || true && \
   sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-bot.service.template' | sudo tee /etc/systemd/system/weather-bot.service >/dev/null && \
   sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' -e 's#__PORT__#8501#g' '${REMOTE_WORKDIR}/deploy/weather-dashboard.service.template' | sudo tee /etc/systemd/system/weather-dashboard.service >/dev/null && \
+  sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-dashboard-api.service.template' | sudo tee /etc/systemd/system/weather-dashboard-api.service >/dev/null && \
   sed -e 's#__USER__#${REMOTE_USER}#g' -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-settlement-watcher.service.template' | sudo tee /etc/systemd/system/weather-settlement-watcher.service >/dev/null && \
   sed -e 's#__WORKDIR__#${REMOTE_WORKDIR}#g' '${REMOTE_WORKDIR}/deploy/weather-bot-logrotate' | sudo tee /etc/logrotate.d/weather-bot >/dev/null"
 
 gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   set -euo pipefail && \
+  DASHBOARD_API_TOKEN=\$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))') && \
   if [ ! -f /etc/weather-bot.env ]; then \
     printf '%s\n' \
       'PAPER_TRADING=true' \
@@ -99,6 +101,9 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
       'CLOB_PREFILTER_PRIORITY=HIGH,MEDIUM,LOW' \
       'SETTLEMENT_WATCHER_POLL_SECONDS=10' \
       'SETTLEMENT_WATCHER_OFFICIAL_REFRESH_SECONDS=60' \
+      'DASHBOARD_API_HOST=127.0.0.1' \
+      'DASHBOARD_API_PORT=8510' \
+      \"DASHBOARD_API_TOKEN=\${DASHBOARD_API_TOKEN}\" \
       'MET_OFFICE_API_KEY=' \
       'ACCUWEATHER_API_KEY=' | sudo tee /etc/weather-bot.env >/dev/null; \
   fi && \
@@ -107,9 +112,11 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   sudo systemctl daemon-reload && \
   sudo systemctl enable weather-bot && \
   sudo systemctl enable weather-dashboard && \
+  sudo systemctl enable weather-dashboard-api && \
   sudo systemctl enable weather-settlement-watcher && \
   sudo systemctl restart weather-bot && \
   sudo systemctl restart weather-dashboard && \
+  sudo systemctl restart weather-dashboard-api && \
   sudo systemctl restart weather-settlement-watcher"
 
 echo "==> Installing cron suite"
@@ -126,6 +133,7 @@ gcloud compute ssh "${VM_NAME}" --zone "${ZONE}" --command "\
   sudo systemctl status weather-bot --no-pager && \
   sudo systemctl status weather-settlement-watcher --no-pager && \
   sudo systemctl status weather-dashboard --no-pager && \
+  sudo systemctl status weather-dashboard-api --no-pager && \
   if ! sudo journalctl -u weather-bot --no-pager -n 300 | grep HEARTBEAT | tail -5; then \
     grep HEARTBEAT '${REMOTE_WORKDIR}/logs/bot.log' | tail -5 || true; \
   fi"
@@ -137,7 +145,12 @@ Next:
 1) Set secrets on VM (not in repo):
    gcloud compute ssh ${VM_NAME} --zone ${ZONE} --command 'sudo nano /etc/weather-bot.env'
 2) Restart after editing:
-   gcloud compute ssh ${VM_NAME} --zone ${ZONE} --command 'sudo systemctl restart weather-bot weather-settlement-watcher'
+   gcloud compute ssh ${VM_NAME} --zone ${ZONE} --command 'sudo systemctl restart weather-bot weather-settlement-watcher weather-dashboard weather-dashboard-api'
 3) Open the private dashboard tunnel:
    gcloud compute ssh ${VM_NAME} --zone ${ZONE} --project weather-488111 -- -N -L 8501:127.0.0.1:8501
+4) To power Streamlit Cloud from the VM directly, expose weather-dashboard-api (default 127.0.0.1:8510)
+   through your preferred reverse proxy/tunnel and set Streamlit secrets:
+   DASHBOARD_DATA_SOURCE=api
+   DASHBOARD_API_BASE_URL=<public api base url>
+   DASHBOARD_API_TOKEN=<value from /etc/weather-bot.env>
 EOF

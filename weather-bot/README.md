@@ -76,7 +76,7 @@ What it shows:
 
 Notes:
 
-- `DASHBOARD_DATA_SOURCE=local|github|auto` controls whether the dashboard reads authoritative local files or the GitHub mirror. `auto` preserves the old behavior.
+- `DASHBOARD_DATA_SOURCE=local|github|api|auto` controls whether the dashboard reads authoritative local files, the GitHub mirror, or a read-only VM API. `auto` now prefers `api` when `DASHBOARD_API_BASE_URL` is configured, otherwise it preserves the old behavior.
 - `DASHBOARD_READ_ONLY=true` disables mode/config writes. Use this for production dashboards.
 - `scripts/settlement_watcher.py` writes `data/settlement_snapshot.json` and `data/settlement_status.json`; the dashboard uses those files for instant settled-PnL overlays without mutating paper/live position files.
 - `umaResolutionStatus=proposed` is displayed immediately as provisional; final resolution replaces it once Polymarket moves to resolved/closed.
@@ -94,7 +94,22 @@ For an authoritative read-only production dashboard on the VM itself:
 3. Visit:
    - `http://localhost:8501`
 
-This VM-hosted dashboard reads local runtime files directly (`DASHBOARD_DATA_SOURCE=local`) and is intended to be the source of truth. The realtime settlement watcher runs as a separate `systemd` service and never modifies `paper_trader.py`, `positions*.json`, or `logs/resolved.csv`. The public Streamlit Cloud app remains a mirror fed by GitHub sync.
+This VM-hosted dashboard reads local runtime files directly (`DASHBOARD_DATA_SOURCE=local`) and is intended to be the source of truth. The realtime settlement watcher runs as a separate `systemd` service and never modifies `paper_trader.py`, `positions*.json`, or `logs/resolved.csv`. The public Streamlit Cloud app can stay in GitHub mirror mode or be switched to VM API mode.
+
+### Public Streamlit Cloud Via VM API
+
+If you want to keep the existing public `streamlit.app` URL but stop relying on GitHub data mirroring:
+
+1. Install the API service on the VM:
+   - `bash deploy/install_dashboard_api_service.sh`
+2. Expose the API service (`127.0.0.1:8510`) through your preferred reverse proxy or tunnel.
+3. Set Streamlit Cloud secrets for the public app:
+   - `DASHBOARD_DATA_SOURCE=api`
+   - `DASHBOARD_API_BASE_URL=https://<your-public-api-base-url>`
+   - `DASHBOARD_API_TOKEN=<value from /etc/weather-bot.env>`
+4. Redeploy the public Streamlit Cloud app.
+
+This keeps the same public Streamlit frontend link while moving the source of truth to the VM instead of GitHub snapshots.
 
 ## Quick Market Check
 

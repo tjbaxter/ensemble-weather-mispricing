@@ -40,6 +40,9 @@ add_if_exists \
   weather-bot/data/polymarket_cache.json \
   weather-bot/data/commercial_forecast_log.json \
   weather-bot/data/model_snapshot_log.json \
+  weather-bot/data/settlement_snapshot.json \
+  weather-bot/data/settlement_status.json \
+  weather-bot/data/settlement_summary.json \
   weather-bot/data/trade_observability.jsonl \
   weather-bot/data/accuracy_rows_cache.json \
   weather-bot/data/morning_obs_cache.json \
@@ -64,14 +67,25 @@ for rel in weather-bot/logs/deep/*.jsonl; do
   fi
 done
 
-# Only commit if there are actual changes
-if git diff --cached --quiet; then
-  echo "[git_push_data] No changes to commit."
+created_commit=0
+if ! git diff --cached --quiet; then
+  TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
+  git commit -m "auto: data sync ${TIMESTAMP}"
+  created_commit=1
+fi
+
+ahead_count="$(git rev-list --count @{u}..HEAD 2>/dev/null || echo 0)"
+if [[ "${ahead_count}" -gt 0 ]]; then
+  if [[ "${created_commit}" -eq 0 ]]; then
+    echo "[git_push_data] Branch already ahead by ${ahead_count} commit(s); retrying push."
+  fi
+  git push origin main
+  echo "[git_push_data] Pushed data update to origin/main."
   exit 0
 fi
 
-TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
-git commit -m "auto: data sync ${TIMESTAMP}"
-git push origin main
-
-echo "[git_push_data] Pushed data update at ${TIMESTAMP}"
+if [[ "${created_commit}" -eq 1 ]]; then
+  echo "[git_push_data] Commit created but branch is not ahead of origin/main."
+else
+  echo "[git_push_data] No changes to commit or push."
+fi
