@@ -13,6 +13,7 @@ from typing import Final
 from aiohttp import web
 
 ROOT = Path(__file__).resolve().parents[1]
+SETTLEMENT_STATUS_PATH = ROOT / "data" / "settlement_status.json"
 
 DATA_FILE_RE: Final = re.compile(r"^data/[^/]+\.(json|csv)$")
 LOG_FILE_RE: Final = re.compile(
@@ -79,6 +80,25 @@ def _resolve_rel_path(raw_path: str) -> tuple[str, Path]:
     return rel_path, abs_path
 
 
+def _dashboard_sync_status_payload() -> dict:
+    now_iso = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
+    watcher_payload: dict = {}
+    try:
+        if SETTLEMENT_STATUS_PATH.exists():
+            loaded = json.loads(SETTLEMENT_STATUS_PATH.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                watcher_payload = loaded
+    except Exception:
+        watcher_payload = {}
+    return {
+        "last_fast_sync_utc": now_iso,
+        "last_api_refresh_utc": now_iso,
+        "api_mode": True,
+        "settlement_watcher_last_success_utc": watcher_payload.get("last_success_utc", ""),
+        "settlement_watcher_last_heartbeat_utc": watcher_payload.get("last_heartbeat_utc", ""),
+    }
+
+
 @web.middleware
 async def auth_middleware(request: web.Request, handler):
     if request.path == "/health" and _public_health():
@@ -126,7 +146,12 @@ async def logs_index(_: web.Request) -> web.Response:
 
 
 async def raw_file(request: web.Request) -> web.Response:
-    rel_path, abs_path = _resolve_rel_path(request.match_info.get("tail", ""))
+    raw_target = request.match_info.get("tail", "")
+    rel_path = PurePosixPath(raw_target.lstrip("/")).as_posix()
+    if rel_path == "data/dashboard_sync_status.json":
+        return web.json_response(_dashboard_sync_status_payload())
+
+    rel_path, abs_path = _resolve_rel_path(raw_target)
     try:
         text = abs_path.read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
