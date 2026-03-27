@@ -3849,7 +3849,16 @@ def main() -> None:
         st.markdown("### Auto-refresh")
 
     refresh_options = ["off", "5s", "15s", "30s", "60s", "5m"]
-    default_refresh = "5s" if local_runtime else "30s"
+    if local_runtime:
+        default_refresh = "5s"
+    elif effective_source == "api":
+        default_refresh = "60s"
+    elif effective_source == "github":
+        # Mirror mode does a full Streamlit rerun on each tick, which looks
+        # like a page reload in the public app. Use a gentler default there.
+        default_refresh = "5m"
+    else:
+        default_refresh = "30s"
     refresh_opt = st.sidebar.selectbox("Interval", options=refresh_options, index=refresh_options.index(default_refresh))
     if refresh_opt != "off" and st_autorefresh is not None:
         interval_ms = {"5s": 5_000, "15s": 15_000, "30s": 30_000, "60s": 60_000, "5m": 300_000}[refresh_opt]
