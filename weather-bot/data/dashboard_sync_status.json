@@ -1,5 +1,5 @@
 {
-  "fast_sync_file_count": 18,
+  "fast_sync_file_count": 23,
   "fast_sync_files": [
     "data/positions.json",
     "data/positions_archive_20260228.json",
@@ -11,6 +11,7 @@
     "data/positions_shadow_cavendish.json",
     "data/positions_shadow_cavendish2.json",
     "data/positions_shadow_cavendish3.json",
+    "data/positions_shadow_prime_alpha.json",
     "data/positions_shadow_props_kelly.json",
     "data/positions_shadow_purdey.json",
     "data/positions_shadow_purdey2.json",
@@ -18,8 +19,13 @@
     "data/settlement_snapshot.json",
     "data/settlement_status.json",
     "data/settlement_summary.json",
-    "logs/resolved.csv"
+    "logs/resolved.csv",
+    "logs/trades.csv",
+    "logs/signals.csv",
+    "logs/shadow_cavendish3/resolved.csv",
+    "logs/shadow_true_alpha/resolved.csv"
   ],
-  "last_fast_sync_utc": "2026-03-25 09:34:41 UTC",
-  "recovery_sync": true
+  "last_fast_sync_utc": "2026-03-27 14:25:32 UTC",
+  "recovery_sync": true,
+  "source": "vm_api_manual_refresh"
 }

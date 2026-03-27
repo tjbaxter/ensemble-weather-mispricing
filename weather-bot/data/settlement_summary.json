@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-25T09:29:38.862869+00:00",
+  "generated_at": "2026-03-27T14:13:02.563782+00:00",
   "strategies": [
     {
       "half_wins": 0,
@@ -14,14 +14,14 @@
     },
     {
       "half_wins": 0,
-      "losses": 400,
+      "losses": 445,
       "mode": "paper",
-      "official": 429,
-      "pnl_usd": 211.78110000000007,
-      "provisional": 5,
+      "official": 488,
+      "pnl_usd": 346.6875000000001,
+      "provisional": 0,
       "strategy": "CAVENDISH_MK1",
-      "trades": 488,
-      "wins": 88
+      "trades": 544,
+      "wins": 99
     },
     {
       "half_wins": 0,
@@ -36,102 +36,113 @@
     },
     {
       "half_wins": 0,
-      "losses": 178,
+      "losses": 223,
       "mode": "paper",
-      "official": 157,
-      "pnl_usd": 135.45060000000004,
-      "provisional": 5,
+      "official": 218,
+      "pnl_usd": 277.74750000000006,
+      "provisional": 0,
       "strategy": "CAVENDISH_MK3",
-      "trades": 218,
-      "wins": 40
+      "trades": 275,
+      "wins": 52
     },
     {
       "half_wins": 0,
-      "losses": 417,
+      "losses": 9,
       "mode": "paper",
-      "official": 451,
-      "pnl_usd": -21.4844,
-      "provisional": 5,
-      "strategy": "PROPS_KELLY",
-      "trades": 512,
-      "wins": 95
+      "official": 0,
+      "pnl_usd": 159.59070000000003,
+      "provisional": 0,
+      "strategy": "PRIME_ALPHA",
+      "trades": 13,
+      "wins": 4
     },
     {
       "half_wins": 0,
-      "losses": 378,
+      "losses": 462,
+      "mode": "paper",
+      "official": 512,
+      "pnl_usd": 124.06050000000002,
+      "provisional": 0,
+      "strategy": "PROPS_KELLY",
+      "trades": 569,
+      "wins": 107
+    },
+    {
+      "half_wins": 0,
+      "losses": 423,
       "mode": "paper",
       "official": 382,
-      "pnl_usd": 197.76260000000008,
-      "provisional": 5,
+      "pnl_usd": 381.2183000000001,
+      "provisional": 0,
       "strategy": "PURDEY_MK1",
-      "trades": 452,
-      "wins": 74
+      "trades": 507,
+      "wins": 84
     },
     {
       "half_wins": 0,
-      "losses": 421,
+      "losses": 473,
       "mode": "paper",
       "official": 438,
-      "pnl_usd": -1.341500000000039,
-      "provisional": 5,
+      "pnl_usd": 169.10579999999996,
+      "provisional": 0,
       "strategy": "PURDEY_MK2",
-      "trades": 507,
-      "wins": 86
+      "trades": 571,
+      "wins": 98
     },
     {
       "half_wins": 0,
-      "losses": 196,
+      "losses": 199,
       "mode": "paper",
       "official": 241,
-      "pnl_usd": -355.6155999999998,
+      "pnl_usd": 98.5174000000002,
       "provisional": 0,
       "strategy": "SINGLE",
-      "trades": 241,
-      "wins": 45
+      "trades": 246,
+      "wins": 47
     },
     {
       "half_wins": 0,
-      "losses": 460,
+      "losses": 505,
       "mode": "paper",
       "official": 477,
-      "pnl_usd": 26.503100000000018,
-      "provisional": 5,
+      "pnl_usd": 209.95880000000002,
+      "provisional": 0,
       "strategy": "TOP2_COND",
-      "trades": 547,
-      "wins": 87
+      "trades": 602,
+      "wins": 97
     },
     {
       "half_wins": 0,
-      "losses": 461,
+      "losses": 506,
       "mode": "paper",
       "official": 478,
-      "pnl_usd": 57.49689999999981,
-      "provisional": 5,
+      "pnl_usd": 240.95259999999982,
+      "provisional": 0,
       "strategy": "TOP2_EQUAL",
-      "trades": 548,
-      "wins": 87
+      "trades": 603,
+      "wins": 97
     },
     {
       "half_wins": 0,
-      "losses": 460,
+      "losses": 505,
       "mode": "paper",
       "official": 477,
-      "pnl_usd": 26.503100000000018,
-      "provisional": 5,
+      "pnl_usd": 209.95880000000002,
+      "provisional": 0,
       "strategy": "TOP2_PROP",
-      "trades": 547,
-      "wins": 87
+      "trades": 602,
+      "wins": 97
     },
     {
       "half_wins": 0,
-      "losses": 180,
+      "losses": 225,
       "mode": "paper",
       "official": 158,
-      "pnl_usd": 47.36279999999995,
-      "provisional": 5,
+      "pnl_usd": 257.6652,
+      "provisional": 0,
       "strategy": "TRUE_ALPHA",
-      "trades": 219,
-      "wins": 39
+      "trades": 276,
+      "wins": 51
     },
     {
       "half_wins": 0,
@@ -146,13 +157,13 @@
     },
     {
       "half_wins": 0,
-      "losses": 30,
+      "losses": 31,
       "mode": "paper",
       "official": 40,
-      "pnl_usd": -13.642700000000014,
+      "pnl_usd": -23.152700000000014,
       "provisional": 0,
       "strategy": "WS_PRICE_MONITOR",
-      "trades": 40,
+      "trades": 41,
       "wins": 10
     }
   ]
