@@ -3852,7 +3852,9 @@ def main() -> None:
     if local_runtime:
         default_refresh = "5s"
     elif effective_source == "api":
-        default_refresh = "60s"
+        # API mode still triggers a full Streamlit rerun on each refresh tick.
+        # Use a gentler default so the public dashboard stays interactive.
+        default_refresh = "5m"
     elif effective_source == "github":
         # Mirror mode does a full Streamlit rerun on each tick, which looks
         # like a page reload in the public app. Use a gentler default there.
