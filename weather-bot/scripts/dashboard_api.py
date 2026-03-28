@@ -3,10 +3,13 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import json
 import os
 import re
 import secrets
+import sys
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Final
@@ -14,6 +17,11 @@ from typing import Final
 from aiohttp import web
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from monitoring.dashboard_overview import build_dashboard_overview_payload  # noqa: E402
+
 SETTLEMENT_STATUS_PATH = ROOT / "data" / "settlement_status.json"
 
 DATA_FILE_RE: Final = re.compile(r"^data/[^/]+\.(json|csv)$")
@@ -23,6 +31,7 @@ LOG_FILE_RE: Final = re.compile(
 SHADOW_LOG_RE: Final = re.compile(r"^logs/shadow_[^/]+/resolved(?:_archive_\d{8})?\.csv$")
 BACKTEST_FILE_RE: Final = re.compile(r"^backtest/data/resolved_markets\.(json|csv)$")
 TRUTHY = {"1", "true", "yes", "on"}
+OVERVIEW_CACHE_KEY = "dashboard_overview_cache"
 
 
 def _parse_truthy(raw: str | None, default: bool = False) -> bool:
@@ -48,6 +57,13 @@ def _api_token() -> str:
 
 def _public_health() -> bool:
     return _parse_truthy(os.getenv("DASHBOARD_API_PUBLIC_HEALTH"), default=True)
+
+
+def _overview_refresh_seconds() -> int:
+    try:
+        return max(15, int(os.getenv("DASHBOARD_API_OVERVIEW_REFRESH_SEC", "60")))
+    except Exception:
+        return 60
 
 
 def _is_loopback_request(request: web.Request) -> bool:
@@ -97,6 +113,54 @@ def _dashboard_sync_status_payload() -> dict:
         "api_mode": True,
         "settlement_watcher_last_success_utc": watcher_payload.get("last_success_utc", ""),
         "settlement_watcher_last_heartbeat_utc": watcher_payload.get("last_heartbeat_utc", ""),
+    }
+
+
+async def _refresh_overview_cache_once(app: web.Application) -> None:
+    cache = app.setdefault(OVERVIEW_CACHE_KEY, {})
+    try:
+        payload = await asyncio.to_thread(build_dashboard_overview_payload, ROOT)
+        cache["payload"] = payload
+        cache["last_refresh_utc"] = datetime.now(UTC).isoformat()
+        cache["last_error"] = ""
+    except Exception as exc:  # pragma: no cover - defensive
+        cache["last_error"] = str(exc)
+        cache["last_refresh_utc"] = datetime.now(UTC).isoformat()
+
+
+@contextlib.asynccontextmanager
+async def _overview_cache_ctx(app: web.Application):
+    app[OVERVIEW_CACHE_KEY] = {
+        "payload": {},
+        "last_error": "",
+        "last_refresh_utc": "",
+    }
+    await _refresh_overview_cache_once(app)
+
+    async def _loop() -> None:
+        while True:
+            await asyncio.sleep(_overview_refresh_seconds())
+            await _refresh_overview_cache_once(app)
+
+    task = asyncio.create_task(_loop())
+    try:
+        yield
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+
+
+def _dashboard_overview_payload(app: web.Application) -> dict:
+    cache = app.get(OVERVIEW_CACHE_KEY, {})
+    payload = cache.get("payload")
+    if isinstance(payload, dict) and payload.get("strategies"):
+        return payload
+    return {
+        "generated_at_utc": cache.get("last_refresh_utc", ""),
+        "strategies": [],
+        "last_error": cache.get("last_error", ""),
+        "warming": True,
     }
 
 
@@ -151,6 +215,8 @@ async def raw_file(request: web.Request) -> web.Response:
     rel_path = PurePosixPath(raw_target.lstrip("/")).as_posix()
     if rel_path == "data/dashboard_sync_status.json":
         return web.json_response(_dashboard_sync_status_payload())
+    if rel_path == "data/dashboard_overview.json":
+        return web.json_response(_dashboard_overview_payload(request.app))
 
     rel_path, abs_path = _resolve_rel_path(raw_target)
     try:
@@ -168,6 +234,7 @@ async def raw_file(request: web.Request) -> web.Response:
 
 def build_app() -> web.Application:
     app = web.Application(middlewares=[auth_middleware])
+    app.cleanup_ctx.append(_overview_cache_ctx)
     app.router.add_get("/health", health)
     app.router.add_get("/logs/index", logs_index)
     app.router.add_get("/raw/{tail:.*}", raw_file)

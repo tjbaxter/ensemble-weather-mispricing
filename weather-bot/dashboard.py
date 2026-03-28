@@ -61,6 +61,7 @@ RESOLVED_CSV = ROOT / "logs" / "resolved.csv"
 POSITIONS_JSON = ROOT / "data" / "positions.json"
 POSITIONS_LIVE_JSON = ROOT / "data" / "positions_live.json"
 DASHBOARD_SYNC_STATUS_JSON = ROOT / "data" / "dashboard_sync_status.json"
+DASHBOARD_OVERVIEW_JSON = ROOT / "data" / "dashboard_overview.json"
 SETTLEMENT_SNAPSHOT_PATH = ROOT / SETTLEMENT_SNAPSHOT_JSON
 SETTLEMENT_STATUS_PATH = ROOT / SETTLEMENT_STATUS_JSON
 DEFAULT_ENV = ROOT / ".env"
@@ -317,6 +318,11 @@ def _read_json_object(rel_path: str, local_path: Path) -> dict:
 
 def load_dashboard_sync_status() -> dict:
     return _read_json_object("data/dashboard_sync_status.json", DASHBOARD_SYNC_STATUS_JSON)
+
+
+@st.cache_data(ttl=15, show_spinner=False)
+def load_dashboard_overview_payload() -> dict:
+    return _read_json_object("data/dashboard_overview.json", DASHBOARD_OVERVIEW_JSON)
 
 
 @st.cache_data(ttl=5, show_spinner=False)
@@ -3956,167 +3962,30 @@ def main() -> None:
         else:
             st.caption(freshness_line)
 
-    (
-        tab_ov, tab_single, tab_ladder, tab_conv,
-        tab_2a, tab_2b, tab_2c, tab_purdey, tab_cavendish, tab_purdey2, tab_cavendish3, tab_true_alpha, tab_prime_alpha, tab_pk, tab_acc,
-    ) = st.tabs([
-        "🏆 Overview",
-        "⚡ SINGLE",
-        "🪜 LADDER",
-        "🎯 CONVICTION",
-        "2A Equal",
-        "2B Cond",
-        "2C Prop",
-        "🎯 PURDEY",
-        "🌿 CAVENDISH",
-        "🎯 PURDEY MK2",
-        "🌱 CAVENDISH III",
-        "💎 True Alpha",
-        "🧭 Prime Alpha",
-        "🎲 Props Kelly",
-        "📊 Accuracy",
-    ])
+    tab_labels = ["🏆 Overview", *[spec["tab_label"] for spec in _DETAIL_TAB_SPECS], "📊 Accuracy"]
+    tab_objects = st.tabs(
+        tab_labels,
+        default="🏆 Overview",
+        key="dashboard_main_tabs",
+        on_change="rerun",
+    )
+    tabs_by_label = dict(zip(tab_labels, tab_objects, strict=False))
 
-    resolved_df = load_effective_resolved_df()
-    has_strat   = not resolved_df.empty and "strategy" in resolved_df.columns
-
-    def _strat_df(s: str) -> pd.DataFrame:
-        return _filter_rows_for_strategy(resolved_df, s, current_main_mode_name()) if has_strat else pd.DataFrame()
-
-    # Fetch live positions + prices — main bot positions (SINGLE / LADDER)
-    _all_positions      = load_positions()
-    _shadow_2a          = load_shadow_positions("shadow_2a")
-    _shadow_2b          = load_shadow_positions("shadow_2b")
-    _shadow_2c          = load_shadow_positions("shadow_2c")
-    _shadow_purdey      = load_shadow_positions("shadow_purdey")
-    _shadow_cavendish   = load_shadow_positions("shadow_cavendish")
-    _shadow_purdey2     = load_shadow_positions("shadow_purdey2")
-    _shadow_cavendish3  = load_shadow_positions("shadow_cavendish3")
-    _shadow_true_alpha  = load_shadow_positions("shadow_true_alpha")
-    _shadow_prime_alpha = load_shadow_positions("shadow_prime_alpha")
-    _shadow_props_kelly = load_shadow_positions("shadow_props_kelly")
-
-    # Filter main positions by strategy tag.
-    # Legacy positions written before tagging was added have strategy="" or strategy="LADDER".
-    # They are attributed to LADDER (the original single strategy before 6-way split).
-    # SINGLE and CONVICTION only show positions explicitly tagged as such.
-    def _pos_for_strategy(strat: str) -> list[dict]:
-        if strat == "LADDER":
-            # Include explicitly tagged LADDER + legacy untagged positions (strategy="" or missing)
-            return [p for p in _all_positions if p.get("strategy", "") in ("LADDER", "")]
-        return [p for p in _all_positions if p.get("strategy") == strat]
-
-    _single_positions     = _pos_for_strategy("SINGLE")
-    _ladder_positions     = _pos_for_strategy("LADDER")
-    _conviction_positions = _pos_for_strategy("CONVICTION")
-
-    # Gather ALL unique token ids across every portfolio for one batched price fetch
-    _all_token_ids = tuple({
-        p["token_id"]
-        for p in (_all_positions + _shadow_2a + _shadow_2b + _shadow_2c
-                  + _shadow_purdey + _shadow_cavendish + _shadow_purdey2
-                  + _shadow_cavendish3 + _shadow_true_alpha + _shadow_prime_alpha + _shadow_props_kelly)
-        if p.get("token_id")
-    })
-    _live_prices_main = fetch_live_position_prices(_all_token_ids) if _all_token_ids else {}
-    _live_ts_main     = datetime.now(UTC).strftime("%H:%M UTC")
-
+    tab_ov = tabs_by_label["🏆 Overview"]
     with tab_ov:
-        _render_overview_tab()
+        if tab_ov.open:
+            _render_overview_tab()
 
-    with tab_single:
-        _render_model_detail_tab(
-            "SINGLE", _strat_df("SINGLE"),
-            positions=_single_positions, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="single",
-        )
+    for spec in _DETAIL_TAB_SPECS:
+        tab = tabs_by_label[spec["tab_label"]]
+        with tab:
+            if tab.open:
+                _render_model_detail_tab_lazy(spec)
 
-    with tab_ladder:
-        _render_model_detail_tab(
-            "LADDER", _strat_df("LADDER"),
-            positions=_ladder_positions, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="ladder",
-        )
-
-    with tab_conv:
-        _render_model_detail_tab(
-            "CONVICTION", _strat_df("CONVICTION"),
-            positions=_conviction_positions, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="conv",
-        )
-
-    with tab_2a:
-        _render_model_detail_tab(
-            "2A Equal", _strat_df("TOP2_EQUAL"),
-            positions=_shadow_2a, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="2a",
-        )
-
-    with tab_2b:
-        _render_model_detail_tab(
-            "2B Cond", _strat_df("TOP2_COND"),
-            positions=_shadow_2b, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="2b",
-        )
-
-    with tab_2c:
-        _render_model_detail_tab(
-            "2C Prop", _strat_df("TOP2_PROP"),
-            positions=_shadow_2c, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="2c",
-        )
-
-    with tab_purdey:
-        _render_model_detail_tab(
-            "🎯 PURDEY MK1", _strat_df("PURDEY_MK1"),
-            positions=_shadow_purdey, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="purdey",
-        )
-
-    with tab_cavendish:
-        _render_model_detail_tab(
-            "🌿 CAVENDISH MK1", _strat_df("CAVENDISH_MK1"),
-            positions=_shadow_cavendish, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="cavendish",
-        )
-
-    with tab_purdey2:
-        _render_model_detail_tab(
-            "🎯 PURDEY MK2", _strat_df("PURDEY_MK2"),
-            positions=_shadow_purdey2, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="purdey2",
-        )
-
-    with tab_cavendish3:
-        _render_model_detail_tab(
-            "🌱 CAVENDISH MK3", _strat_df("CAVENDISH_MK3"),
-            positions=_shadow_cavendish3, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="cavendish3",
-        )
-
-    with tab_true_alpha:
-        _render_model_detail_tab(
-            "💎 True Alpha", _strat_df("TRUE_ALPHA"),
-            positions=_shadow_true_alpha, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="true_alpha",
-        )
-
-    with tab_prime_alpha:
-        _render_model_detail_tab(
-            "🧭 Prime Alpha", _strat_df("PRIME_ALPHA"),
-            positions=_shadow_prime_alpha, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="prime_alpha",
-        )
-
-    with tab_pk:
-        _render_model_detail_tab(
-            "🎲 Props Kelly", _strat_df("PROPS_KELLY"),
-            positions=_shadow_props_kelly, live_prices=_live_prices_main,
-            live_ts=_live_ts_main, key_prefix="props_kelly",
-        )
-
+    tab_acc = tabs_by_label["📊 Accuracy"]
     with tab_acc:
-        _render_accuracy_tab()
+        if tab_acc.open:
+            _render_accuracy_tab()
 
 
 def _render_trading_tab() -> None:
@@ -5060,8 +4929,323 @@ _MODEL_COLORS: dict[str, str] = {
 }
 
 
+_DETAIL_TAB_SPECS: list[dict[str, str]] = [
+    {
+        "tab_label": "⚡ SINGLE",
+        "render_label": "SINGLE",
+        "strategy_key": "SINGLE",
+        "source_kind": "main",
+        "source_value": "SINGLE",
+        "key_prefix": "single",
+    },
+    {
+        "tab_label": "🪜 LADDER",
+        "render_label": "LADDER",
+        "strategy_key": "LADDER",
+        "source_kind": "main",
+        "source_value": "LADDER",
+        "key_prefix": "ladder",
+    },
+    {
+        "tab_label": "🎯 CONVICTION",
+        "render_label": "CONVICTION",
+        "strategy_key": "CONVICTION",
+        "source_kind": "main",
+        "source_value": "CONVICTION",
+        "key_prefix": "conv",
+    },
+    {
+        "tab_label": "2A Equal",
+        "render_label": "2A Equal",
+        "strategy_key": "TOP2_EQUAL",
+        "source_kind": "shadow",
+        "source_value": "shadow_2a",
+        "key_prefix": "2a",
+    },
+    {
+        "tab_label": "2B Cond",
+        "render_label": "2B Cond",
+        "strategy_key": "TOP2_COND",
+        "source_kind": "shadow",
+        "source_value": "shadow_2b",
+        "key_prefix": "2b",
+    },
+    {
+        "tab_label": "2C Prop",
+        "render_label": "2C Prop",
+        "strategy_key": "TOP2_PROP",
+        "source_kind": "shadow",
+        "source_value": "shadow_2c",
+        "key_prefix": "2c",
+    },
+    {
+        "tab_label": "🎯 PURDEY",
+        "render_label": "🎯 PURDEY MK1",
+        "strategy_key": "PURDEY_MK1",
+        "source_kind": "shadow",
+        "source_value": "shadow_purdey",
+        "key_prefix": "purdey",
+    },
+    {
+        "tab_label": "🌿 CAVENDISH",
+        "render_label": "🌿 CAVENDISH MK1",
+        "strategy_key": "CAVENDISH_MK1",
+        "source_kind": "shadow",
+        "source_value": "shadow_cavendish",
+        "key_prefix": "cavendish",
+    },
+    {
+        "tab_label": "🎯 PURDEY MK2",
+        "render_label": "🎯 PURDEY MK2",
+        "strategy_key": "PURDEY_MK2",
+        "source_kind": "shadow",
+        "source_value": "shadow_purdey2",
+        "key_prefix": "purdey2",
+    },
+    {
+        "tab_label": "🌱 CAVENDISH III",
+        "render_label": "🌱 CAVENDISH MK3",
+        "strategy_key": "CAVENDISH_MK3",
+        "source_kind": "shadow",
+        "source_value": "shadow_cavendish3",
+        "key_prefix": "cavendish3",
+    },
+    {
+        "tab_label": "💎 True Alpha",
+        "render_label": "💎 True Alpha",
+        "strategy_key": "TRUE_ALPHA",
+        "source_kind": "shadow",
+        "source_value": "shadow_true_alpha",
+        "key_prefix": "true_alpha",
+    },
+    {
+        "tab_label": "🧭 Prime Alpha",
+        "render_label": "🧭 Prime Alpha",
+        "strategy_key": "PRIME_ALPHA",
+        "source_kind": "shadow",
+        "source_value": "shadow_prime_alpha",
+        "key_prefix": "prime_alpha",
+    },
+    {
+        "tab_label": "🎲 Props Kelly",
+        "render_label": "🎲 Props Kelly",
+        "strategy_key": "PROPS_KELLY",
+        "source_kind": "shadow",
+        "source_value": "shadow_props_kelly",
+        "key_prefix": "props_kelly",
+    },
+]
+
+
+def _load_main_positions_for_detail(strategy: str) -> list[dict]:
+    positions = load_positions()
+    if strategy == "LADDER":
+        return [position for position in positions if position.get("strategy", "") in ("LADDER", "")]
+    return [position for position in positions if position.get("strategy") == strategy]
+
+
+def _load_positions_for_detail(spec: dict[str, str]) -> list[dict]:
+    if spec["source_kind"] == "main":
+        return _load_main_positions_for_detail(spec["source_value"])
+    return load_shadow_positions(spec["source_value"])
+
+
+@st.cache_data(ttl=5, show_spinner=False)
+def load_strategy_resolved_slice(strategy_key: str, main_mode: str) -> pd.DataFrame:
+    resolved_df = load_effective_resolved_df()
+    return _filter_rows_for_strategy(resolved_df, strategy_key, main_mode)
+
+
+def _render_model_detail_tab_lazy(spec: dict[str, str]) -> None:
+    with st.spinner(f"Loading {spec['render_label']}..."):
+        df = load_strategy_resolved_slice(spec["strategy_key"], current_main_mode_name())
+        positions = _load_positions_for_detail(spec)
+        open_positions, _, _ = split_positions_for_display(positions)
+        token_ids = tuple(
+            {
+                str(position.get("token_id", "") or "")
+                for position in open_positions
+                if position.get("token_id")
+            }
+        )
+        live_prices = fetch_live_position_prices(token_ids) if token_ids else {}
+        live_ts = datetime.now(UTC).strftime("%H:%M UTC")
+    _render_model_detail_tab(
+        spec["render_label"],
+        df,
+        positions=positions,
+        live_prices=live_prices,
+        live_ts=live_ts,
+        key_prefix=spec["key_prefix"],
+    )
+
+
+def _render_overview_tab_from_payload(payload: dict) -> bool:
+    strategies = [item for item in payload.get("strategies", []) if isinstance(item, dict)]
+    if not strategies:
+        return False
+
+    st.markdown(
+        '<div style="font-size:1.1rem;font-weight:700;color:#E6EDF3;'
+        'letter-spacing:.05em;margin:6px 0 14px;">STRATEGY SCOREBOARD</div>',
+        unsafe_allow_html=True,
+    )
+
+    rank_emojis = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟", "1️⃣1️⃣", "1️⃣2️⃣", "1️⃣3️⃣", "1️⃣4️⃣", "1️⃣5️⃣"]
+    for row_start in range(0, len(strategies), 3):
+        cols = st.columns(3)
+        for idx, col in enumerate(cols):
+            ranked_idx = row_start + idx
+            if ranked_idx >= len(strategies):
+                break
+            item = strategies[ranked_idx]
+            label = str(item.get("label", ""))
+            key = str(item.get("strategy_key", ""))
+            settled = item.get("settled", {}) if isinstance(item.get("settled"), dict) else {}
+            live = item.get("live", {}) if isinstance(item.get("live"), dict) else {}
+            unrealized = float(live.get("unrealized_pnl", 0.0) or 0.0)
+            open_count = int(live.get("open_count", 0) or 0)
+            roi = float(live.get("roi", 0.0) or 0.0)
+            pnl = float(settled.get("pnl", 0.0) or 0.0)
+            wins = int(settled.get("wins", 0) or 0)
+            losses = int(settled.get("losses", 0) or 0)
+            wr = float(settled.get("wr", 0.0) or 0.0)
+            n = int(settled.get("n", 0) or 0)
+            provisional = int(settled.get("provisional", 0) or 0)
+
+            upnl_c = GREEN if unrealized >= 0 else RED
+            pnl_c = GREEN if pnl >= 0 else RED
+            accent = str(item.get("color", "") or _MODEL_COLORS.get(key, BLUE))
+            border_color = "#1a4d2e" if unrealized >= 0 else "#4d1a1a"
+
+            provisional_note = f" · {provisional} provisional" if provisional > 0 else ""
+            settled_line = (
+                f'<div style="color:{pnl_c};font-size:0.8rem;font-weight:600;">'
+                f'${pnl:+.2f} settled · {wins}W/{losses}L · {wr*100:.0f}% WR{provisional_note}</div>'
+                if n > 0
+                else '<div style="color:#555;font-size:0.75rem;">No settled trades yet</div>'
+            )
+
+            with col:
+                st.markdown(
+                    f"""
+<div style="background:#141A22;border:1px solid {border_color};border-left:4px solid {accent};
+     border-radius:10px;padding:14px;margin-bottom:12px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <span style="font-weight:700;color:#E6EDF3;font-size:0.92rem;">{label}</span>
+    <span style="font-size:0.72rem;color:#666;">{rank_emojis[ranked_idx]}</span>
+  </div>
+  <div style="font-size:1.9rem;font-weight:800;color:{upnl_c};line-height:1.1;">${unrealized:+.2f}</div>
+  <div style="color:#aaa;font-size:0.75rem;margin-top:2px;">
+    unrealized · {open_count} open · {roi:+.1f}% ROI
+  </div>
+  <div style="margin-top:8px;padding-top:8px;border-top:1px solid #1f2937;">
+    {settled_line}
+  </div>
+</div>""",
+                    unsafe_allow_html=True,
+                )
+
+    chart = payload.get("chart", {}) if isinstance(payload.get("chart"), dict) else {}
+    chart_series = [item for item in chart.get("series", []) if isinstance(item, dict)]
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="font-size:0.95rem;font-weight:700;color:#aaa;'
+        'letter-spacing:.05em;margin-bottom:10px;">CUMULATIVE P&L — ALL STRATEGIES</div>',
+        unsafe_allow_html=True,
+    )
+    fig_all = go.Figure()
+    any_data = False
+    live_point_x = chart.get("live_point_x") or payload.get("generated_at_utc") or datetime.now(UTC).isoformat()
+
+    for item in chart_series:
+        label = str(item.get("label", ""))
+        key = str(item.get("strategy_key", ""))
+        color = str(item.get("color", "") or _MODEL_COLORS.get(key, BLUE))
+        settled_points = [point for point in item.get("settled_points", []) if isinstance(point, dict)]
+        if settled_points:
+            x_vals = [point.get("x") for point in settled_points]
+            y_vals = [float(point.get("y", 0.0) or 0.0) for point in settled_points]
+            fig_all.add_trace(go.Scatter(
+                x=x_vals,
+                y=y_vals,
+                mode="lines+markers",
+                name=label,
+                line={"color": color, "width": 2, "dash": "solid"},
+                marker={"size": 5},
+                hovertemplate=f"{label}<br>%{{x|%b %d}}<br>Settled cum: $%{{y:.2f}}<extra></extra>",
+            ))
+            any_data = True
+
+        live_total = item.get("live_total")
+        if live_total is not None:
+            total_now = float(live_total)
+            dot_c = GREEN if total_now >= 0 else RED
+            fig_all.add_trace(go.Scatter(
+                x=[live_point_x],
+                y=[total_now],
+                mode="markers",
+                name=f"{label} (live)",
+                marker={"size": 12, "color": dot_c, "symbol": "circle", "line": {"color": color, "width": 2}},
+                hovertemplate=f"{label} NOW<br>Total: $%{{y:+.2f}}<extra></extra>",
+                showlegend=not settled_points,
+            ))
+            any_data = True
+
+    if any_data:
+        fig_all.add_hline(y=0, line_dash="dot", line_color="#333", line_width=1)
+        fig_all.update_layout(
+            plot_bgcolor=BG,
+            paper_bgcolor=PANEL,
+            font={"color": TEXT, "family": "Inter, Arial, sans-serif"},
+            margin={"l": 20, "r": 10, "t": 10, "b": 20},
+            xaxis={"gridcolor": "#1f2937", "tickformat": "%b %d"},
+            yaxis={"gridcolor": "#1f2937", "title": "Cumulative P&L ($)", "zeroline": False},
+            legend={"bgcolor": "rgba(0,0,0,0)", "font": {"size": 11}, "orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
+            height=320,
+        )
+        st.plotly_chart(fig_all, use_container_width=True)
+        st.caption(f"Lines = settled trades · Dots = current unrealized P&L as of {chart.get('live_ts', payload.get('live_ts', ''))}")
+    else:
+        st.info("No positions yet across any strategy.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    live_book = payload.get("live_book", {}) if isinstance(payload.get("live_book"), dict) else {}
+    if live_book:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.markdown(
+            '<div style="font-size:0.95rem;font-weight:700;color:#aaa;'
+            'letter-spacing:.05em;margin-bottom:10px;">LIVE BOOK — OPEN POSITIONS</div>',
+            unsafe_allow_html=True,
+        )
+        rows = [row for row in live_book.get("rows", []) if isinstance(row, dict)]
+        if rows:
+            st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        else:
+            st.info("No live open positions in the main book.")
+        details = [f"{int(live_book.get('open_count', 0) or 0)} genuinely open positions"]
+        stale_count = int(live_book.get("stale_count", 0) or 0)
+        settled_count = int(live_book.get("settled_count", 0) or 0)
+        provisional_count = int(live_book.get("provisional_count", 0) or 0)
+        if stale_count:
+            details.append(f"{stale_count} past-date rows excluded")
+        if settled_count:
+            if provisional_count:
+                details.append(f"{settled_count} watcher-settled ({provisional_count} provisional)")
+            else:
+                details.append(f"{settled_count} watcher-settled")
+        st.caption(f"Live prices as of {live_book.get('live_ts', payload.get('live_ts', ''))} · " + " · ".join(details))
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    render_trading_mode_panel(key_prefix="overview_mode")
+    return True
+
+
 def _render_overview_tab() -> None:
     """Comparison scoreboard: all strategies side-by-side, plus live open-book."""
+    if _render_overview_tab_from_payload(load_dashboard_overview_payload()):
+        return
+
     resolved_df = load_effective_resolved_df()
     positions   = load_positions()
     shadow_2a          = load_shadow_positions("shadow_2a")
