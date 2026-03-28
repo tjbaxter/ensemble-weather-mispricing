@@ -4131,23 +4131,61 @@ def load_strategy_resolved_slice(strategy_key: str, main_mode: str) -> pd.DataFr
     return _filter_rows_for_strategy(resolved_df, strategy_key, main_mode)
 
 
+def _strategy_detail_from_overview_payload(strategy_key: str) -> dict:
+    payload = load_dashboard_overview_payload()
+    strategies = payload.get("strategies", []) if isinstance(payload, dict) else []
+    if not isinstance(strategies, list):
+        return {}
+    for item in strategies:
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("strategy_key", "") or "") != strategy_key:
+            continue
+        detail = item.get("detail")
+        return detail if isinstance(detail, dict) else {}
+    return {}
+
+
+def _strategy_detail_positions(detail: dict) -> list[dict]:
+    positions = detail.get("positions", []) if isinstance(detail, dict) else []
+    if not isinstance(positions, list):
+        return []
+    return [dict(item) for item in positions if isinstance(item, dict)]
+
+
+def _strategy_detail_live_prices(detail: dict) -> dict[str, float]:
+    raw_prices = detail.get("live_prices", {}) if isinstance(detail, dict) else {}
+    if not isinstance(raw_prices, dict):
+        return {}
+    out: dict[str, float] = {}
+    for token_id, value in raw_prices.items():
+        try:
+            out[str(token_id)] = float(value)
+        except Exception:
+            continue
+    return out
+
+
 def _render_model_detail_tab_lazy(spec: dict[str, str]) -> None:
+    note = ""
     with st.spinner(f"Loading {spec['render_label']}..."):
         df = load_strategy_resolved_slice(spec["strategy_key"], current_main_mode_name())
-        positions = _load_positions_for_detail(spec)
-        open_positions, _, _ = split_positions_for_display(positions)
-        token_ids = tuple(
-            {
-                str(position.get("token_id", "") or "")
-                for position in open_positions
-                if position.get("token_id")
-            }
-        )
-        live_prices = fetch_live_position_prices(token_ids) if token_ids else {}
-        live_ts = datetime.now(UTC).strftime("%H:%M UTC")
+        detail = _strategy_detail_from_overview_payload(spec["strategy_key"])
+        positions = _strategy_detail_positions(detail)
+        live_prices = _strategy_detail_live_prices(detail)
+        live_ts = str(detail.get("live_ts", "") or "")
+        if not positions:
+            positions = _load_positions_for_detail(spec)
+            if positions:
+                note = "Live prices unavailable in the cache yet, so this view is rendering positions without blocking on a fresh price fetch."
+        elif not live_prices:
+            note = "Using cached positions while live prices warm in the VM cache."
+        if positions and not live_ts:
+            live_ts = "cache pending"
     _render_model_detail_tab(
         spec["render_label"],
         df,
+        note=note,
         positions=positions,
         live_prices=live_prices,
         live_ts=live_ts,
@@ -4741,7 +4779,7 @@ def _render_live_positions_section(
         pos_df["fill_size"]  = pd.to_numeric(pos_df["fill_size"],  errors="coerce").fillna(0.0)
         pos_df["live_price"] = pos_df["token_id"].map(lambda t: live_prices.get(t))
         pos_df["unreal_pnl"] = (
-            (pos_df["live_price"].fillna(pos_df["fill_price"]) - pos_df["fill_price"])
+            (pos_df["live_price"] - pos_df["fill_price"])
             * pos_df["fill_size"]
         ).round(2)
         active_df = pos_df.copy()
@@ -4750,7 +4788,9 @@ def _render_live_positions_section(
             active_df["live_price_fmt"] = active_df["live_price"].apply(
                 lambda x: f"{x:.3f}" if pd.notna(x) else "—"
             )
-            active_df["unreal_pnl_fmt"] = active_df["unreal_pnl"].apply(lambda x: f"${x:+.2f}")
+            active_df["unreal_pnl_fmt"] = active_df["unreal_pnl"].apply(
+                lambda x: f"${x:+.2f}" if pd.notna(x) else "—"
+            )
             active_df["to_win"] = (active_df["fill_size"] - active_df["cost"]).round(2)
             active_df = active_df.sort_values(["date", "city", "bucket"], ascending=True)
 
@@ -4772,7 +4812,7 @@ def _render_live_positions_section(
             styled = display_df.style.applymap(_colour_unreal, subset=["Unreal. P&L"])
             st.dataframe(styled, use_container_width=True, hide_index=True)
             n_priced = int(active_df["live_price"].notna().sum())
-            total_unreal_tbl = active_df["unreal_pnl"].sum()
+            total_unreal_tbl = active_df["unreal_pnl"].fillna(0.0).sum()
             st.caption(
                 f"Exposure: **${active_df['cost'].sum():.2f}** · "
                 f"Unrealized: **${total_unreal_tbl:+.2f}** ({n_priced}/{len(active_df)} priced) · "

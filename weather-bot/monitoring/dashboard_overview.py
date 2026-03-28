@@ -594,6 +594,15 @@ def build_dashboard_overview_payload(root: Path) -> dict[str, Any]:
     chart_series: list[dict[str, Any]] = []
     for row in strategy_rows:
         live_stats = _compute_live_stats(row["open_positions"], live_prices)
+        detail_live_prices = {
+            token_id: float(live_prices[token_id])
+            for token_id in {
+                str(position.get("token_id", "") or "")
+                for position in row["open_positions"]
+                if position.get("token_id")
+            }
+            if token_id in live_prices
+        }
         strategies.append(
             {
                 "label": row["label"],
@@ -601,6 +610,11 @@ def build_dashboard_overview_payload(root: Path) -> dict[str, Any]:
                 "color": row["color"],
                 "settled": row["settled_stats"],
                 "live": live_stats,
+                "detail": {
+                    "positions": row["positions"],
+                    "live_prices": detail_live_prices,
+                    "live_ts": live_ts,
+                },
             }
         )
 
