@@ -128,19 +128,16 @@ async def _refresh_overview_cache_once(app: web.Application) -> None:
         cache["last_refresh_utc"] = datetime.now(UTC).isoformat()
 
 
-@contextlib.asynccontextmanager
 async def _overview_cache_ctx(app: web.Application):
     app[OVERVIEW_CACHE_KEY] = {
         "payload": {},
         "last_error": "",
         "last_refresh_utc": "",
     }
-    await _refresh_overview_cache_once(app)
-
     async def _loop() -> None:
         while True:
-            await asyncio.sleep(_overview_refresh_seconds())
             await _refresh_overview_cache_once(app)
+            await asyncio.sleep(_overview_refresh_seconds())
 
     task = asyncio.create_task(_loop())
     try:
