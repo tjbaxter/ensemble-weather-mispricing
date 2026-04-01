@@ -929,10 +929,11 @@ def fetch_commercial_forecasts(city: str) -> dict:
                 "source":  f"🔒 locked {logged_ts}",
             }
 
-    # Before 19:00 UTC: serve from disk if we already have both values logged.
+    # Before 19:00 UTC: serve from disk if we already have either value logged.
     # Forecasts don't change meaningfully hour-to-hour; only fetch live when
     # we have no data at all (e.g. early in the morning before the 19:00 cron).
-    if logged.get("accu") is not None and logged.get("wu") is not None:
+    # Using `or` (not `and`) so cities with only WU data (no AccuWeather) use disk.
+    if logged.get("accu") is not None or logged.get("wu") is not None:
         logged_ts = ""
         try:
             logged_ts = datetime.fromisoformat(logged["logged_at"]).strftime("%H:%M UTC")
@@ -5540,25 +5541,34 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
         # Commercial forecasts — D+3/D+2 come from fetch_commercial_forecasts (accu_d3/wu_d3, accu_d2/wu_d2),
         # D+1 falls back to a live fetch when the disk log has no entry yet (cron not run today),
         # D+0 reads strictly from disk (yesterday's cron snapshot); shows "—" if missing.
+        # Read commercial forecasts from disk log using D+N offset from tomorrow's
+        # entry. This avoids routing through fetch_commercial_forecasts (which can
+        # fail silently inside Streamlit due to network/cache issues).
+        from datetime import date as _comm_d
+        _comm_tomorrow_str = (_comm_d.today() + timedelta(days=1)).isoformat()
+        _comm_snapshot = comm_log.get(_comm_tomorrow_str, {})
         if _is_day3:
-            comm_live = fetch_commercial_forecasts(city)
-            _accu_val = comm_live.get("accu_d3")
-            _wu_val   = comm_live.get("wu_d3")
+            _accu_val = _comm_snapshot.get("accu_d3")
+            _wu_val   = _comm_snapshot.get("wu_d3")
+            if _accu_val is None and _wu_val is None:
+                comm_live = fetch_commercial_forecasts(city)
+                _accu_val = comm_live.get("accu_d3")
+                _wu_val   = comm_live.get("wu_d3")
             row_d["🔶 AccuWeather"] = (fmt_val(_hround(_accu_val * 10) / 10) + " ⏳") if _accu_val is not None else "—"
             row_d["🔷 Weather.com"] = (fmt_val(_hround(_wu_val   * 10) / 10) + " ⏳") if _wu_val   is not None else "—"
         elif _is_day2:
-            comm_live = fetch_commercial_forecasts(city)
-            _accu_val = comm_live.get("accu_d2")
-            _wu_val   = comm_live.get("wu_d2")
+            _accu_val = _comm_snapshot.get("accu_d2")
+            _wu_val   = _comm_snapshot.get("wu_d2")
+            if _accu_val is None and _wu_val is None:
+                comm_live = fetch_commercial_forecasts(city)
+                _accu_val = comm_live.get("accu_d2")
+                _wu_val   = comm_live.get("wu_d2")
             row_d["🔶 AccuWeather"] = (fmt_val(_hround(_accu_val * 10) / 10) + " ⏳") if _accu_val is not None else "—"
             row_d["🔷 Weather.com"] = (fmt_val(_hround(_wu_val   * 10) / 10) + " ⏳") if _wu_val   is not None else "—"
         elif _is_tomorrow:
-            # D+1: prefer disk snapshot, but if missing do a live fetch so columns always appear.
-            comm_entry = comm_log.get(date_str)
-            if comm_entry:
-                _accu_val = comm_entry.get("accu")
-                _wu_val   = comm_entry.get("wu")
-            else:
+            _accu_val = _comm_snapshot.get("accu")
+            _wu_val   = _comm_snapshot.get("wu")
+            if _accu_val is None and _wu_val is None:
                 comm_live = fetch_commercial_forecasts(city)
                 _accu_val = comm_live.get("accu")
                 _wu_val   = comm_live.get("wu")
