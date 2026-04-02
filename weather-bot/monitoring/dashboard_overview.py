@@ -131,6 +131,17 @@ SHADOW_STRATEGY_FALLBACKS = {
 }
 
 
+def _load_v3_state(root: Path) -> dict[str, Any]:
+    """Load the Prime Alpha V3 dashboard state file (written by shadow runner)."""
+    path = root / "data" / "prime_alpha_v3_state.json"
+    try:
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return {}
+
+
 def _parse_truthy(raw: str | None, default: bool = False) -> bool:
     if raw is None:
         return default
@@ -547,6 +558,7 @@ def build_dashboard_overview_payload(root: Path) -> dict[str, Any]:
         for spec in STRATEGY_SPECS
         if spec["source_kind"] == "shadow"
     }
+    v3_state = _load_v3_state(root)
 
     def _main_positions_for_strategy(strategy: str) -> list[dict]:
         tagged = [position for position in primary_positions if position.get("strategy") == strategy]
@@ -560,14 +572,26 @@ def build_dashboard_overview_payload(root: Path) -> dict[str, Any]:
     strategy_rows: list[dict[str, Any]] = []
     all_open_positions: list[dict] = []
 
+    _v3_reset_at = v3_state.get("reset_at_utc", "") if v3_state else ""
+
     for spec in STRATEGY_SPECS:
         if spec["source_kind"] == "main":
             positions = _main_positions_for_strategy(spec["source_value"])
         else:
             positions = shadow_positions.get(spec["source_value"], [])
+
+        df = _resolved_slice(spec["strategy_key"])
+
+        if spec["strategy_key"] == "PRIME_ALPHA" and _v3_reset_at:
+            positions = [
+                p for p in positions
+                if (p.get("timestamp_utc") or p.get("timestamp") or "") >= _v3_reset_at
+            ]
+            if not df.empty and "signal_timestamp" in df.columns:
+                df = df[df["signal_timestamp"].fillna("") >= _v3_reset_at].copy()
+
         open_positions, _, _ = split_positions_for_display(positions, lookup)
         all_open_positions.extend(open_positions)
-        df = _resolved_slice(spec["strategy_key"])
         strategy_rows.append(
             {
                 "label": spec["label"],
@@ -603,20 +627,49 @@ def build_dashboard_overview_payload(root: Path) -> dict[str, Any]:
             }
             if token_id in live_prices
         }
-        strategies.append(
-            {
-                "label": row["label"],
-                "strategy_key": row["strategy_key"],
-                "color": row["color"],
-                "settled": row["settled_stats"],
-                "live": live_stats,
-                "detail": {
-                    "positions": row["positions"],
-                    "live_prices": detail_live_prices,
-                    "live_ts": live_ts,
-                },
+        settled_rows_list: list[dict[str, Any]] = []
+        if not row["settled_df"].empty:
+            _sdf = row["settled_df"]
+            for _, srow in _sdf.iterrows():
+                settled_rows_list.append({
+                    "city": str(srow.get("city", "") or ""),
+                    "date": str(srow.get("target_date", "") or ""),
+                    "bucket": str(srow.get("bucket", "") or ""),
+                    "side": str(srow.get("side", "BUY_YES") or "BUY_YES"),
+                    "pnl": round(float(srow.get("pnl_usd", 0) or 0), 2),
+                    "outcome": str(srow.get("outcome", "") or ""),
+                    "entry": round(float(srow.get("entry_price", 0) or 0), 3),
+                    "settlement_phase": str(srow.get("settlement_phase", "") or ""),
+                })
+
+        strat_obj: dict[str, Any] = {
+            "label": row["label"],
+            "strategy_key": row["strategy_key"],
+            "color": row["color"],
+            "settled": row["settled_stats"],
+            "live": live_stats,
+            "detail": {
+                "positions": row["positions"],
+                "live_prices": detail_live_prices,
+                "live_ts": live_ts,
+                "settled_rows": settled_rows_list,
+            },
+        }
+        if row["strategy_key"] == "PRIME_ALPHA" and v3_state:
+            latest_map = v3_state.get("latest_by_city", {})
+            decisions = v3_state.get("decisions", {})
+            latest_decisions = {
+                city: decisions[key]
+                for city, key in latest_map.items()
+                if key in decisions
             }
-        )
+            strat_obj["v3_meta"] = {
+                "version": v3_state.get("version", ""),
+                "reset_date": v3_state.get("reset_date", ""),
+                "reset_at_utc": v3_state.get("reset_at_utc", ""),
+                "latest_by_city": latest_decisions,
+            }
+        strategies.append(strat_obj)
 
         settled_df: pd.DataFrame = row["settled_df"]
         settled_points: list[dict[str, Any]] = []
