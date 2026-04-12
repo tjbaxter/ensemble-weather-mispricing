@@ -746,6 +746,39 @@ def build_prime_alpha_plan(
     # ── Deterministic bucket selection ──────────────────────────────────────
     selected: list[str] = []
 
+    # ── Smart bucket count: determine how many buckets based on consensus ──
+    # Strong consensus (single model on streak, or tight cluster) → 1 bucket
+    # Moderate spread → 2 buckets
+    # Wide spread / bridge case → 3 buckets (max)
+    smart_max_buckets = PRIME_ALPHA_MAX_BUCKETS  # default 3
+
+    if working_set and working_center is not None:
+        working_forecasts = [core_families[f]["forecast"] for f in working_set
+                             if f not in suppressed]
+        if working_forecasts:
+            forecast_spread = max(working_forecasts) - min(working_forecasts)
+            spread_threshold_tight = 1.0 if not is_f else 2.0  # 1°C or 2°F
+            spread_threshold_moderate = 2.0 if not is_f else 4.0  # 2°C or 4°F
+
+            # Single model on hot streak → 1 bucket (strong signal)
+            if len(working_set) == 1 and max_streak >= 3:
+                smart_max_buckets = 1
+                notes.append(f"smart_single_streak={max_streak}")
+            # Tight consensus (all within 1°C) → 1 bucket
+            elif forecast_spread <= spread_threshold_tight:
+                smart_max_buckets = 1
+                notes.append(f"smart_tight_consensus={forecast_spread:.1f}")
+            # Moderate spread (within 2°C) → 2 buckets
+            elif forecast_spread <= spread_threshold_moderate:
+                smart_max_buckets = 2
+                notes.append(f"smart_moderate_spread={forecast_spread:.1f}")
+            # Wide spread → use full 3 (bridge case)
+            else:
+                smart_max_buckets = 3
+                notes.append(f"smart_bridge_spread={forecast_spread:.1f}")
+
+    sel_info["smart_max_buckets"] = smart_max_buckets
+
     if bimodal_selected:
         selected = [
             sel_info["bimodal"]["lower"]["bucket"],
@@ -785,11 +818,11 @@ def build_prime_alpha_plan(
                 sel_info["lower_anchor"] = {
                     "bucket": lower_anchor, "family": lower_anchor_fam}
 
-            # Bridge: fill one-bucket gaps
-            if len(selected) >= 2 and len(selected) < PRIME_ALPHA_MAX_BUCKETS:
+            # Bridge: fill one-bucket gaps (only if smart_max allows)
+            if len(selected) >= 2 and len(selected) < smart_max_buckets:
                 sel_sorted = sorted(selected, key=lambda b: _bucket_sort_key(b))
                 for i in range(len(sel_sorted) - 1):
-                    if len(selected) >= PRIME_ALPHA_MAX_BUCKETS:
+                    if len(selected) >= smart_max_buckets:
                         break
                     idx_a = _bucket_index(sel_sorted[i], ordered_buckets)
                     idx_b = _bucket_index(sel_sorted[i + 1], ordered_buckets)
@@ -801,8 +834,8 @@ def build_prime_alpha_plan(
                             sel_info["bridge"] = bridge
 
             # Upper anchor: only if ≥2 working set families support it
-            # and it's not a lone outlier
-            if len(selected) < PRIME_ALPHA_MAX_BUCKETS:
+            # and it's not a lone outlier (and smart_max allows)
+            if len(selected) < smart_max_buckets:
                 upper_anchor = None
                 for fam in working_set:
                     if fam in high_outlier_winners:
@@ -828,7 +861,8 @@ def build_prime_alpha_plan(
                     selected.append(upper_anchor)
 
             # Fill remaining from working-set-supported buckets near center
-            while len(selected) < PRIME_ALPHA_MAX_BUCKETS:
+            # (only if smart_max_buckets allows more)
+            while len(selected) < smart_max_buckets:
                 fill_buckets: dict[str, int] = {}
                 for fam in working_set:
                     if fam in high_outlier_winners:
@@ -866,7 +900,7 @@ def build_prime_alpha_plan(
             for b, p in ranked_buckets:
                 if p < MIN_BUCKET_PROB:
                     continue
-                if len(selected) >= PRIME_ALPHA_MAX_BUCKETS:
+                if len(selected) >= smart_max_buckets:
                     break
                 b_mid = _resolved_midpoint(b)
                 if b_mid is not None and abs(b_mid - working_center) > _fb_max:
@@ -883,7 +917,7 @@ def build_prime_alpha_plan(
             notes.append("fallback=gaussian_topk")
             ranked_buckets = sorted(bucket_probs.items(), key=lambda x: -x[1])
             selected = [b for b, p in ranked_buckets
-                        if p >= MIN_BUCKET_PROB][:PRIME_ALPHA_MAX_BUCKETS]
+                        if p >= MIN_BUCKET_PROB][:smart_max_buckets]
             if not selected and ranked_buckets:
                 selected = [ranked_buckets[0][0]]
 
