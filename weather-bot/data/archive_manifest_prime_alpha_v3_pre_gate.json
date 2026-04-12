@@ -1,0 +1,37 @@
+{
+  "archive_name": "prime_alpha_v3_pre_gate",
+  "archived_at_utc": "2026-03-31T08:25:00+00:00",
+  "reason": "Known prior-day gating bug allowed standard D+1 Prime Alpha execution before prior signal availability. All trades in this era are methodologically suspect — the prior-day temperature resolution gate was not enforced, meaning positions could be opened based on incomplete information (prior_resolution_mode = 'none').",
+  "prior_version": "v3.2",
+  "prior_reset_date": "2026-03-30",
+  "prior_reset_at_utc": "2026-03-30T11:20:00+00:00",
+  "new_version": "v3.3",
+  "new_reset_date": "2026-03-31",
+  "new_reset_at_utc": "2026-03-31T08:25:00+00:00",
+  "fix_deployed": "Prior-day signal gate now enforced after planning but before execution. Timestamp sourcing fixed: resolved.csv column corrected, UTC-midnight fallback replaced with timezone-aware local midnight. Explicit prior_signal_timestamp_source audit field added.",
+  "archived_files": {
+    "positions": "positions_shadow_prime_alpha_v3_pre_gate_archive.json",
+    "prior_archive": "positions_shadow_prime_alpha_v2_archive.json"
+  },
+  "pre_gate_settlement_summary": {
+    "strategy": "PRIME_ALPHA",
+    "mode": "paper",
+    "trades": 38,
+    "wins": 11,
+    "losses": 27,
+    "pnl_usd": 172.73,
+    "official": 0,
+    "provisional": 2
+  },
+  "pre_gate_resolved_csv": {
+    "rows": 34,
+    "date_range": ["2026-03-26", "2026-03-27"],
+    "entry_timestamp_range": ["2026-03-25T13:07:41.560113+00:00", "2026-03-27T02:15:25.549944+00:00"],
+    "total_pnl_usd": 8.76
+  },
+  "pre_gate_open_positions": {
+    "committed_count": 52,
+    "date_range": ["2026-03-26", "2026-03-27", "2026-03-28"],
+    "entry_timestamp_range": ["2026-03-25T13:07:41.560113+00:00", "2026-03-27T12:19:03.378572+00:00"]
+  }
+}

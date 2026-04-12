@@ -116,10 +116,12 @@ async def run_live(bankroll: float) -> None:
         )
         set_signal_observability_context(market_scan_id, mode="live")
 
-        print("Fetching forecasts for all cities...")
+        print("Fetching forecasts for active cities...")
         target_date = date.today() + timedelta(days=1)
         forecasts: dict = {}
         for icao in STATIONS:
+            if STATIONS[icao].get("paused"):
+                continue
             bucket_labels = [
                 b
                 for m in hydrated

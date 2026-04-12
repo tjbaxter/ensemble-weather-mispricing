@@ -34,14 +34,14 @@ LOG_PATH = ROOT / "data" / "model_snapshot_log.json"
 LOCK_HOUR_UTC = 19  # After this hour the snapshot is frozen (canonical 12Z)
 
 sys.path.insert(0, str(ROOT))
-from config.cities import STATIONS  # noqa: E402
+from config.cities import STATIONS, canonical_dashboard_city  # noqa: E402
 
 
 def _build_cities() -> dict[str, dict]:
     """Auto-generate snapshot cities from the canonical STATIONS config."""
     cities: dict[str, dict] = {}
     for _icao, cfg in STATIONS.items():
-        city = cfg.get("market_label")
+        city = canonical_dashboard_city(cfg.get("market_label", ""))
         if not city or not cfg.get("ensemble_models"):
             continue
         cities[city] = {
@@ -125,24 +125,38 @@ def run(target_date: str, dry_run: bool = False) -> None:
     for city, cfg in CITIES.items():
         city_log = log.setdefault(city, {})
         existing = city_log.get(target_date)
+        n_expected = len(cfg["models"])
+        min_complete = max(1, (n_expected * 2 + 2) // 3)  # ceil(2/3)
 
-        # Check lock: if already logged at/after LOCK_HOUR_UTC, skip
+        # Lock check: only skip if entry has sufficient model coverage.
+        # Incomplete entries (API failures) are always eligible for backfill.
         if existing and not dry_run:
+            n_have = len(existing.get("preds", {}))
             try:
                 logged_hour = datetime.fromisoformat(existing["logged_at"]).hour
-                if logged_hour >= LOCK_HOUR_UTC:
-                    n = len(existing.get("preds", {}))
-                    print(f"  {city:<16} locked ({n} models @ {existing['logged_at'][11:16]} UTC)")
+                if logged_hour >= LOCK_HOUR_UTC and n_have >= min_complete:
+                    print(f"  {city:<16} locked ({n_have}/{n_expected} models @ {existing['logged_at'][11:16]} UTC)")
                     continue
             except Exception:
                 pass
+            if n_have < min_complete:
+                missing = [m for m in cfg["models"] if m not in existing.get("preds", {})]
+                print(f"  {city:<16} incomplete ({n_have}/{n_expected}), backfilling {len(missing)} models...")
 
-        print(f"  {city:<16} fetching {len(cfg['models'])} models...")
+        if not existing:
+            print(f"  {city:<16} fetching {n_expected} models...")
+
         preds = fetch_city_preds(city, cfg, target_date)
 
         if not preds:
             print(f"    ⚠ no predictions returned")
             continue
+
+        # Merge with existing predictions so we never lose already-captured data
+        if existing and existing.get("preds"):
+            merged_preds = dict(existing["preds"])
+            merged_preds.update(preds)
+            preds = merged_preds
 
         # Compute spread for spread-filter models if applicable
         spread_models = {
@@ -156,7 +170,7 @@ def run(target_date: str, dry_run: bool = False) -> None:
         unit_sym = "°F" if cfg.get("unit") == "fahrenheit" else "°C"
         top_pred = preds.get(sf_keys[0] if sf_keys else cfg["models"][0])
         spread_s = f"  spread={spread}{unit_sym}" if spread is not None else ""
-        print(f"    → {len(preds)}/{len(cfg['models'])} models  top={top_pred}{unit_sym}{spread_s}")
+        print(f"    → {len(preds)}/{n_expected} models  top={top_pred}{unit_sym}{spread_s}")
 
         if not dry_run:
             city_log[target_date] = {
@@ -187,14 +201,20 @@ def main() -> None:
     if args.date:
         try:
             date.fromisoformat(args.date)
-            target = args.date
+            targets = [args.date]
         except ValueError:
             print(f"Invalid date: {args.date}")
             sys.exit(1)
     else:
-        target = (date.today() + timedelta(days=1)).isoformat()
+        today = date.today()
+        targets = [
+            (today + timedelta(days=1)).isoformat(),
+            (today + timedelta(days=2)).isoformat(),
+            (today + timedelta(days=3)).isoformat(),
+        ]
 
-    run(target, dry_run=args.dry_run)
+    for target in targets:
+        run(target, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":

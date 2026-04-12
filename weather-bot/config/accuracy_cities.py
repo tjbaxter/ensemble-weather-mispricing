@@ -1,0 +1,1166 @@
+# Accuracy city configuration -- extracted from dashboard.py.
+#
+# Single source of truth for accuracy-tab city configs.
+# Both dashboard.py and refresh_accuracy_cache.py import from here.
+
+from __future__ import annotations
+
+ACCURACY_CITIES: dict[str, dict] = {
+    "Seoul": {
+        "lat": 37.4492, "lon": 126.451,
+        "timezone": "Asia/Seoul",
+        "polymarket_slug": "highest-temperature-in-seoul-on",
+        "models": {
+            "ncep_aigfs025":               ("NCEP AI-GFS",       "🤖"),
+            "gfs_graphcast025":            ("GFS GraphCast",     "🌐"),
+            "ecmwf_ifs025":                ("ECMWF IFS",         "🌍"),
+            "ncep_hgefs025_ensemble_mean": ("NCEP HGEFS Ens",    "📊"),
+            "kma_gdps":                    ("KMA GDPS",          "🇰🇷"),
+            "kma_seamless":                ("KMA Seamless",      "🇰🇷"),
+            "icon_seamless":               ("ICON Seamless",     "🇩🇪"),
+            "meteofrance_seamless":        ("MF Seamless",       "🇫🇷"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(NCEP+GC)",
+            "label":      "AVG(NCEP AI-GFS + GraphCast)",
+            "model_keys": ["ncep_aigfs025", "gfs_graphcast025"],
+        },
+        "top_model_key":   "ncep_aigfs025",
+        "top_model_label": "NCEP AI-GFS D1",
+        "chart_models":    ["ncep_aigfs025", "gfs_graphcast025", "ecmwf_ifs025"],
+        "notes": (
+            "**Best signal:** AVG(NCEP AI-GFS + GFS GraphCast) D1 — exhaustive search confirmed this "
+            "as the accuracy ceiling for Seoul.\n\n"
+            "**Coverage:** `ncep_aigfs025` data starts ~Jan 7 2026. HGEFS Ensemble starts ~Jan 22 2026."
+        ),
+        "polymarket": {
+            "2026-01-07": ("5+",   5, True),  "2026-01-08": ("-2",  -2, False),
+            "2026-01-09": ("7",    7, False),  "2026-01-10": ("8",   8, False),
+            "2026-01-11": ("-3",  -3, False),  "2026-01-12": ("4",   4, False),
+            "2026-01-13": ("1+",   1, True),   "2026-01-14": ("2+",  2, True),
+            "2026-01-15": ("7+",   7, True),   "2026-01-16": ("6",   6, False),
+            "2026-01-17": ("2",    2, False),  "2026-01-18": ("2",   2, False),
+            "2026-01-19": ("0",    0, False),  "2026-01-20": ("-6", -6, False),
+            "2026-01-21": ("-6",  -6, False),  "2026-01-22": ("-5", -5, False),
+            "2026-01-23": ("-1",  -1, False),  "2026-01-24": ("-2", -2, False),
+            "2026-01-25": ("-3",  -3, False),  "2026-01-26": ("-1", -1, False),
+            "2026-01-27": ("-1",  -1, False),  "2026-01-28": ("-2", -2, False),
+            "2026-01-29": ("-1",  -1, False),  "2026-01-30": ("-3", -3, False),
+            "2026-01-31": ("-1",  -1, False),
+            "2026-02-01": ("0",    0, False),  "2026-02-02": ("0",   0, False),
+            "2026-02-03": ("3",    3, False),  "2026-02-04": ("7+",  7, True),
+            "2026-02-05": ("8+",   8, True),   "2026-02-06": ("-4", -4, False),
+            "2026-02-07": ("-5",  -5, False),  "2026-02-08": ("-4", -4, False),
+            "2026-02-09": ("2",    2, False),  "2026-02-10": ("3",   3, False),
+            "2026-02-11": ("4",    4, False),  "2026-02-12": ("7+",  7, True),
+            "2026-02-13": ("9+",   9, True),   "2026-02-14": ("11+",11, True),
+            "2026-02-15": ("8",    8, False),  "2026-02-16": ("5",   5, False),
+            "2026-02-17": ("4",    4, False),  "2026-02-18": ("6",   6, False),
+            "2026-02-19": ("5",    5, False),  "2026-02-20": ("11+",11, True),
+            "2026-02-21": ("14+", 14, True),   "2026-02-22": ("11", 11, False),
+            "2026-02-23": ("4",    4, False),
+        },
+    },
+    "London": {
+        "lat": 51.5053, "lon": 0.0553,
+        "timezone": "Europe/London",
+        "polymarket_slug": "highest-temperature-in-london-on",
+        "models": {
+            "meteofrance_arome_france":       ("MF AROME France",    "🇫🇷"),
+            "meteofrance_seamless":           ("MF Seamless",        "🇫🇷"),
+            "meteofrance_arome_france_hd":    ("MF AROME HD",        "🇫🇷"),
+            "icon_seamless":                  ("ICON Seamless",      "🇩🇪"),
+            "dmi_seamless":                   ("DMI Seamless",       "🇩🇰"),
+            "ecmwf_ifs025":                   ("ECMWF IFS",          "🌍"),
+            "kma_seamless":                   ("KMA Seamless",       "🇰🇷"),
+            "ukmo_uk_deterministic_2km":      ("UKMO 2km",           "🇬🇧"),
+            "ukmo_seamless":                  ("UKMO Seamless",      "🇬🇧"),
+            "ukmo_global_deterministic_10km": ("UKMO Global 10km",   "🇬🇧"),
+            "ncep_aigfs025":                  ("NCEP AIGFS",         "🤖"),
+        },
+        "best_ensemble": {
+            "short":      "MF AROME France",
+            "label":      "MF AROME France D1 (primary signal)",
+            "model_keys": ["meteofrance_arome_france"],
+        },
+        "hypothesis_ensembles": [
+            {
+                "key":        "h1_5model",
+                "short":      "H1: 5-model (MF3+ICON+DMI)",
+                "model_keys": ["meteofrance_arome_france","meteofrance_seamless",
+                               "meteofrance_arome_france_hd","icon_seamless","dmi_seamless"],
+                "weights":    None,
+            },
+        ],
+        "top_model_key":   "meteofrance_arome_france",
+        "top_model_label": "MF AROME France D1",
+        # Pre-registered spread filter (2026-02-24). Threshold 1.0°C chosen once, forward-testing only.
+        # In-sample: ≤1.0°C → 80.8% (52 days), >1.0°C → 47.6% (21 days). Christmas contamination noted.
+        "spread_filter": {
+            "model_keys": [
+                "meteofrance_arome_france", "meteofrance_seamless",
+                "meteofrance_arome_france_hd", "icon_seamless", "dmi_seamless",
+            ],
+            "threshold": 1.0,
+            "label": "5-model spread (MF3+ICON+DMI)",
+        },
+        "chart_models": [
+            "meteofrance_arome_france",
+            "meteofrance_seamless",
+            "meteofrance_arome_france_hd",
+            "ukmo_uk_deterministic_2km",
+            "ecmwf_ifs025",
+        ],
+        "notes": (
+            "**Trading signal: MF AROME France D1 — 70.7%** (53/75, Dec 2025–Feb 2026).\n\n"
+            "**Why MF AROME alone, not an ensemble:**\n"
+            "Exhaustive permutation over all 1,585 model combos found AVG(MF+MF HD+ICON+DMI) at 77.3% (58/75). "
+            "But 1,585 hypotheses on 75 days = textbook data dredging. Bonferroni-corrected threshold requires "
+            "~65+ wins to be significant — 58 doesn't clear it. The 5-win gap is noise. "
+            "MF AROME was not selected by searching — it has a clear causal story: 1.3km NW Europe, "
+            "post-Oct 2024 3DEnVar upgrade, 3× observation intake. Use it alone.\n\n"
+            "**Forward test protocol:** All models accumulate fresh daily data automatically. "
+            "After 30+ new days, evaluate all combinations on that unseen window — no pre-selected candidates. "
+            "Until then, MF AROME alone.\n\n"
+            "**Month-by-month (MF AROME D1):**\n"
+            "- Dec 2025: ~48% (21 days)\n"
+            "- Jan 2026: ~81% (31 days) ← strongest month\n"
+            "- Feb 2026: ~70% (23 days)\n\n"
+            "**⚠ SEASONAL EDGE — winter only.** Atlantic frontal systems Dec–Feb predictable; "
+            "spring/summer convection is not. Conservative winter prior: **65–75%**. "
+            "Size up Dec–Feb, scale back or skip Apr–Sep.\n\n"
+            "**UKMO for comparison** (data from Aug 2024): ~44% accuracy — consistently worse than MF. "
+            "NCEP AIGFS025 starts Jan 7 2026. London Polymarket started Feb 2025 — no 2024 data exists.\n\n"
+            "**🔬 Spread Filter (pre-registered 2026-02-24 — forward test only):**\n"
+            "In-sample finding: when MF AROME + MF Seamless + MF HD + ICON + DMI all agree within "
+            "**1.0°C**, MF AROME hit 80.8% (42/52 days). When spread >1.0°C, only 47.6% (10/21 days). "
+            "Caveat: threshold found in-sample; 1.1–1.5°C 'death zone' heavily contaminated by "
+            "Christmas week (5/14 days). **Do not change position sizing yet.** "
+            "Track for 30+ forward days, then evaluate."
+        ),
+        "polymarket": {
+            "2025-12-11": ("13°C", 13, False), "2025-12-12": ("13°C", 13, False),
+            "2025-12-13": ("11°C", 11, False), "2025-12-14": ("11°C", 11, False),
+            "2025-12-15": ("11°C", 11, False), "2025-12-16": ("13°C", 13, False),
+            "2025-12-17": ("≥11°C", 11, True), "2025-12-18": ("13°C", 13, False),
+            "2025-12-19": ("≥12°C", 12, True), "2025-12-20": ("10°C", 10, False),
+            "2025-12-21": ("11°C", 11, False), "2025-12-22": ("10°C", 10, False),
+            "2025-12-23": ("9°C",   9, False), "2025-12-24": ("7°C",   7, False),
+            "2025-12-25": ("6°C",   6, False), "2025-12-26": ("6°C",   6, False),
+            "2025-12-27": ("8°C",   8, False), "2025-12-28": ("7°C",   7, False),
+            "2025-12-29": ("7°C",   7, False), "2025-12-30": ("7°C",   7, False),
+            "2025-12-31": ("5°C",   5, False),
+            "2026-01-01": ("6",   6, False), "2026-01-02": ("4",   4, False),
+            "2026-01-03": ("3",   3, False), "2026-01-04": ("3",   3, False),
+            "2026-01-05": ("2",   2, False), "2026-01-06": ("4+",  4, True),
+            "2026-01-07": ("6",   6, False), "2026-01-08": ("8+",  8, True),
+            "2026-01-09": ("6+",  6, True),  "2026-01-10": ("3",   3, False),
+            "2026-01-11": ("8+",  8, True),  "2026-01-12": ("11", 11, False),
+            "2026-01-13": ("11", 11, False), "2026-01-14": ("9+",  9, True),
+            "2026-01-15": ("10", 10, False), "2026-01-16": ("10", 10, False),
+            "2026-01-17": ("11", 11, False), "2026-01-18": ("11+",11, True),
+            "2026-01-19": ("11", 11, False), "2026-01-20": ("10", 10, False),
+            "2026-01-21": ("10", 10, False), "2026-01-22": ("9",   9, False),
+            "2026-01-23": ("9",   9, False), "2026-01-24": ("10", 10, False),
+            "2026-01-25": ("8",   8, False), "2026-01-26": ("6",   6, False),
+            "2026-01-27": ("9+",  9, True),  "2026-01-28": ("10", 10, False),
+            "2026-01-29": ("7",   7, False), "2026-01-30": ("11", 11, False),
+            "2026-01-31": ("11+",11, True),
+            "2026-02-01": ("9",   9, False), "2026-02-02": ("8",   8, False),
+            "2026-02-03": ("7",   7, False), "2026-02-04": ("10", 10, False),
+            "2026-02-05": ("8",   8, False), "2026-02-06": ("12", 12, False),
+            "2026-02-07": ("11", 11, False), "2026-02-08": ("11", 11, False),
+            "2026-02-09": ("9",   9, False), "2026-02-10": ("12", 12, False),
+            "2026-02-11": ("12", 12, False), "2026-02-12": ("11", 11, False),
+            "2026-02-13": ("8",   8, False), "2026-02-14": ("6",   6, False),
+            "2026-02-15": ("9",   9, False), "2026-02-16": ("10", 10, False),
+            "2026-02-17": ("7",   7, False), "2026-02-18": ("6",   6, False),
+            "2026-02-19": ("7",   7, False), "2026-02-20": ("12", 12, False),
+            "2026-02-21": ("14", 14, False), "2026-02-22": ("14", 14, False),
+            "2026-02-23": ("13", 13, False), "2026-02-24": ("16", 16, False),
+        },
+    },
+    "New York": {
+        "lat": 40.7769, "lon": -73.8740,
+        "timezone": "America/New_York",
+        "temperature_unit": "fahrenheit",
+        "bucket_style": "range_2f",
+        "temp_unit_display": "°F",
+        "polymarket_slug": "highest-temperature-in-new-york-on",
+        "polymarket_alt_slugs": ["highest-temperature-in-nyc-on"],
+        "models": {
+            "ncep_nbm_conus":   ("NCEP NBM",      "🇺🇸"),
+            "gfs_graphcast025": ("GFS GraphCast", "🌐"),
+            "icon_seamless":    ("ICON Seamless", "🇩🇪"),
+            "kma_seamless":     ("KMA Seamless",  "🇰🇷"),
+            "gem_seamless":     ("GEM Seamless",  "🇨🇦"),
+            "kma_gdps":         ("KMA GDPS",      "🇰🇷"),
+            "gem_hrdps_continental": ("GEM HRDPS", "🇨🇦"),
+            "ncep_aigfs025":    ("NCEP AIGFS",    "🤖"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(NBM+ICON+GraphCast+KMA+GEM)",
+            "label":      "AVG(NCEP NBM + ICON Seamless + GFS GraphCast + KMA Seamless + GEM Seamless)",
+            "model_keys": ["ncep_nbm_conus", "icon_seamless", "gfs_graphcast025", "kma_seamless", "gem_seamless"],
+        },
+        "top_model_key":   "ncep_nbm_conus",
+        "top_model_label": "NCEP NBM D1",
+        "chart_models":    ["ncep_nbm_conus", "gfs_graphcast025", "icon_seamless", "gem_seamless"],
+        "notes": (
+            "**Best signal:** AVG(NCEP NBM + ICON Seamless + GFS GraphCast + KMA Seamless + GEM Seamless) D1 — "
+            "exhaustive search over all 43,795 subsets of top models across **363 dates** (Feb 2025 → Feb 2026) "
+            "found **44.1% bucket accuracy** (+6.1pp over single-model best of 37.7%).\n\n"
+            "**Station:** LaGuardia Airport (KLGA) — same source as Polymarket (Wunderground KLGA).\n\n"
+            "**Bucket:** 2°F wide pairs (e.g. 38-39°F, 40-41°F) measured in whole degrees Fahrenheit. "
+            "20 of 48 Open-Meteo models cover NYC.\n\n"
+            "**Notable:** NCEP NBM (National Blend of Models) is the top single model at 37.7% — a US-specific "
+            "blend that outperforms all global models. GFS GraphCast consistently boosts ensemble accuracy."
+        ),
+        "polymarket": {
+            "2026-01-07": ("48-49°F", 48, 49, 41, 52),
+            "2026-01-08": ("48-49°F", 48, 49, 41, 52),
+            "2026-01-09": ("≥48°F",   48, None, 37, 48),
+            "2026-01-10": ("52-53°F", 52, 53, 43, 54),
+            "2026-01-11": ("46-47°F", 46, 47, 41, 52),
+            "2026-01-12": ("40-41°F", 40, 41, 37, 48),
+            "2026-01-13": ("46-47°F", 46, 47, 41, 52),
+            "2026-01-14": ("50-51°F", 50, 51, 41, 52),
+            "2026-01-15": ("≥46°F",   46, None, 35, 46),
+            "2026-01-16": ("34-35°F", 34, 35, 25, 36),
+            "2026-01-17": ("40-41°F", 40, 41, 33, 44),
+            "2026-01-18": ("34-35°F", 34, 35, 31, 42),
+            "2026-01-19": ("32-33°F", 32, 33, 25, 36),
+            "2026-01-20": ("24-25°F", 24, 25, 19, 30),
+            "2026-01-21": ("≥36°F",   36, None, 25, 36),
+            "2026-01-22": ("≥46°F",   46, None, 35, 46),
+            "2026-01-23": ("≥36°F",   36, None, 25, 36),
+            "2026-01-24": ("18-19°F", 18, 19, 15, 26),
+            "2026-01-25": ("≥22°F",   22, None, 11, 22),
+            "2026-01-26": ("26-27°F", 26, 27, 25, 36),
+            "2026-01-27": ("22-23°F", 22, 23, 15, 26),
+            "2026-01-28": ("24-25°F", 24, 25, 23, 34),
+            "2026-01-29": ("24-25°F", 24, 25, 17, 28),
+            "2026-01-30": ("18-19°F", 18, 19,  9, 20),
+            "2026-01-31": ("24-25°F", 24, 25, 17, 28),
+            "2026-02-03": ("32-33°F", 32, 33, 29, 40),
+            "2026-02-04": ("32-33°F", 32, 33, 31, 42),
+            "2026-02-05": ("32-33°F", 32, 33, 23, 34),
+            "2026-02-06": ("32-33°F", 32, 33, 23, 34),
+            "2026-02-07": ("≥26°F",   26, None, 15, 26),
+            "2026-02-08": ("18-19°F", 18, 19, 15, 26),
+            "2026-02-09": ("30-31°F", 30, 31, 23, 34),
+            "2026-02-10": ("≥36°F",   36, None, 25, 36),
+            "2026-02-11": ("40-41°F", 40, 41, 33, 44),
+            "2026-02-12": ("36-37°F", 36, 37, 33, 44),
+            "2026-02-13": ("38-39°F", 38, 39, 33, 44),
+            "2026-02-14": ("44-45°F", 44, 45, 35, 50),
+            "2026-02-15": ("38-39°F", 38, 39, 31, 46),
+            "2026-02-16": ("38-39°F", 38, 39, 31, 46),
+            "2026-02-17": ("46-47°F", 46, 47, 41, 56),
+            "2026-02-18": ("38-39°F", 38, 39, 31, 46),
+            "2026-02-19": ("36-37°F", 36, 37, 31, 46),
+            "2026-02-20": ("38-39°F", 38, 39, 31, 46),
+            "2026-02-21": ("46-47°F", 46, 47, 39, 54),
+            "2026-02-22": ("34-35°F", 34, 35, 29, 44),
+            "2026-02-23": ("≥36°F",   36, None, 28, 36),
+            "2026-02-24": ("32-33°F", 32, 33,   25, 40),
+            "2026-02-25": ("42-43°F", 42, 43,   33, 50),
+            "2026-02-26": ("46-47°F", 46, 47,   37, 54),
+            "2026-02-27": ("40-41°F", 40, 41,   33, 50),
+            "2026-02-28": ("≥50°F",   50, None, 37, 50),
+        },
+    },
+    "Atlanta": {
+        "lat": 33.6407, "lon": -84.4277,
+        "timezone": "America/New_York",
+        "temperature_unit": "fahrenheit",
+        "bucket_style": "range_2f",
+        "temp_unit_display": "°F",
+        "polymarket_slug": "highest-temperature-in-atlanta-on",
+        "models": {
+            "ncep_nbm_conus": ("NCEP NBM",      "🇺🇸"),
+            "icon_seamless":  ("ICON Seamless", "🇩🇪"),
+            "gem_global":     ("GEM Global",    "🇨🇦"),
+            "ncep_aigfs025":  ("NCEP AIGFS",    "🤖"),
+            "gem_seamless":   ("GEM Seamless",  "🇨🇦"),
+            "ecmwf_ifs025":   ("ECMWF IFS",     "🌍"),
+            "gfs_seamless":   ("GFS Seamless",  "🇺🇸"),
+        },
+        "best_ensemble": {
+            "short":      "NCEP NBM D1",
+            "label":      "NCEP NBM (National Blend of Models)",
+            "model_keys": ["ncep_nbm_conus"],
+        },
+        "top_model_key":   "ncep_nbm_conus",
+        "top_model_label": "NCEP NBM D1",
+        "chart_models":    ["ncep_nbm_conus", "icon_seamless", "gem_global", "ncep_aigfs025"],
+        "notes": (
+            "**Best signal:** NCEP NBM D1 — **43.8%** accuracy over 48 days (Jan 6–Feb 22 2026). "
+            "Exhaustive ensemble search found no combination beats the single model; averaging others in "
+            "dilutes NCEP NBM's US-station calibration.\n\n"
+            "**Station:** Hartsfield-Jackson Atlanta International Airport (KATL) — Wunderground KATL.\n\n"
+            "**Bucket:** 2°F wide pairs in Fahrenheit. 22 of 48 Open-Meteo models cover KATL. "
+            "Regional European models don't reach this location.\n\n"
+            "**Notable:** NCEP NBM is a US-specific blend specifically calibrated for American airport "
+            "stations. It outperforms global models here by ~10 percentage points."
+        ),
+        "polymarket": {
+            "2026-01-06": ("≥60°F",   60, None, None, None),
+            "2026-01-07": ("≥68°F",   68, None, None, None),
+            "2026-01-08": ("≥66°F",   66, None, None, None),
+            "2026-01-09": ("70-71°F", 70,   71, None, None),
+            "2026-01-10": ("70-71°F", 70,   71, None, None),
+            "2026-01-11": ("54-55°F", 54,   55, None, None),
+            "2026-01-12": ("52-53°F", 52,   53, None, None),
+            "2026-01-13": ("62-63°F", 62,   63, None, None),
+            "2026-01-14": ("52-53°F", 52,   53, None, None),
+            "2026-01-15": ("36-37°F", 36,   37, None, None),
+            "2026-01-16": ("≥50°F",   50, None, None, None),
+            "2026-01-17": ("≥52°F",   52, None, None, None),
+            "2026-01-18": ("≥40°F",   40, None, None, None),
+            "2026-01-19": ("46-47°F", 46,   47, None, None),
+            "2026-01-20": ("≥46°F",   46, None, None, None),
+            "2026-01-21": ("54-55°F", 54,   55, None, None),
+            "2026-01-22": ("50-51°F", 50,   51, None, None),
+            "2026-01-23": ("≥52°F",   52, None, None, None),
+            "2026-01-24": ("≥46°F",   46, None, None, None),
+            "2026-01-25": ("38-39°F", 38,   39, None, None),
+            "2026-01-26": ("36-37°F", 36,   37, None, None),
+            "2026-01-27": ("42-43°F", 42,   43, None, None),
+            "2026-01-28": ("≥48°F",   48, None, None, None),
+            "2026-01-29": ("46-47°F", 46,   47, None, None),
+            "2026-01-30": ("≥52°F",   52, None, None, None),
+            "2026-01-31": ("≥32°F",   32, None, None, None),
+            "2026-02-01": ("36-37°F", 36,   37, None, None),
+            "2026-02-02": ("≥50°F",   50, None, None, None),
+            "2026-02-03": ("≥56°F",   56, None, None, None),
+            "2026-02-04": ("≥56°F",   56, None, None, None),
+            "2026-02-05": ("44-45°F", 44,   45, None, None),
+            "2026-02-06": ("64-65°F", 64,   65, None, None),
+            "2026-02-07": ("≥54°F",   54, None, None, None),
+            "2026-02-08": ("≥60°F",   60, None, None, None),
+            "2026-02-09": ("66-67°F", 66,   67, None, None),
+            "2026-02-10": ("≥66°F",   66, None, None, None),
+            "2026-02-11": ("64-65°F", 64,   65, None, None),
+            "2026-02-12": ("64-65°F", 64,   65, None, None),
+            "2026-02-13": ("≥62°F",   62, None, None, None),
+            "2026-02-14": ("62-63°F", 62,   63, None, None),
+            "2026-02-15": ("60-61°F", 60,   61, None, None),
+            "2026-02-16": ("≥64°F",   64, None, None, None),
+            "2026-02-17": ("68-69°F", 68,   69, None, None),
+            "2026-02-18": ("≥68°F",   68, None, None, None),
+            "2026-02-19": ("≥78°F",   78, None, None, None),
+            "2026-02-20": ("78-79°F", 78,   79, None, None),
+            "2026-02-21": ("66-67°F", 66,   67, None, None),
+            "2026-02-22": ("52-53°F", 52,   53, None, None),
+        },
+    },
+    "Chicago": {
+        "lat": 41.9742, "lon": -87.9073,
+        "timezone": "America/Chicago",
+        "temperature_unit": "fahrenheit",
+        "bucket_style": "range_2f",
+        "temp_unit_display": "°F",
+        "polymarket_slug": "highest-temperature-in-chicago-on",
+        "models": {
+            "ncep_nbm_conus":       ("NCEP NBM",      "🇺🇸"),
+            "ncep_aigfs025":        ("NCEP AIGFS",    "🤖"),
+            "gem_seamless":         ("GEM Seamless",  "🇨🇦"),
+            "best_match":           ("Best Match",    "🌍"),
+            "icon_seamless":        ("ICON Seamless", "🇩🇪"),
+            "ecmwf_ifs025":         ("ECMWF IFS",     "🌍"),
+            "gfs_seamless":         ("GFS Seamless",  "🇺🇸"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(NBM+AIGFS+GEM+BestMatch+ICON)",
+            "label":      "AVG(NCEP NBM + NCEP AIGFS + GEM Seamless + Best Match + ICON Seamless)",
+            "model_keys": ["ncep_nbm_conus", "ncep_aigfs025", "gem_seamless", "best_match", "icon_seamless"],
+        },
+        "top_model_key":   "ncep_nbm_conus",
+        "top_model_label": "NCEP NBM D1",
+        "chart_models":    ["ncep_nbm_conus", "ncep_aigfs025", "gem_seamless", "icon_seamless"],
+        "notes": (
+            "**Best signal:** AVG(NCEP NBM + NCEP AIGFS + GEM Seamless + Best Match + ICON Seamless) D1 — "
+            "exhaustive search confirmed **71.9%** (23/32 days) as the accuracy ceiling for Chicago Jan–Feb 2026.\n\n"
+            "**Station:** Chicago O'Hare International Airport (KORD) — Wunderground KORD.\n\n"
+            "**Bucket:** 2°F wide pairs in Fahrenheit. 24 of 48 Open-Meteo models cover KORD. "
+            "Markets started Jan 22, 2026 (32 days total).\n\n"
+            "**Notable:** NCEP NBM leads at 62.5% single-model, and the 5-model blend adds +6.3pp. "
+            "Chicago's cold January temps (as low as 2°F!) provide strong model differentiation."
+        ),
+        "polymarket": {
+            "2026-01-22": ("24-25°F", 24,   25, None, None),
+            "2026-01-23": ("2-3°F",    2,    3, None, None),
+            "2026-01-24": ("6-7°F",    6,    7, None, None),
+            "2026-01-25": ("≤17°F",  None,  17, None, None),
+            "2026-01-26": ("≤11°F",  None,  11, None, None),
+            "2026-01-27": ("14-15°F", 14,   15, None, None),
+            "2026-01-28": ("≤19°F",  None,  19, None, None),
+            "2026-01-29": ("16-17°F", 16,   17, None, None),
+            "2026-01-30": ("18-19°F", 18,   19, None, None),
+            "2026-01-31": ("24-25°F", 24,   25, None, None),
+            "2026-02-01": ("28-29°F", 28,   29, None, None),
+            "2026-02-02": ("26-27°F", 26,   27, None, None),
+            "2026-02-03": ("28-29°F", 28,   29, None, None),
+            "2026-02-04": ("26-27°F", 26,   27, None, None),
+            "2026-02-05": ("30-31°F", 30,   31, None, None),
+            "2026-02-06": ("38-39°F", 38,   39, None, None),
+            "2026-02-07": ("24-25°F", 24,   25, None, None),
+            "2026-02-08": ("30-31°F", 30,   31, None, None),
+            "2026-02-09": ("38-39°F", 38,   39, None, None),
+            "2026-02-10": ("≥42°F",   42, None, None, None),
+            "2026-02-11": ("42-43°F", 42,   43, None, None),
+            "2026-02-12": ("38-39°F", 38,   39, None, None),
+            "2026-02-13": ("≥50°F",   50, None, None, None),
+            "2026-02-14": ("50-51°F", 50,   51, None, None),
+            "2026-02-15": ("≥46°F",   46, None, None, None),
+            "2026-02-16": ("≥52°F",   52, None, None, None),
+            "2026-02-17": ("≥54°F",   54, None, None, None),
+            "2026-02-18": ("62-63°F", 62,   63, None, None),
+            "2026-02-19": ("≥54°F",   54, None, None, None),
+            "2026-02-20": ("44-45°F", 44,   45, None, None),
+            "2026-02-21": ("≤29°F",  None,  29, None, None),
+            "2026-02-22": ("26-27°F", 26,   27, None, None),
+        },
+    },
+    "Miami": {
+        "lat": 25.7959, "lon": -80.2870,
+        "timezone": "America/New_York",
+        "temperature_unit": "fahrenheit",
+        "bucket_style": "range_2f",
+        "temp_unit_display": "°F",
+        "polymarket_slug": "highest-temperature-in-miami-on",
+        "models": {
+            "gem_global":       ("GEM Global",    "🇨🇦"),
+            "ncep_aigfs025":    ("NCEP AIGFS",    "🤖"),
+            "gem_seamless":     ("GEM Seamless",  "🇨🇦"),
+            "gem_regional":     ("GEM Regional",  "🇨🇦"),
+            "gfs_graphcast025": ("GFS GraphCast", "🌐"),
+            "ncep_nbm_conus":   ("NCEP NBM",      "🇺🇸"),
+            "ecmwf_ifs025":     ("ECMWF IFS",     "🌍"),
+            "gfs_seamless":     ("GFS Seamless",   "🇺🇸"),
+            "icon_seamless":    ("ICON Seamless",  "🇩🇪"),
+        },
+        "best_ensemble": {
+            "short":      "GEM Global D1",
+            "label":      "GEM Global (Canadian Global Model)",
+            "model_keys": ["gem_global"],
+        },
+        "top_model_key":   "gem_global",
+        "top_model_label": "GEM Global D1",
+        "chart_models":    ["gem_global", "ncep_aigfs025", "gem_seamless", "gem_regional"],
+        "notes": (
+            "**Best signal:** GEM Global D1 — **59.4%** accuracy over 32 days (Jan 22–Feb 22 2026). "
+            "MET Norway Seamless ensemble adds 0% improvement; GEM Global alone is the cleanest signal.\n\n"
+            "**Station:** Miami International Airport (KMIA) — Wunderground KMIA.\n\n"
+            "**Bucket:** 2°F wide pairs in Fahrenheit. 23 of 48 Open-Meteo models cover KMIA. "
+            "Markets started Jan 22, 2026 (32 days total).\n\n"
+            "**Notable:** Miami's high and stable temperatures (62–89°F range) make it theoretically "
+            "easier to predict, and GEM (Canadian) models dominate here as in NYC. "
+            "NCEP NBM, which dominates Chicago/Atlanta, ranks only 3rd here."
+        ),
+        "polymarket": {
+            "2026-01-22": ("76-77°F",  76,   77, None, None),
+            "2026-01-23": ("≥82°F",    82, None, None, None),
+            "2026-01-24": ("82-83°F",  82,   83, None, None),
+            "2026-01-25": ("≥80°F",    80, None, None, None),
+            "2026-01-26": ("86-87°F",  86,   87, None, None),
+            "2026-01-27": ("66-67°F",  66,   67, None, None),
+            "2026-01-28": ("62-63°F",  62,   63, None, None),
+            "2026-01-29": ("72-73°F",  72,   73, None, None),
+            "2026-01-30": ("68-69°F",  68,   69, None, None),
+            "2026-01-31": ("64-65°F",  64,   65, None, None),
+            "2026-02-01": ("≤53°F",  None,   53, None, None),
+            "2026-02-02": ("≤59°F",  None,   59, None, None),
+            "2026-02-03": ("68-69°F",  68,   69, None, None),
+            "2026-02-04": ("≤75°F",  None,   75, None, None),
+            "2026-02-05": ("≥70°F",    70, None, None, None),
+            "2026-02-06": ("66-67°F",  66,   67, None, None),
+            "2026-02-07": ("78-79°F",  78,   79, None, None),
+            "2026-02-08": ("≥70°F",    70, None, None, None),
+            "2026-02-09": ("74-75°F",  74,   75, None, None),
+            "2026-02-10": ("≥76°F",    76, None, None, None),
+            "2026-02-11": ("76-77°F",  76,   77, None, None),
+            "2026-02-12": ("80-81°F",  80,   81, None, None),
+            "2026-02-13": ("80-81°F",  80,   81, None, None),
+            "2026-02-14": ("78-79°F",  78,   79, None, None),
+            "2026-02-15": ("80-81°F",  80,   81, None, None),
+            "2026-02-16": ("84-85°F",  84,   85, None, None),
+            "2026-02-17": ("80-81°F",  80,   81, None, None),
+            "2026-02-18": ("78-79°F",  78,   79, None, None),
+            "2026-02-19": ("80-81°F",  80,   81, None, None),
+            "2026-02-20": ("82-83°F",  82,   83, None, None),
+            "2026-02-21": ("82-83°F",  82,   83, None, None),
+            "2026-02-22": ("88-89°F",  88,   89, None, None),
+        },
+    },
+    "Dallas": {
+        "lat": 32.8481, "lon": -96.8518,
+        "timezone": "America/Chicago",
+        "temperature_unit": "fahrenheit",
+        "bucket_style": "range_2f",
+        "temp_unit_display": "°F",
+        "polymarket_slug": "highest-temperature-in-dallas-on",
+        "models": {
+            "icon_seamless":  ("ICON Seamless", "🇩🇪"),
+            "gem_seamless":   ("GEM Seamless",  "🇨🇦"),
+            "gem_regional":   ("GEM Regional",  "🇨🇦"),
+            "gfs_seamless":   ("GFS Seamless",  "🇺🇸"),
+            "gfs_hrrr":       ("GFS HRRR",      "🇺🇸"),
+            "ncep_aigfs025":  ("NCEP AIGFS",    "🤖"),
+            "ecmwf_ifs025":   ("ECMWF IFS",     "🌍"),
+            "ncep_nbm_conus": ("NCEP NBM",      "🇺🇸"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(ICON+GEM+GEM Reg+GFS)",
+            "label":      "AVG(ICON Seamless + GEM Seamless + GEM Regional + GFS Seamless)",
+            "model_keys": ["icon_seamless", "gem_seamless", "gem_regional", "gfs_seamless"],
+        },
+        "top_model_key":   "icon_seamless",
+        "top_model_label": "ICON Seamless D1",
+        "chart_models":    ["icon_seamless", "gem_seamless", "gfs_seamless", "gfs_hrrr"],
+        "notes": (
+            "**Best signal:** AVG(ICON Seamless + GEM Seamless + GEM Regional + GFS Seamless) D1 — "
+            "**54.4%** (43/79) over 79 days (Dec 4 2025–Feb 22 2026). "
+            "Best single: ICON Seamless 54.4% (43/79), tied with ensemble.\n\n"
+            "**Station:** Dallas Love Field (KDAL) — Wunderground KDAL.\n\n"
+            "**Bucket:** 2°F wide pairs (e.g. 60-61°F) with ≤ and ≥ edge buckets. Fahrenheit. "
+            "MF AROME/UKMO UK 2km don't cover Dallas (HTTP 400). North American & ICON models dominate.\n\n"
+            "**Why full Dec 4 window:** NCEP AIGFS only starts Jan 6 and ranks 19/23 at 29.2% here — "
+            "not a leader. Full Dec 4 Polymarket history used."
+        ),
+        "polymarket": {
+            "2025-12-04": ("≤54°F",   None, 54,   54, None),
+            "2025-12-05": ("≤54°F",   None, 54,   54, None),
+            "2025-12-06": ("≤54°F",   None, 54,   54, None),
+            "2025-12-09": ("65-66°F",   65,  66, None, None),
+            "2025-12-10": ("64-65°F",   64,  65, None, None),
+            "2025-12-11": ("66-67°F",   66,  67, None, None),
+            "2025-12-12": ("69-70°F",   69,  70, None, None),
+            "2025-12-13": ("59-60°F",   59,  60, None, None),
+            "2025-12-14": ("44-45°F",   44,  45, None, None),
+            "2025-12-15": ("52-53°F",   52,  53, None, None),
+            "2025-12-16": ("60-61°F",   60,  61, None, None),
+            "2025-12-17": ("≥60°F",     60, None, None,  60),
+            "2025-12-18": ("≥70°F",     70, None, None,  70),
+            "2025-12-19": ("64-65°F",   64,  65, None, None),
+            "2025-12-20": ("≥72°F",     72, None, None,  72),
+            "2025-12-21": ("≥60°F",     60, None, None,  60),
+            "2025-12-22": ("≥66°F",     66, None, None,  66),
+            "2025-12-23": ("80-81°F",   80,  81, None, None),
+            "2025-12-24": ("≥74°F",     74, None, None,  74),
+            "2025-12-25": ("78-79°F",   78,  79, None, None),
+            "2025-12-26": ("86-87°F",   86,  87, None, None),
+            "2025-12-27": ("≥74°F",     74, None, None,  74),
+            "2025-12-28": ("≥80°F",     80, None, None,  80),
+            "2025-12-29": ("≤45°F",   None, 45,   45, None),
+            "2025-12-30": ("52-53°F",   52,  53, None, None),
+            "2025-12-31": ("66-67°F",   66,  67, None, None),
+            "2026-01-01": ("70-71°F",   70,  71, None, None),
+            "2026-01-02": ("76-77°F",   76,  77, None, None),
+            "2026-01-03": ("64-65°F",   64,  65, None, None),
+            "2026-01-04": ("62-63°F",   62,  63, None, None),
+            "2026-01-05": ("≥62°F",     62, None, None,  62),
+            "2026-01-06": ("76-77°F",   76,  77, None, None),
+            "2026-01-07": ("80-81°F",   80,  81, None, None),
+            "2026-01-08": ("78-79°F",   78,  79, None, None),
+            "2026-01-09": ("70-71°F",   70,  71, None, None),
+            "2026-01-10": ("54-55°F",   54,  55, None, None),
+            "2026-01-11": ("60-61°F",   60,  61, None, None),
+            "2026-01-12": ("≤65°F",   None, 65,   65, None),
+            "2026-01-13": ("66-67°F",   66,  67, None, None),
+            "2026-01-14": ("62-63°F",   62,  63, None, None),
+            "2026-01-15": ("58-59°F",   58,  59, None, None),
+            "2026-01-16": ("≤59°F",   None, 59,   59, None),
+            "2026-01-17": ("≤43°F",   None, 43,   43, None),
+            "2026-01-18": ("60-61°F",   60,  61, None, None),
+            "2026-01-19": ("52-53°F",   52,  53, None, None),
+            "2026-01-20": ("54-55°F",   54,  55, None, None),
+            "2026-01-21": ("64-65°F",   64,  65, None, None),
+            "2026-01-22": ("52-53°F",   52,  53, None, None),
+            "2026-01-23": ("≥50°F",     50, None, None,  50),
+            "2026-01-24": ("32-33°F",   32,  33, None, None),
+            "2026-01-25": ("20-21°F",   20,  21, None, None),
+            "2026-01-26": ("32-33°F",   32,  33, None, None),
+            "2026-01-27": ("40-41°F",   40,  41, None, None),
+            "2026-01-28": ("≥40°F",     40, None, None,  40),
+            "2026-01-29": ("≥46°F",     46, None, None,  46),
+            "2026-01-30": ("48-49°F",   48,  49, None, None),
+            "2026-01-31": ("32-33°F",   32,  33, None, None),
+            "2026-02-01": ("50-51°F",   50,  51, None, None),
+            "2026-02-02": ("≥62°F",     62, None, None,  62),
+            "2026-02-03": ("≥62°F",     62, None, None,  62),
+            "2026-02-04": ("≥54°F",     54, None, None,  54),
+            "2026-02-05": ("≥58°F",     58, None, None,  58),
+            "2026-02-06": ("≥82°F",     82, None, None,  82),
+            "2026-02-07": ("72-73°F",   72,  73, None, None),
+            "2026-02-08": ("≥76°F",     76, None, None,  76),
+            "2026-02-09": ("≥74°F",     74, None, None,  74),
+            "2026-02-10": ("≥72°F",     72, None, None,  72),
+            "2026-02-11": ("≥62°F",     62, None, None,  62),
+            "2026-02-12": ("74-75°F",   74,  75, None, None),
+            "2026-02-13": ("≥68°F",     68, None, None,  68),
+            "2026-02-14": ("68-69°F",   68,  69, None, None),
+            "2026-02-15": ("≥68°F",     68, None, None,  68),
+            "2026-02-16": ("70-71°F",   70,  71, None, None),
+            "2026-02-17": ("76-77°F",   76,  77, None, None),
+            "2026-02-18": ("76-77°F",   76,  77, None, None),
+            "2026-02-19": ("78-79°F",   78,  79, None, None),
+            "2026-02-20": ("≤65°F",   None, 65,   65, None),
+            "2026-02-21": ("62-63°F",   62,  63, None, None),
+            "2026-02-22": ("58-59°F",   58,  59, None, None),
+        },
+    },
+    "Seattle": {
+        "lat": 47.4502, "lon": -122.3088,
+        "timezone": "America/Los_Angeles",
+        "temperature_unit": "fahrenheit",
+        "bucket_style": "range_2f",
+        "temp_unit_display": "°F",
+        "polymarket_slug": "highest-temperature-in-seattle-on",
+        # Top 8 models from exhaustive 37-model sweep, 81 resolved markets Dec 5 2025–Feb 24 2026
+        "models": {
+            "ncep_nbm_conus":       ("NCEP NBM",        "🇺🇸"),
+            "gem_seamless":         ("GEM Seamless",    "🇨🇦"),
+            "gem_hrdps_continental":("GEM HRDPS",       "🇨🇦"),
+            "knmi_seamless":        ("KNMI Seamless",   "🇳🇱"),
+            "dmi_seamless":         ("DMI Seamless",    "🇩🇰"),
+            "icon_seamless":        ("ICON Seamless",   "🇩🇪"),
+            "ecmwf_ifs025":         ("ECMWF IFS",       "🌍"),
+            "gfs_seamless":         ("GFS Seamless",    "🇺🇸"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(ICON+GEM+NBM)",
+            "label":      "AVG(ICON Seamless + GEM Seamless + NCEP NBM)",
+            "model_keys": ["icon_seamless", "gem_seamless", "ncep_nbm_conus"],
+        },
+        "top_model_key":   "gem_seamless",
+        "top_model_label": "GEM Seamless D1",
+        "chart_models":    ["ncep_nbm_conus", "gem_seamless", "icon_seamless", "ecmwf_ifs025"],
+        "notes": (
+            "**Best signal:** AVG(ICON Seamless + GEM Seamless + NCEP NBM) — bucket accuracy **58.0%** "
+            "(47/81 days), MAE **1.07°F**, ≤1°F **55.6%** over 81 resolved markets Dec 5 2025–Feb 24 2026.\n\n"
+            "**How found:** Exhaustive search over 263,949 subsets (size 1–8) of 20 valid models. "
+            "Size-3 and size-7 combos both hit the ceiling of 58.0% bucket accuracy — the simplest "
+            "(ICON + GEM + NBM) is used as it matches the maximum with fewest parameters.\n\n"
+            "**⚠ Data-dredging caveat:** 263K combinations on 81 days. In-sample ceiling. "
+            "Pre-registered; evaluate on 30+ forward days before sizing up.\n\n"
+            "**Single-model baseline:** GEM Seamless — **46.9%** bucket accuracy.\n"
+            "**Ensemble gain:** +11.1 pp vs best single (in-sample).\n\n"
+            "**37-model sweep singles ranking (81 days, by MAE, in °F):**\n"
+            "1. NCEP NBM CONUS — MAE 1.19°F, bucket 39.5%\n"
+            "2. GEM Seamless / GEM HRDPS — MAE 1.28°F, bucket **46.9%** ← best single bucket\n"
+            "3. KNMI / DMI / MetNO Seamless — MAE 1.28°F, bucket 44.4%\n"
+            "4. ECMWF IFS — MAE 1.44°F\n"
+            "5. ICON Seamless / Global — MAE 1.45°F, bucket 42.0%\n"
+            "Models NOT covering Seattle (KSEA): AROME France, UK Met Office, jma_msm, BOM, SMHI, CFS.\n\n"
+            "**Station:** Seattle-Tacoma International Airport (KSEA) — same as Polymarket Wunderground.\n\n"
+            "**Bucket:** 2°F wide pairs (e.g. 40-41°F, 42-43°F) with lower/upper boundary buckets. "
+            "Markets started Dec 5 2025."
+        ),
+        "polymarket": {
+            "2025-12-05": ("≥54°F",   54, None, None,   54),
+            "2025-12-06": ("50-51°F", 50,   51, None, None),
+            "2025-12-07": ("54-55°F", 54,   55, None, None),
+            "2025-12-08": ("55-56°F", 55,   56, None, None),
+            "2025-12-09": ("52-53°F", 52,   53, None, None),
+            "2025-12-10": ("56-57°F", 56,   57, None, None),
+            "2025-12-11": ("55-56°F", 55,   56, None, None),
+            "2025-12-12": ("53-54°F", 53,   54, None, None),
+            "2025-12-13": ("52-53°F", 52,   53, None, None),
+            "2025-12-14": ("52-53°F", 52,   53, None, None),
+            "2025-12-15": ("56-57°F", 56,   57, None, None),
+            "2025-12-16": ("54-55°F", 54,   55, None, None),
+            "2025-12-17": ("≥52°F",   52, None, None,   52),
+            "2025-12-18": ("50-51°F", 50,   51, None, None),
+            "2025-12-19": ("42-43°F", 42,   43, None, None),
+            "2025-12-20": ("44-45°F", 44,   45, None, None),
+            "2025-12-21": ("46-47°F", 46,   47, None, None),
+            "2025-12-22": ("50-51°F", 50,   51, None, None),
+            "2025-12-23": ("44-45°F", 44,   45, None, None),
+            "2025-12-24": ("≥46°F",   46, None, None,   46),
+            "2025-12-25": ("42-43°F", 42,   43, None, None),
+            "2025-12-26": ("44-45°F", 44,   45, None, None),
+            "2025-12-27": ("40-41°F", 40,   41, None, None),
+            "2025-12-28": ("40-41°F", 40,   41, None, None),
+            "2025-12-29": ("42-43°F", 42,   43, None, None),
+            "2025-12-30": ("≥48°F",   48, None, None,   48),
+            "2025-12-31": ("≤41°F", None,   41,   41, None),
+            "2026-01-01": ("42-43°F", 42,   43, None, None),
+            "2026-01-02": ("48-49°F", 48,   49, None, None),
+            "2026-01-03": ("≥52°F",   52, None, None,   52),
+            "2026-01-04": ("48-49°F", 48,   49, None, None),
+            "2026-01-05": ("42-43°F", 42,   43, None, None),
+            "2026-01-06": ("44-45°F", 44,   45, None, None),
+            "2026-01-07": ("42-43°F", 42,   43, None, None),
+            "2026-01-08": ("44-45°F", 44,   45, None, None),
+            "2026-01-09": ("50-51°F", 50,   51, None, None),
+            "2026-01-11": ("50-51°F", 50,   51, None, None),
+            "2026-01-12": ("52-53°F", 52,   53, None, None),
+            "2026-01-13": ("56-57°F", 56,   57, None, None),
+            "2026-01-14": ("52-53°F", 52,   53, None, None),
+            "2026-01-15": ("48-49°F", 48,   49, None, None),
+            "2026-01-16": ("52-53°F", 52,   53, None, None),
+            "2026-01-17": ("52-53°F", 52,   53, None, None),
+            "2026-01-18": ("48-49°F", 48,   49, None, None),
+            "2026-01-19": ("48-49°F", 48,   49, None, None),
+            "2026-01-20": ("50-51°F", 50,   51, None, None),
+            "2026-01-21": ("≤45°F", None,   45,   45, None),
+            "2026-01-22": ("40-41°F", 40,   41, None, None),
+            "2026-01-23": ("≥42°F",   42, None, None,   42),
+            "2026-01-24": ("44-45°F", 44,   45, None, None),
+            "2026-01-25": ("44-45°F", 44,   45, None, None),
+            "2026-01-26": ("46-47°F", 46,   47, None, None),
+            "2026-01-27": ("50-51°F", 50,   51, None, None),
+            "2026-01-28": ("50-51°F", 50,   51, None, None),
+            "2026-01-29": ("50-51°F", 50,   51, None, None),
+            "2026-01-30": ("52-53°F", 52,   53, None, None),
+            "2026-01-31": ("56-57°F", 56,   57, None, None),
+            "2026-02-01": ("≥52°F",   52, None, None,   52),
+            "2026-02-02": ("52-53°F", 52,   53, None, None),
+            "2026-02-03": ("≤55°F", None,   55,   55, None),
+            "2026-02-04": ("60-61°F", 60,   61, None, None),
+            "2026-02-05": ("≤59°F", None,   59,   59, None),
+            "2026-02-06": ("56-57°F", 56,   57, None, None),
+            "2026-02-07": ("50-51°F", 50,   51, None, None),
+            "2026-02-08": ("48-49°F", 48,   49, None, None),
+            "2026-02-09": ("50-51°F", 50,   51, None, None),
+            "2026-02-10": ("≥52°F",   52, None, None,   52),
+            "2026-02-11": ("≥48°F",   48, None, None,   48),
+            "2026-02-12": ("≥52°F",   52, None, None,   52),
+            "2026-02-13": ("46-47°F", 46,   47, None, None),
+            "2026-02-14": ("48-49°F", 48,   49, None, None),
+            "2026-02-15": ("46-47°F", 46,   47, None, None),
+            "2026-02-16": ("42-43°F", 42,   43, None, None),
+            "2026-02-17": ("46-47°F", 46,   47, None, None),
+            "2026-02-18": ("40-41°F", 40,   41, None, None),
+            "2026-02-19": ("40-41°F", 40,   41, None, None),
+            "2026-02-20": ("42-43°F", 42,   43, None, None),
+            "2026-02-21": ("48-49°F", 48,   49, None, None),
+            "2026-02-22": ("50-51°F", 50,   51, None, None),
+            "2026-02-23": ("48-49°F", 48,   49, None, None),
+            "2026-02-24": ("46-47°F", 46,   47, None, None),
+        },
+    },
+    "Buenos Aires": {
+        "lat": -34.8222, "lon": -58.5358,
+        "timezone": "America/Argentina/Buenos_Aires",
+        "temperature_unit": "celsius",
+        "bucket_style": "exact_1c",
+        "temp_unit_display": "°C",
+        "polymarket_slug": "highest-temperature-in-buenos-aires-on",
+        "models": {
+            "ukmo_seamless":        ("UKMO Seamless",  "🇬🇧"),
+            "ecmwf_ifs025":         ("ECMWF IFS",      "🌍"),
+            "best_match":           ("Best Match",     "🌐"),
+            "icon_seamless":        ("ICON Seamless",  "🇩🇪"),
+            "ncep_aigfs025":        ("NCEP AIGFS",     "🤖"),
+            "meteofrance_seamless": ("MF Seamless",    "🇫🇷"),
+            "gfs_seamless":         ("GFS Seamless",   "🇺🇸"),
+        },
+        "best_ensemble": {
+            "short":      "UKMO Seamless D1",
+            "label":      "UKMO Seamless (UK Met Office Global)",
+            "model_keys": ["ukmo_seamless"],
+        },
+        "top_model_key":   "ukmo_seamless",
+        "top_model_label": "UKMO Seamless D1",
+        "chart_models":    ["ukmo_seamless", "ecmwf_ifs025", "best_match", "icon_seamless"],
+        "notes": (
+            "**Best signal:** UKMO Seamless D1 — **65.4%** accuracy over 78 days (Dec 6 2025–Feb 22 2026). "
+            "Exhaustive ensemble search found no combination beats the single model; UKMO Global excels "
+            "in the Southern Hemisphere where it is specifically well-calibrated.\n\n"
+            "**Station:** Minister Pistarini International Airport (SAEZ/Ezeiza) — Wunderground SAEZ.\n\n"
+            "**Bucket:** Exact 1°C integers with ≤ and ≥ edge buckets (e.g. 30°C, 31°C, ≥32°C, ≤29°C). "
+            "Temperatures in Celsius. ~20 of 48 Open-Meteo models cover SAEZ.\n\n"
+            "**Why full Dec 6 window:** NCEP AIGFS (our best model elsewhere) only starts Jan 6 at SAEZ "
+            "and ranks 6th here (50.0%/48 days). UKMO leads from Dec 6 with 29 extra days of data. "
+            "NCEP is NOT the leader here — UK Met Office dominates the Southern Hemisphere."
+        ),
+        "polymarket": {
+            "2025-12-06": ("30°C",   30, False),
+            "2025-12-07": ("≥28°C",  28, True),   # confirmed from Polymarket (slug API quirk)
+            "2025-12-09": ("≥26°C",  26, True),
+            "2025-12-10": ("31°C",   31, False),
+            "2025-12-11": ("31°C",   31, False),
+            "2025-12-12": ("34°C",   34, False),
+            "2025-12-13": ("34°C",   34, False),
+            "2025-12-14": ("≥25°C",  25, True),
+            "2025-12-15": ("27°C",   27, False),
+            "2025-12-16": ("25°C",   25, False),
+            "2025-12-17": ("≤31°C",  31, None),
+            "2025-12-18": ("≤36°C",  36, None),
+            "2025-12-19": ("≤33°C",  33, None),
+            "2025-12-20": ("28°C",   28, False),
+            "2025-12-21": ("≥33°C",  33, True),
+            "2025-12-22": ("31°C",   31, False),
+            "2025-12-23": ("≥33°C",  33, True),
+            "2025-12-24": ("35°C",   35, False),
+            "2025-12-25": ("31°C",   31, False),
+            "2025-12-26": ("35°C",   35, False),
+            "2025-12-27": ("≤35°C",  35, None),
+            "2025-12-28": ("≤35°C",  35, None),
+            "2025-12-29": ("≤37°C",  37, None),
+            "2025-12-30": ("≤38°C",  38, None),
+            "2025-12-31": ("≤40°C",  40, None),
+            "2026-01-01": ("31°C",   31, False),
+            "2026-01-02": ("29°C",   29, False),
+            "2026-01-03": ("≤24°C",  24, None),
+            "2026-01-04": ("≤26°C",  26, None),
+            "2026-01-05": ("≤29°C",  29, None),
+            "2026-01-06": ("32°C",   32, False),
+            "2026-01-07": ("≤33°C",  33, None),
+            "2026-01-08": ("≤26°C",  26, None),
+            "2026-01-09": ("26°C",   26, False),
+            "2026-01-10": ("≤26°C",  26, None),
+            "2026-01-11": ("35°C",   35, False),
+            "2026-01-12": ("39°C",   39, False),
+            "2026-01-13": ("33°C",   33, False),
+            "2026-01-14": ("≤36°C",  36, None),
+            "2026-01-15": ("35°C",   35, False),
+            "2026-01-16": ("31°C",   31, False),
+            "2026-01-17": ("≤35°C",  35, None),
+            "2026-01-18": ("≤29°C",  29, None),
+            "2026-01-19": ("25°C",   25, False),
+            "2026-01-20": ("29°C",   29, False),
+            "2026-01-21": ("≤32°C",  32, None),
+            "2026-01-22": ("≤32°C",  32, None),
+            "2026-01-23": ("≤34°C",  34, None),
+            "2026-01-24": ("≤35°C",  35, None),
+            "2026-01-25": ("≤35°C",  35, None),
+            "2026-01-26": ("≤38°C",  38, None),
+            "2026-01-27": ("≤35°C",  35, None),
+            "2026-01-28": ("≤34°C",  34, None),
+            "2026-01-29": ("35°C",   35, False),
+            "2026-01-30": ("31°C",   31, False),
+            "2026-01-31": ("32°C",   32, False),
+            "2026-02-01": ("≤34°C",  34, None),
+            "2026-02-02": ("≤38°C",  38, None),
+            "2026-02-03": ("≤37°C",  37, None),
+            "2026-02-04": ("≤31°C",  31, None),
+            "2026-02-05": ("30°C",   30, False),
+            "2026-02-06": ("31°C",   31, False),
+            "2026-02-07": ("33°C",   33, False),
+            "2026-02-08": ("≤34°C",  34, None),
+            "2026-02-09": ("34°C",   34, False),
+            "2026-02-10": ("36°C",   36, False),
+            "2026-02-11": ("≤32°C",  32, None),
+            "2026-02-12": ("31°C",   31, False),
+            "2026-02-13": ("29°C",   29, False),
+            "2026-02-14": ("29°C",   29, False),
+            "2026-02-15": ("30°C",   30, False),
+            "2026-02-16": ("33°C",   33, False),
+            "2026-02-17": ("31°C",   31, False),
+            "2026-02-18": ("≤35°C",  35, None),
+            "2026-02-19": ("32°C",   32, False),
+            "2026-02-20": ("31°C",   31, False),
+            "2026-02-21": ("31°C",   31, False),
+            "2026-02-22": ("31°C",   31, False),
+        },
+    },
+    "Paris": {
+        "lat": 49.0097, "lon": 2.5479,
+        "timezone": "Europe/Paris",
+        "temperature_unit": "celsius",
+        "bucket_style": "exact_1c",
+        "temp_unit_display": "°C",
+        "polymarket_slug": "highest-temperature-in-paris-on",
+        "models": {
+            "ukmo_seamless":              ("UKMO Seamless",    "🇬🇧"),
+            "ukmo_uk_deterministic_2km":  ("UKMO UK 2km",      "🇬🇧"),
+            "metno_seamless":             ("MET Norway",       "🇳🇴"),
+            "ecmwf_ifs025":               ("ECMWF IFS",        "🌍"),
+            "meteofrance_seamless":       ("MeteoFrance",      "🇫🇷"),
+            "jma_seamless":               ("JMA Seamless",     "🇯🇵"),
+            "ncep_aigfs025":              ("NCEP AIGFS",       "🤖"),
+            "meteofrance_arome_france":   ("MF AROME",         "🇫🇷"),
+            "icon_seamless":              ("ICON Seamless",    "🇩🇪"),
+            "dmi_seamless":               ("DMI Seamless",     "🇩🇰"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(UKMO UK 2km + MET Norway)",
+            "label":      "Ensemble: UKMO UK 2km + MET Norway Seamless",
+            "model_keys": ["ukmo_uk_deterministic_2km", "metno_seamless"],
+        },
+        "top_model_key":   "ukmo_seamless",
+        "top_model_label": "UKMO Seamless D1",
+        "chart_models":    ["ukmo_seamless", "ukmo_uk_deterministic_2km", "metno_seamless", "ecmwf_ifs025"],
+        "notes": (
+            "**Best signal:** AVG(UKMO UK 2km + MET Norway) — **75.0%** (6/8) over 8 resolved days "
+            "(Feb 11–21 2026). All three top singles tie at 62.5% (5/8): UKMO Seamless, UKMO UK 2km, "
+            "MET Norway. Full 47-model sweep run; MeteoFrance's own models (50%) beaten by UK & Nordic models.\n\n"
+            "**Station:** Charles de Gaulle Airport (LFPG) — Wunderground LFPG.\n\n"
+            "**Bucket:** Exact 1°C integers with ≤ and ≥ edge buckets. Temperatures in Celsius. "
+            "NCEP AIGFS only 25% here — European models dominate.\n\n"
+            "**Note:** Paris markets only started on Polymarket on Feb 11 2026. Very small sample (10 days) "
+            "— accuracy figures will stabilise as more data accumulates."
+        ),
+        "polymarket": {
+            "2026-02-11": ("13°C",  13, False),
+            "2026-02-15": ("≥7°C",   7, True),
+            "2026-02-16": ("11°C",  11, False),
+            "2026-02-17": ("8°C",    8, False),
+            "2026-02-18": ("≥8°C",   8, True),
+            "2026-02-19": ("≥10°C", 10, True),
+            "2026-02-20": ("11°C",  11, False),
+            "2026-02-21": ("16°C",  16, False),
+            "2026-02-22": ("14°C",  14, False),
+            "2026-02-23": ("16°C",  16, False),
+        },
+    },
+    "Toronto": {
+        "lat": 43.6772, "lon": -79.6306,
+        "timezone": "America/Toronto",
+        "temperature_unit": "celsius",
+        "bucket_style": "exact_1c",
+        "temp_unit_display": "°C",
+        "polymarket_slug": "highest-temperature-in-toronto-on",
+        # Top 8 models from exhaustive 38-model sweep, 81 resolved markets Dec 6 2025–Feb 24 2026
+        # NCEP NBM CONUS covers Toronto (close to US border) and is the clear #1
+        # kma_seamless = kma_gdps (identical scores); meteofrance_seamless = meteofrance_arpege_world
+        "models": {
+            "ncep_nbm_conus":          ("NCEP NBM",           "🇺🇸"),
+            "kma_gdps":                ("KMA GDPS",           "🇰🇷"),
+            "meteofrance_arpege_world": ("MF ARPEGE World",   "🇫🇷"),
+            "gem_global":              ("GEM Global",         "🇨🇦"),
+            "dmi_seamless":            ("DMI Seamless",       "🇩🇰"),
+            "ncep_aigfs025":           ("NCEP AI-GFS",        "🤖"),
+            "gem_regional":            ("GEM Regional",       "🇨🇦"),
+            "gfs_seamless":            ("GFS Seamless",       "🇺🇸"),
+            "ecmwf_ifs025":            ("ECMWF IFS",          "🌍"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(KMA+MF+GEM+DMI)",
+            "label":      "AVG(KMA GDPS + MF ARPEGE World + GEM Global + DMI Seamless)",
+            "model_keys": ["kma_gdps", "meteofrance_arpege_world", "gem_global", "dmi_seamless"],
+        },
+        "top_model_key":   "ncep_nbm_conus",
+        "top_model_label": "NCEP NBM D1",
+        "chart_models":    ["ncep_nbm_conus", "kma_gdps", "meteofrance_arpege_world", "gem_global"],
+        "notes": (
+            "**Best signal:** AVG(KMA GDPS + MF ARPEGE World + GEM Global + DMI Seamless) — "
+            "bucket accuracy **53.1%** (43/81 days), MAE **0.691°C**, ≤1°C **70.4%**.\n\n"
+            "**How found:** Exhaustive permutation search over all 263,949 subsets (size 1–8) "
+            "of 20 valid models, tested on 81 resolved markets Dec 6 2025–Feb 24 2026. "
+            "Ceiling was 53.1%, hit by multiple size-3, size-5, and size-6 combos — all sharing "
+            "the same KMA + GEM core. Adding more models did not improve bucket accuracy beyond 53.1%.\n\n"
+            "**⚠ Data-dredging caveat:** 263K hypotheses on 81 days is significant in-sample "
+            "fitting. Treat 53.1% as the ceiling, not a forward-test guarantee. "
+            "Pre-registering this ensemble now; evaluate after 30+ new forward days.\n\n"
+            "**Single-model baseline:** KMA GDPS — 45.7% bucket accuracy.\n"
+            "**Ensemble gain:** +7.4 pp vs best single (in-sample).\n\n"
+            "**38-model sweep singles ranking (81 days, by MAE):**\n"
+            "1. NCEP NBM CONUS — MAE 0.846°C, ≤1°C 66.7% ← lowest MAE, best for ≤1°C\n"
+            "2. KMA GDPS — MAE 0.878°C, bucket 45.7% ← best single by bucket accuracy\n"
+            "3. MF ARPEGE World — MAE 0.940°C\n"
+            "4. GEM Global — MAE 0.983°C\n"
+            "Models NOT covering Toronto: UK Met Office, AROME France/HD, icon_eu/d2, BOM, SMHI.\n\n"
+            "**Station:** Toronto Pearson International Airport (CYYZ) — same as Polymarket Wunderground.\n\n"
+            "**Bucket:** Exact 1°C integers with lower/upper boundary buckets. Markets started Dec 6 2025."
+        ),
+        "polymarket": {
+            "2025-12-06": ("1°C",    1,  False),
+            "2025-12-07": ("-1°C",  -1,  False),
+            "2025-12-08": ("-4°C",  -4,  False),
+            "2025-12-09": ("0°C",    0,  False),
+            "2025-12-10": ("1°C",    1,  False),
+            "2025-12-11": ("-6°C",  -6,  False),
+            "2025-12-12": ("-1°C",  -1,  False),
+            "2025-12-13": ("-2°C",  -2,  False),
+            "2025-12-14": ("-7°C",  -7,  False),
+            "2025-12-15": ("-5°C",  -5,  False),
+            "2025-12-16": ("≥1°C",   1,  True),
+            "2025-12-17": ("4°C",    4,  False),
+            "2025-12-18": ("≥7°C",   7,  True),
+            "2025-12-19": ("≥6°C",   6,  True),
+            "2025-12-20": ("≥2°C",   2,  True),
+            "2025-12-21": ("≥2°C",   2,  True),
+            "2025-12-22": ("≥1°C",   1,  True),
+            "2025-12-23": ("4°C",    4,  False),
+            "2025-12-24": ("≥3°C",   3,  True),
+            "2025-12-25": ("2°C",    2,  False),
+            "2025-12-26": ("-2°C",  -2,  False),
+            "2025-12-27": ("-3°C",  -3,  False),
+            "2025-12-28": ("2°C",    2,  False),
+            "2025-12-29": ("5°C",    5,  False),
+            "2025-12-30": ("-4°C",  -4,  False),
+            "2025-12-31": ("≤-4°C", -4,  None),
+            "2026-01-01": ("-7°C",  -7,  False),
+            "2026-01-02": ("-4°C",  -4,  False),
+            "2026-01-03": ("-3°C",  -3,  False),
+            "2026-01-04": ("-1°C",  -1,  False),
+            "2026-01-05": ("0°C",    0,  False),
+            "2026-01-06": ("1°C",    1,  False),
+            "2026-01-07": ("3°C",    3,  False),
+            "2026-01-08": ("≥5°C",   5,  True),
+            "2026-01-09": ("≥10°C", 10,  True),
+            "2026-01-10": ("≥3°C",   3,  True),
+            "2026-01-11": ("2°C",    2,  False),
+            "2026-01-12": ("0°C",    0,  False),
+            "2026-01-13": ("5°C",    5,  False),
+            "2026-01-14": ("5°C",    5,  False),
+            "2026-01-15": ("-9°C",  -9,  False),
+            "2026-01-16": ("≥-1°C", -1,  True),
+            "2026-01-17": ("2°C",    2,  False),
+            "2026-01-18": ("-6°C",  -6,  False),
+            "2026-01-19": ("-5°C",  -5,  False),
+            "2026-01-20": ("≥-11°C",-11, True),
+            "2026-01-21": ("-1°C",  -1,  False),
+            "2026-01-22": ("-1°C",  -1,  False),
+            "2026-01-23": ("-9°C",  -9,  False),
+            "2026-01-24": ("-11°C", -11, False),
+            "2026-01-25": ("-9°C",  -9,  False),
+            "2026-01-26": ("-9°C",  -9,  False),
+            "2026-01-27": ("-9°C",  -9,  False),
+            "2026-01-28": ("-10°C", -10, False),
+            "2026-01-29": ("≤-12°C",-12, None),
+            "2026-01-30": ("≥-10°C",-10, True),
+            "2026-01-31": ("≥-10°C",-10, True),
+            "2026-02-01": ("≥-5°C", -5,  True),
+            "2026-02-02": ("≥-5°C", -5,  True),
+            "2026-02-03": ("-3°C",  -3,  False),
+            "2026-02-04": ("-5°C",  -5,  False),
+            "2026-02-05": ("-5°C",  -5,  False),
+            "2026-02-06": ("-3°C",  -3,  False),
+            "2026-02-07": ("-13°C", -13, False),
+            "2026-02-08": ("≤-12°C",-12, None),
+            "2026-02-09": ("-7°C",  -7,  False),
+            "2026-02-10": ("2°C",    2,  False),
+            "2026-02-11": ("1°C",    1,  False),
+            "2026-02-12": ("-3°C",  -3,  False),
+            "2026-02-13": ("-1°C",  -1,  False),
+            "2026-02-14": ("2°C",    2,  False),
+            "2026-02-15": ("1°C",    1,  False),
+            "2026-02-16": ("2°C",    2,  False),
+            "2026-02-17": ("≥7°C",   7,  True),
+            "2026-02-18": ("3°C",    3,  False),
+            "2026-02-19": ("2°C",    2,  False),
+            "2026-02-20": ("2°C",    2,  False),
+            "2026-02-21": ("2°C",    2,  False),
+            "2026-02-22": ("0°C",    0,  False),
+            "2026-02-23": ("-1°C",  -1,  False),
+            "2026-02-24": ("-4°C",  -4,  False),
+            "2026-02-25": ("2°C",    2,  False),
+            "2026-02-26": ("-2°C",  -2,  False),
+            "2026-02-27": ("7°C",    7,  False),
+            "2026-02-28": ("≥6°C",   6,  True),
+        },
+    },
+    "Ankara": {
+        "lat": 40.1281, "lon": 32.9951,
+        "timezone": "Europe/Istanbul",
+        "temperature_unit": "celsius",
+        "bucket_style": "exact_1c",
+        "temp_unit_display": "°C",
+        "polymarket_slug": "highest-temperature-in-ankara-on",
+        # Best 6-model ensemble from exhaustive permutation search over 37 resolved days (Jan 22–Feb 27 2026)
+        # icon_global, meteofrance_arpege_world, jma_seamless, icon_seamless, ecmwf_ifs025, gfs_graphcast025 → 62.2% bucket accuracy
+        "models": {
+            "icon_seamless":             ("ICON Seamless",       "🌐"),
+            "icon_global":               ("ICON Global",         "🌍"),
+            "ecmwf_ifs025":              ("ECMWF IFS",           "🇪🇺"),
+            "gfs_graphcast025":          ("GFS GraphCast",       "🤖"),
+            "jma_seamless":              ("JMA Seamless",        "🇯🇵"),
+            "meteofrance_arpege_world":  ("MF ARPEGE World",     "🇫🇷"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(ICON+MF+JMA+EC+GC)",
+            "label":      "AVG(ICON Global + MF ARPEGE + JMA + ICON Seamless + ECMWF + GraphCast)",
+            "model_keys": ["icon_global", "meteofrance_arpege_world", "jma_seamless",
+                           "icon_seamless", "ecmwf_ifs025", "gfs_graphcast025"],
+        },
+        "top_model_key":   "icon_seamless",
+        "top_model_label": "ICON Seamless D1",
+        "chart_models":    ["icon_seamless", "icon_global", "ecmwf_ifs025", "gfs_graphcast025"],
+        "notes": (
+            "**Best signal:** AVG(ICON Global + MF ARPEGE World + JMA Seamless + ICON Seamless + ECMWF IFS + GFS GraphCast) — "
+            "**62.2%** bucket accuracy (23/37 days, Jan 22–Feb 27 2026).\n\n"
+            "**How found:** Exhaustive permutation search over all 145,498 subsets (size 1–6) of "
+            "**23 Open-Meteo models** that cover LTAC, tested on 37 resolved markets. "
+            "Full 37-model sweep run; remaining 14 models returned no data for Ankara. "
+            "Best per size: Size 1 → JMA Seamless 46.0%; Size 2 → ICON+JMA 51.4%; "
+            "Size 3 → 56.8%; Size 4 → 56.8%; Size 5 → 59.5%; Size 6 → 62.2% (ceiling).\n\n"
+            "**Single-model baseline:** JMA Seamless 45.9% (best single by bucket accuracy). "
+            "Best by MAE: ICON Seamless & ICON EU (0.822°C, within-1°C 78.4%). "
+            "GEM Seamless/Global: 43.2% bucket. UKMO models tested — only 21.6% for Ankara (poor coverage).\n\n"
+            "**Ensemble gain:** +16.3 pp vs best single (in-sample).\n\n"
+            "**Station:** Esenboğa International Airport (LTAC) — Wunderground LTAC.\n\n"
+            "**Bucket:** Exact 1°C integers with ≤ and ≥ edge buckets. Temperatures in Celsius. "
+            "Markets started Jan 22, 2026."
+        ),
+        "polymarket": {
+            "2026-01-22": ("≤2°C",   2, None),
+            "2026-01-23": ("5°C",    5, False),
+            "2026-01-24": ("7°C",    7, False),
+            "2026-01-25": ("≥9°C",   9, True),
+            "2026-01-26": ("≥7°C",   7, True),
+            "2026-01-27": ("≥10°C", 10, True),
+            "2026-01-28": ("7°C",    7, False),
+            "2026-01-29": ("8°C",    8, False),
+            "2026-01-30": ("11°C",  11, False),
+            "2026-01-31": ("8°C",    8, False),
+            "2026-02-01": ("12°C",  12, False),
+            "2026-02-02": ("≥8°C",   8, True),
+            "2026-02-03": ("6°C",    6, False),
+            "2026-02-04": ("7°C",    7, False),
+            "2026-02-05": ("8°C",    8, False),
+            "2026-02-06": ("8°C",    8, False),
+            "2026-02-07": ("10°C",  10, False),
+            "2026-02-08": ("≥10°C", 10, True),
+            "2026-02-09": ("9°C",    9, False),
+            "2026-02-10": ("6°C",    6, False),
+            "2026-02-11": ("7°C",    7, False),
+            "2026-02-12": ("10°C",  10, False),
+            "2026-02-13": ("11°C",  11, False),
+            "2026-02-14": ("11°C",  11, False),
+            "2026-02-15": ("14°C",  14, False),
+            "2026-02-16": ("15°C",  15, False),
+            "2026-02-17": ("13°C",  13, False),
+            "2026-02-18": ("9°C",    9, False),
+            "2026-02-19": ("5°C",    5, False),
+            "2026-02-20": ("11°C",  11, False),
+            "2026-02-21": ("13°C",  13, False),
+            "2026-02-22": ("7°C",    7, False),
+            "2026-02-23": ("7°C",    7, False),
+            "2026-02-24": ("8°C",    8, False),
+            "2026-02-25": ("6°C",    6, False),
+            "2026-02-26": ("5°C",    5, False),
+            "2026-02-27": ("5°C",    5, False),
+        },
+    },
+    "Wellington": {
+        "lat": -41.3272, "lon": 174.8050,
+        "timezone": "Pacific/Auckland",
+        "temperature_unit": "celsius",
+        "bucket_style": "exact_1c",
+        "temp_unit_display": "°C",
+        "polymarket_slug": "highest-temperature-in-wellington-on",
+        "polymarket_since": "2026-03-01",  # First possible resolution date (markets created Feb 28 for Mar 2+)
+        # Top models from Open-Meteo for New Zealand region
+        "models": {
+            "bom_access_global": ("BOM ACCESS-G",  "🇦🇺"),
+            "ukmo_seamless":     ("UKMO Seamless",  "🇬🇧"),
+            "ecmwf_ifs025":      ("ECMWF IFS",      "🌍"),
+            "icon_seamless":     ("ICON Seamless",  "🇩🇪"),
+            "gfs_seamless":      ("GFS Seamless",   "🇺🇸"),
+        },
+        "best_ensemble": {
+            "short":      "AVG(BOM+UKMO+ECMWF+ICON)",
+            "label":      "AVG(BOM ACCESS-G + UKMO Seamless + ECMWF IFS + ICON Seamless)",
+            "model_keys": ["bom_access_global", "ukmo_seamless", "ecmwf_ifs025", "icon_seamless"],
+        },
+        "top_model_key":   "bom_access_global",
+        "top_model_label": "BOM ACCESS-G D1",
+        "chart_models":    ["bom_access_global", "ukmo_seamless", "ecmwf_ifs025", "icon_seamless"],
+        "notes": (
+            "**Best signal:** Not yet backtested — using BOM ACCESS-G as anchor (Australian Bureau of Meteorology "
+            "global model provides excellent coverage of New Zealand). UKMO Global also strong in Southern Hemisphere.\n\n"
+            "**Station:** Wellington International Airport (NZWN) — Wunderground NZWN.\n\n"
+            "**Bucket:** Exact 1°C integers with ≤ and ≥ edge buckets. Temperatures in Celsius.\n\n"
+            "**TODO:** Run backtest once resolved markets are collected."
+        ),
+        "polymarket": {
+        },
+    },
+}
+

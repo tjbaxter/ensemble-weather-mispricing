@@ -688,6 +688,8 @@ async def run_metar_scanner() -> None:
                         obs.parsed.source if obs.parsed else "N/A",
                         rec.high_resolution, rec.unit,
                     )
+            if updated:
+                tracker.save()
 
             # ── 3. Generate signals for stations with positions today ──────────
             for icao, rec in updated.items():

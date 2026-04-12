@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, asdict
-from datetime import UTC, date as _date, datetime
+from datetime import UTC, date as _date, datetime, timedelta
+from pathlib import Path
 
 from config.cities import STATIONS
 from config.settings import (
@@ -14,6 +15,7 @@ from config.settings import (
     D2_P_WIN_DISCOUNT,
     D3_MAX_YES_ENTRY_PRICE,
     D3_P_WIN_DISCOUNT,
+    ENABLE_EXPLORATORY_D2,
     ENABLE_LADDER_STRATEGY,
     ENSEMBLE_DISABLE_CLASSIC_CONFIDENCE_GATE,
     ENSEMBLE_STD_SKIP_THRESHOLD,
@@ -105,6 +107,41 @@ def _kelly_position_cap(bankroll: float) -> float:
     return KELLY_MAX_BET_USD
 
 
+_PA_POSITIONS_PATH = Path(__file__).resolve().parents[1] / "data" / "positions_shadow_prime_alpha.json"
+
+# V3 decision buffer: populated during PRIME_ALPHA processing, consumed by
+# the operational shadow runner for dashboard state persistence. Not populated
+# by replay scripts (they call build_prime_alpha_plan directly).
+_V3_DECISION_BUFFER: dict[str, dict] = {}
+
+
+def pop_v3_decision_buffer() -> dict[str, dict]:
+    """Return and clear the V3 decision buffer. Called by the shadow runner."""
+    global _V3_DECISION_BUFFER
+    buf = dict(_V3_DECISION_BUFFER)
+    _V3_DECISION_BUFFER.clear()
+    return buf
+
+
+def _count_existing_prime_alpha(city: str, target_date: str) -> int:
+    """Count open PRIME_ALPHA positions for a city-date across runs."""
+    try:
+        if not _PA_POSITIONS_PATH.exists():
+            return 0
+        positions = json.loads(_PA_POSITIONS_PATH.read_text(encoding="utf-8"))
+        if not isinstance(positions, list):
+            return 0
+        return sum(
+            1 for p in positions
+            if isinstance(p, dict)
+            and p.get("strategy") == "PRIME_ALPHA"
+            and p.get("city") == city
+            and p.get("date") == target_date
+        )
+    except Exception:
+        return 0
+
+
 _DEEP_OBS = get_deep_observability()
 _OBS_MARKET_SCAN_ID = ""
 _OBS_MODE = "paper"
@@ -193,6 +230,8 @@ def generate_signals(
 
     for market in markets:
         station_icao = market["station_icao"]
+        if STATIONS.get(station_icao, {}).get("paused"):
+            continue
         city = market["city"]
         date = market["date"]
         end_date_iso = market["end_date_iso"]
@@ -1095,6 +1134,16 @@ def generate_top2_shadow_signals(
 def _bucket_lower_bound(bucket: str) -> float:
     """Return the lower temperature bound of a bucket label for sorting."""
     b = str(bucket).strip()
+    if b.startswith("<=") or b.startswith("\u2264"):
+        try:
+            return float(b.lstrip("\u2264<=").strip()) - 100.0
+        except ValueError:
+            return -999.0
+    if b.startswith(">=") or b.startswith("\u2265"):
+        try:
+            return float(b.lstrip("\u2265>=").strip())
+        except ValueError:
+            return 999.0
     if b.endswith("+"):
         try:
             return float(b[:-1])
@@ -1106,7 +1155,10 @@ def _bucket_lower_bound(bucket: str) -> float:
             return float(parts[0])
         except ValueError:
             pass
-    return 999.0
+    try:
+        return float(b)
+    except ValueError:
+        return 999.0
 
 
 def generate_purdey_cavendish_signals(
@@ -1422,6 +1474,8 @@ def generate_mk2_ace_signals(
     markets: list[dict],
     forecasts: dict[str, dict[str, dict]],
     bankroll: float,
+    *,
+    discovered_dates: set[tuple[str, str]] | None = None,
 ) -> list["Signal"]:
     """Generate PURDEY_MK2, CAVENDISH_MK3, TRUE_ALPHA, PRIME_ALPHA, and PROPS_KELLY signals.
 
@@ -1467,10 +1521,21 @@ def generate_mk2_ace_signals(
     if _in_metar_danger_window(datetime.now(UTC)):
         return []
 
-    # Group binary markets by (station, date)
+    # Group binary markets by (station, date), skipping paused cities
+    _skipped_paused: set[str] = set()
     grouped: dict[tuple[str, str], list[dict]] = defaultdict(list)
     for market in markets:
-        grouped[(market["station_icao"], market["date"])].append(market)
+        station_icao = market["station_icao"]
+        if STATIONS.get(station_icao, {}).get("paused"):
+            _skipped_paused.add(f"{market.get('city', station_icao)}")
+            continue
+        grouped[(station_icao, market["date"])].append(market)
+    if _skipped_paused:
+        _log.info(
+            "V2 strategies: skipped %d paused city/cities: %s",
+            len(_skipped_paused),
+            ", ".join(sorted(_skipped_paused)),
+        )
 
     signals: list[Signal] = []
 
@@ -1782,6 +1847,147 @@ def generate_mk2_ace_signals(
             + " | ".join(f"{b['bucket']}(w={b['model_prob']:.2f},nm={b['n_models']})" for b in ta_bets)
         )
 
+        from strategy.prime_alpha import (
+            PRIME_ALPHA_MAX_BUCKETS as _PA_MAX,
+            get_effective_prior_resolved_bucket,
+        )
+        from strategy.execution import apply_execution_filter
+
+        existing_pa = _count_existing_prime_alpha(city, date_str)
+        slots_remaining = max(0, _PA_MAX - existing_pa)
+        if existing_pa > 0:
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: {existing_pa} existing position(s), "
+                f"{slots_remaining} slot(s) remaining"
+            )
+        if slots_remaining == 0:
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: cross-run cap hit "
+                f"({existing_pa}/{_PA_MAX}), skipping"
+            )
+        else:
+            pass  # fall through to plan generation
+
+        # Provisional prior-day resolution: check WU obs + market before model
+        prior_date_str = (
+            _date.fromisoformat(date_str) - timedelta(days=1)
+        ).isoformat()
+        prior_day_mkt_prices: dict[str, float] = {}
+        prior_group = grouped.get((station_icao, prior_date_str))
+        if prior_group:
+            for pmkt in prior_group:
+                for pbucket, pinfo in pmkt.get("buckets", {}).items():
+                    prior_day_mkt_prices[pbucket] = float(
+                        pinfo.get("price", 0) or 0
+                    )
+
+        prior_resolution = get_effective_prior_resolved_bucket(
+            city=city,
+            station_icao=station_icao,
+            prior_date=prior_date_str,
+            prior_day_market_prices=prior_day_mkt_prices or None,
+        )
+        _pa_prior_bucket = prior_resolution.get("bucket")
+        _pa_prior_mode = prior_resolution.get("mode", "none")
+        _pa_signal_available_at = prior_resolution.get("signal_available_at_utc")
+        _pa_signal_ts_source = prior_resolution.get("prior_signal_timestamp_source", "none")
+
+        # ── Prior-day gate ──────────────────────────────────────────────
+        # Classify the prior market into one of four states so we can
+        # both gate correctly AND diagnose clearly:
+        #   exists_resolved           — official/replay resolution available
+        #   exists_provisional        — provisional confirmation via WU + market
+        #   exists_unresolved         — market active in API, not yet resolved
+        #   missing_prior_market      — no evidence a market ever existed
+        #
+        # `grouped` only contains currently-active API markets, so a
+        # closed-but-resolved market won't appear there.  We combine
+        # `prior_group` (active) with `_pa_prior_mode` (resolution data)
+        # to classify.
+        _prior_signal_required = (days_ahead <= 1)
+
+        # Prior market existence: combine three evidence sources:
+        #   1. prior_group  — market still active in Polymarket API
+        #   2. _pa_prior_mode — resolution data found (official/provisional)
+        #   3. discovered_dates — market was discovered pre-hydration
+        #      (catches same-day markets filtered by hours_to_resolution)
+        _prior_in_grouped = bool(prior_group)
+        _prior_was_discovered = (
+            (station_icao, prior_date_str) in discovered_dates
+            if discovered_dates else False
+        )
+        _prior_known = _prior_in_grouped or _prior_was_discovered
+
+        if _pa_prior_mode in ("official", "replay_override"):
+            _prior_market_status = "exists_resolved"
+        elif _pa_prior_mode == "provisional_source_confirmed":
+            _prior_market_status = "exists_provisional"
+        elif _prior_known:
+            _prior_market_status = "exists_unresolved"
+        else:
+            _prior_market_status = "missing_prior_market"
+
+        _prior_signal_valid = False
+        _gating_reason = ""
+
+        if _pa_signal_available_at is not None:
+            try:
+                _signal_ts = datetime.fromisoformat(
+                    str(_pa_signal_available_at).replace("Z", "+00:00")
+                )
+                _now_utc = datetime.now(UTC)
+                _prior_signal_valid = (_signal_ts <= _now_utc)
+                if not _prior_signal_valid:
+                    _gating_reason = (
+                        f"signal_ts_in_future:{_pa_signal_available_at}"
+                    )
+            except (ValueError, TypeError):
+                _gating_reason = (
+                    f"signal_ts_unparseable:{_pa_signal_available_at}"
+                )
+        else:
+            if _prior_market_status == "missing_prior_market":
+                _gating_reason = "missing_prior_market"
+            elif _prior_market_status == "exists_unresolved":
+                _gating_reason = "prior_market_unresolved"
+            else:
+                _gating_reason = "no_signal_available_at_utc"
+
+        _execution_allowed: bool
+        _is_diagnostic_only: bool
+        _gating_result: str
+
+        if _prior_signal_required and not _prior_signal_valid:
+            _execution_allowed = False
+            _is_diagnostic_only = True
+            _gating_result = "blocked"
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: prior-day gate BLOCKED "
+                f"(status={_prior_market_status}, mode={_pa_prior_mode}, "
+                f"reason={_gating_reason})"
+            )
+        elif not _prior_signal_required and not _prior_signal_valid:
+            if ENABLE_EXPLORATORY_D2:
+                _execution_allowed = False
+                _is_diagnostic_only = True
+                _gating_result = "blocked"
+                _log.info(
+                    f"PRIME_ALPHA {city} {date_str}: D+{days_ahead} exploratory "
+                    f"(planning only, no execution)"
+                )
+            else:
+                _execution_allowed = False
+                _is_diagnostic_only = True
+                _gating_result = "blocked"
+                _log.info(
+                    f"PRIME_ALPHA {city} {date_str}: D+{days_ahead} no prior signal, "
+                    f"ENABLE_EXPLORATORY_D2=off, skipping"
+                )
+        else:
+            _execution_allowed = True
+            _is_diagnostic_only = False
+            _gating_result = "allowed"
+
         prime_plan = build_prime_alpha_plan(
             city=city,
             station_icao=station_icao,
@@ -1791,9 +1997,23 @@ def generate_mk2_ace_signals(
             predicted_display_temp=pred_display,
             unit=str(STATIONS.get(station_icao, {}).get("resolution_unit", "F")),
             model_weights=model_weights,
+            prior_resolved_bucket=_pa_prior_bucket,
         )
         prime_context = prime_plan.to_strategy_context()
+        prime_context["prior_resolution_mode"] = _pa_prior_mode
+        prime_context["prior_resolution_bucket"] = _pa_prior_bucket
+
         prime_cands: list[dict] = []
+        if slots_remaining == 0:
+            prime_plan.selected_buckets = []
+            prime_plan.notes.append("cross_run_cap_hit")
+        elif slots_remaining < len(prime_plan.selected_buckets):
+            trimmed = prime_plan.selected_buckets[:slots_remaining]
+            prime_plan.notes.append(
+                f"cross_run_cap_trimmed={','.join(prime_plan.selected_buckets)}"
+                f"->{''.join(trimmed)}"
+            )
+            prime_plan.selected_buckets = trimmed
         for bucket in prime_plan.selected_buckets:
             cand = cand_by_bucket.get(bucket)
             if cand is None:
@@ -1817,7 +2037,77 @@ def generate_mk2_ace_signals(
                 continue
             prime_cands.append(cand)
 
-        if prime_cands:
+        # ── Execution layer: gate → filter → size ──────────────────────
+        # If the gate blocked execution, keep candidate_buckets for
+        # diagnostics but produce no execution_buckets.
+        _pre_filter_cands = list(prime_cands)
+        exec_decision = None
+
+        if prime_cands and _execution_allowed:
+            exec_decision = apply_execution_filter(
+                candidate_buckets=[c["bucket"] for c in prime_cands],
+                bucket_market_prices={c["bucket"]: c["market_prob"] for c in prime_cands},
+                bucket_model_probs={c["bucket"]: c["model_prob"] for c in prime_cands},
+                selection_layer=prime_plan.selection_layer,
+                regime_strength=prime_plan.regime_strength,
+            )
+            prime_context["execution_decision"] = exec_decision.to_dict()
+            exec_set = set(exec_decision.execution_buckets)
+            prime_cands = [c for c in prime_cands if c["bucket"] in exec_set]
+
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: execution filter "
+                f"candidates={exec_decision.candidate_buckets} → "
+                f"buy={exec_decision.execution_buckets} "
+                f"(main={exec_decision.main_bucket} "
+                f"second={exec_decision.second_bucket} "
+                f"third={exec_decision.third_bucket})"
+            )
+        elif prime_cands and not _execution_allowed:
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: gate blocked execution, "
+                f"candidate_buckets={[c['bucket'] for c in prime_cands]} "
+                f"retained for diagnostics only"
+            )
+
+        _v3_candidate_buckets = (
+            [c["bucket"] for c in _pre_filter_cands]
+            if _pre_filter_cands
+            else prime_plan.selected_buckets
+        )
+        _V3_DECISION_BUFFER[f"{city}/{date_str}"] = {
+            "city": city,
+            "date": date_str,
+            "station_icao": station_icao,
+            "prior_resolution_mode": _pa_prior_mode,
+            "prior_resolution_bucket": _pa_prior_bucket,
+            "candidate_buckets": _v3_candidate_buckets,
+            "execution_buckets": exec_decision.execution_buckets if exec_decision else [],
+            "main_bucket": exec_decision.main_bucket if exec_decision else None,
+            "second_bucket": exec_decision.second_bucket if exec_decision else None,
+            "third_bucket": exec_decision.third_bucket if exec_decision else None,
+            "reason_main": exec_decision.reason_main if exec_decision else "",
+            "reason_second": exec_decision.reason_second if exec_decision else "",
+            "reason_third": exec_decision.reason_third if exec_decision else "",
+            "bridge_structure_detected": exec_decision.bridge_structure_detected if exec_decision else False,
+            "per_bucket_edge": exec_decision.per_bucket_edge if exec_decision else {},
+            "total_package_cost": round(exec_decision.total_package_cost, 4) if exec_decision else 0.0,
+            "total_package_edge": round(exec_decision.total_package_edge, 4) if exec_decision else 0.0,
+            "regime_strength": prime_plan.regime_strength,
+            "trust_source": prime_plan.trust_source,
+            "timestamp_utc": datetime.now(UTC).isoformat(),
+            "execution_allowed": _execution_allowed,
+            "is_diagnostic_only": _is_diagnostic_only,
+            "prior_signal_required": _prior_signal_required,
+            "prior_market_status": _prior_market_status,
+            "prior_date": prior_date_str,
+            "prior_signal_available_at_utc": _pa_signal_available_at,
+            "prior_signal_timestamp_source": _pa_signal_ts_source,
+            "gating_result": _gating_result,
+            "gating_reason": _gating_reason or None,
+        }
+
+        if prime_cands and _execution_allowed:
             combined_model_prob = min(0.95, sum(c["model_prob"] for c in prime_cands))
             combined_market_cost = sum(c["market_prob"] for c in prime_cands)
             combined_edge = combined_model_prob - combined_market_cost
@@ -1862,7 +2152,8 @@ def generate_mk2_ace_signals(
                 _log.info(
                     f"PRIME_ALPHA {city} {date_str}: paired bet "
                     f"P(any)={combined_model_prob:.1%} cost={combined_market_cost:.1%} "
-                    f"edge={combined_edge:+.1%} total=${total_kelly:.2f} → "
+                    f"edge={combined_edge:+.1%} total=${total_kelly:.2f} "
+                    f"prior_day={_pa_prior_mode} → "
                     + " | ".join(
                         f"{c['bucket']}(${round(max(total_kelly * (support_scores[c['bucket']]/total_support), KELLY_MIN_BET_USD), 2)})"
                         for c in prime_cands
@@ -1874,6 +2165,12 @@ def generate_mk2_ace_signals(
                     f"P(any)={combined_model_prob:.1%} cost={combined_market_cost:.1%} "
                     f"edge={combined_edge:+.1%}"
                 )
+        elif not _execution_allowed:
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: diagnostic only "
+                f"(gating_result={_gating_result}, "
+                f"selected={prime_plan.selected_buckets})"
+            )
         else:
             _log.info(
                 f"PRIME_ALPHA {city} {date_str}: no viable buckets "

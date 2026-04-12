@@ -383,6 +383,17 @@ class PolymarketDataClient:
         if higher_match:
             return f"{higher_match.group(1)}+"
 
+        lower_match = re.search(
+            r"(-?\d+)\s*(?:[°]?[fc])?\s*(?:or below|or lower|and below|or less)",
+            lower,
+        )
+        if lower_match:
+            return f"<={lower_match.group(1)}"
+
+        single_deg = re.search(r"(-?\d+)\s*°\s*[cf]", lower)
+        if single_deg:
+            return single_deg.group(1)
+
         return None
 
     async def hydrate_prices(self, markets: list[dict]) -> list[dict]:

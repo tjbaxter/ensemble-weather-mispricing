@@ -27,3 +27,6 @@ weather-bot/logs/*
 !weather-bot/data/positions_shadow_2a.json
 !weather-bot/data/positions_shadow_2b.json
 !weather-bot/data/positions_shadow_2c.json
+
+# CV notes — local only
+weather-bot/CV_QUANT_NOTES.md

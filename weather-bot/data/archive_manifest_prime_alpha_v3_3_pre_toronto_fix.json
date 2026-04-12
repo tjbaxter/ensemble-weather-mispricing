@@ -1,0 +1,26 @@
+{
+  "archive_name": "prime_alpha_v3_3_pre_toronto_fix",
+  "archived_at_utc": "2026-04-01T09:55:00+00:00",
+  "reason": "Methodology-driven reset. The active book contains a known-invalid Toronto 2026-04-01 14+ trade generated before the final Toronto fix stack was deployed. Root causes: (1) bucket parser failed to discover individual Celsius degree buckets, collapsing a full 11-bucket market to just '14+'; (2) Gaussian fallback created a live trade from a tail bucket instead of passing; (3) Celsius display rounding used an incorrect F-roundtrip (10.3°C → 11 instead of 10); (4) streak scoring used reconstructed floats instead of canonical accuracy cache. All trades in this era mix pre-fix and post-fix logic. Resetting to create a clean post-fix book.",
+  "prior_version": "v3.3",
+  "prior_reset_date": "2026-03-31",
+  "prior_reset_at_utc": "2026-03-31T08:25:00+00:00",
+  "new_version": "v3.4",
+  "new_reset_date": "2026-04-01",
+  "new_reset_at_utc": "2026-04-01T09:55:00+00:00",
+  "fix_deployed": "Five fixes deployed: (1) _extract_bucket_from_text now handles exact Celsius degree buckets and 'or below' patterns; (2) Gaussian fallback constrained to buckets within ±1°C/±2°F of working center, else PASS; (3) streak scoring uses canonical accuracy_rows_cache.json hit/miss booleans (same source as dashboard); (4) bimodal cluster detection on top-tier streak models — if dominant streak support splits between two separated buckets, selects both instead of averaging; (5) Celsius display rounding fixed: direct _round_half_up, no F-roundtrip. All fixes covered by 19 regression tests in test_toronto_regression.py.",
+  "archived_files": {
+    "positions": "positions_shadow_prime_alpha_v3_3_pre_toronto_fix_archive.json",
+    "prior_archive": "positions_shadow_prime_alpha_v3_pre_gate_archive.json"
+  },
+  "pre_toronto_fix_open_positions": {
+    "committed_count": 3,
+    "positions": [
+      {"city": "NYC", "date": "2026-04-01", "bucket": "72-73", "cost": 11.05, "entry": 0.054},
+      {"city": "NYC", "date": "2026-04-01", "bucket": "74-75", "cost": 11.05, "entry": 0.23},
+      {"city": "Toronto", "date": "2026-04-01", "bucket": "14+", "cost": 20.15, "entry": 0.20, "known_invalid": true, "reason": "bucket parser only discovered 14+; should have been 10 and 13"}
+    ],
+    "total_deployed_capital": 42.25,
+    "unrealized_pnl": -7.06
+  }
+}

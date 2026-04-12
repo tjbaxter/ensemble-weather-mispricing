@@ -16,6 +16,12 @@ except ImportError:  # pragma: no cover - optional runtime dependency fallback.
 def parse_bucket_bounds(bucket: str) -> tuple[float, float]:
     """Convert bucket label to half-open numeric interval."""
     clean = bucket.replace("°F", "").replace("°C", "").strip()
+    if clean.startswith("≤") or clean.startswith("<="):
+        high = float(clean.lstrip("≤<=").strip())
+        return float("-inf"), high + 1.0
+    if clean.startswith("≥") or clean.startswith(">="):
+        low = float(clean.lstrip("≥>=").strip())
+        return low, float("inf")
     if clean.endswith("+"):
         low = float(clean[:-1].strip())
         return low, float("inf")

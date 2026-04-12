@@ -44,9 +44,81 @@ from strategy.signals import (
     generate_mk2_ace_signals,
     generate_purdey_cavendish_signals,
     generate_top2_shadow_signals,
+    pop_v3_decision_buffer,
     set_signal_observability_context,
     summarize_top_missed_edges,
 )
+
+
+import json as _json
+import tempfile
+
+_V3_STATE_PATH = Path(__file__).resolve().parent.parent / "data" / "prime_alpha_v3_state.json"
+_V3_RESET_DATE = "2026-04-01"
+_V3_RESET_AT_UTC = "2026-04-01T09:55:00+00:00"
+_V3_VERSION = "v3.4"
+_v3_state_log = logging.getLogger("weather-bot.v3_state")
+
+
+def _persist_v3_dashboard_state(new_decisions: dict[str, dict]) -> None:
+    """Atomic merge of new V3 decisions into the state file.
+
+    Only called from the operational shadow runner — never from replay/tests.
+    """
+    if not new_decisions:
+        return
+
+    state: dict = {
+        "version": _V3_VERSION,
+        "reset_date": _V3_RESET_DATE,
+        "reset_at_utc": _V3_RESET_AT_UTC,
+        "latest_by_city": {},
+        "decisions": {},
+    }
+    try:
+        if _V3_STATE_PATH.exists():
+            state = _json.loads(_V3_STATE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+
+    for key, decision in new_decisions.items():
+        state["decisions"][key] = decision
+        city = decision.get("city", "")
+        if not city:
+            continue
+        if decision.get("execution_allowed") is False:
+            continue
+        existing_key = state.get("latest_by_city", {}).get(city, "")
+        existing_date = existing_key.split("/", 1)[-1] if existing_key else ""
+        new_date = decision.get("date", "")
+        if new_date >= existing_date:
+            state.setdefault("latest_by_city", {})[city] = key
+
+    state["version"] = _V3_VERSION
+    state["reset_date"] = _V3_RESET_DATE
+    state["reset_at_utc"] = _V3_RESET_AT_UTC
+
+    try:
+        _V3_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp_path = tempfile.mkstemp(
+            dir=str(_V3_STATE_PATH.parent), suffix=".tmp"
+        )
+        closed = False
+        try:
+            os.write(fd, (_json.dumps(state, indent=2) + "\n").encode("utf-8"))
+            os.close(fd)
+            closed = True
+            os.replace(tmp_path, str(_V3_STATE_PATH))
+        except BaseException:
+            if not closed:
+                os.close(fd)
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
+    except Exception as exc:
+        _v3_state_log.warning("Failed to persist V3 state: %s", exc)
 
 
 class ShadowTrader:
@@ -96,13 +168,21 @@ class ShadowTrader:
         bankroll: float,
         run_id: str | None = None,
         market_scan_id: str | None = None,
+        discovered_dates: set[tuple[str, str]] | None = None,
     ) -> None:
         """Execute one scan using shared market + forecast data."""
         if run_id is None:
             run_id = self.audit.new_run_id(f"shadow-{self.variant.lower()}")
         if self.variant in self._MK2_ACE_VARIANTS:
             set_signal_observability_context(market_scan_id, mode="paper")
-            all_shadows = generate_mk2_ace_signals(markets, forecasts, bankroll)
+            all_shadows = generate_mk2_ace_signals(
+                markets, forecasts, bankroll,
+                discovered_dates=discovered_dates,
+            )
+            if self.variant == "PRIME_ALPHA":
+                v3_buf = pop_v3_decision_buffer()
+                if v3_buf:
+                    _persist_v3_dashboard_state(v3_buf)
         elif self.variant in self._PURDEY_CAVENDISH_VARIANTS:
             set_signal_observability_context(market_scan_id, mode="paper")
             all_shadows = generate_purdey_cavendish_signals(markets, forecasts, bankroll)
@@ -328,6 +408,10 @@ class PaperTrader:
         # Latest hydrated markets — updated after every successful discovery run.
         # Shared with _run_shadows_from_cache so shadows can execute independently.
         self._cached_markets: list[dict] = []
+        # Pre-hydration set of (station_icao, date) pairs — includes markets
+        # that hydrate_prices may filter (e.g. same-day near-resolution).
+        # Used by Prime Alpha to classify prior-market existence.
+        self._discovered_dates: set[tuple[str, str]] = set()
         self._last_market_scan_id = ""
         self.shadows = [
             ShadowTrader("TOP2_EQUAL"),
@@ -358,6 +442,9 @@ class PaperTrader:
         discovery_stats: dict = {}
         try:
             markets = await self.market_client.discover_weather_markets()
+            self._discovered_dates = {
+                (m["station_icao"], m["date"]) for m in markets
+            }
             markets = await self.market_client.hydrate_prices(markets)
             stats = self.market_client.last_discovery_stats
             discovery_stats = stats
@@ -773,6 +860,7 @@ class PaperTrader:
                     shadow.portfolio.current_cash,
                     run_id=run_id,
                     market_scan_id=market_scan_id,
+                    discovered_dates=self._discovered_dates,
                 )
             except Exception as exc:
                 self.logger.warning(f"Shadow {shadow.variant} failed: {exc}")

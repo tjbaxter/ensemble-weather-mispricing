@@ -19,8 +19,10 @@ from __future__ import annotations
 import json
 import logging
 import math
+import os
 import re
 import sys
+import tempfile
 from dataclasses import dataclass, field, asdict
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -378,7 +380,22 @@ class DailyHighTracker:
 
     def _save(self) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._path.write_text(json.dumps(self._data, indent=2))
+        blob = json.dumps(self._data, separators=(",", ":"))
+        fd, tmp = tempfile.mkstemp(
+            dir=str(self._path.parent), suffix=".tmp"
+        )
+        try:
+            os.write(fd, blob.encode())
+            os.fsync(fd)
+            os.close(fd)
+            os.replace(tmp, str(self._path))
+        except BaseException:
+            os.close(fd)
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
 
     @staticmethod
     def _local_date(icao: str) -> str:
@@ -437,8 +454,11 @@ class DailyHighTracker:
                 rec["confidence"] = obs.parsed.confidence
                 rec["source"] = obs.parsed.source
 
-        self._save()
         return self._record_obj(key)
+
+    def save(self) -> None:
+        """Persist current state to disk.  Call once after a batch of update()s."""
+        self._save()
 
     def get_high(self, icao: str, local_date: str | None = None) -> DailyHighRecord | None:
         if local_date is None:

@@ -207,6 +207,25 @@ async def logs_index(_: web.Request) -> web.Response:
     return web.json_response({"files": files, "generated_at": datetime.now(UTC).isoformat()})
 
 
+def _cache_freshness_payload() -> dict:
+    """Return mtime-based freshness info for key data caches."""
+    files = {
+        "polymarket_cache": ROOT / "data" / "polymarket_cache.json",
+        "accuracy_rows_cache": ROOT / "data" / "accuracy_rows_cache.json",
+        "model_snapshot_log": ROOT / "data" / "model_snapshot_log.json",
+        "settlement_snapshot": ROOT / "data" / "settlement_snapshot.json",
+    }
+    result: dict = {}
+    for key, path in files.items():
+        if path.exists():
+            mtime = path.stat().st_mtime
+            result[f"{key}_updated_at"] = datetime.fromtimestamp(mtime, tz=UTC).isoformat()
+        else:
+            result[f"{key}_updated_at"] = None
+    result["generated_at"] = datetime.now(UTC).isoformat()
+    return result
+
+
 async def raw_file(request: web.Request) -> web.Response:
     raw_target = request.match_info.get("tail", "")
     rel_path = PurePosixPath(raw_target.lstrip("/")).as_posix()
@@ -214,6 +233,8 @@ async def raw_file(request: web.Request) -> web.Response:
         return web.json_response(_dashboard_sync_status_payload())
     if rel_path == "data/dashboard_overview.json":
         return web.json_response(_dashboard_overview_payload(request.app))
+    if rel_path == "data/cache_freshness.json":
+        return web.json_response(_cache_freshness_payload())
 
     rel_path, abs_path = _resolve_rel_path(raw_target)
     try:

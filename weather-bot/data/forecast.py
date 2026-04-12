@@ -42,6 +42,11 @@ def _normal_cdf(x: float, mu: float, sigma: float) -> float:
 
 def _parse_bucket_bounds(bucket: str) -> tuple[float | None, float | None]:
     clean = bucket.replace("°F", "").replace("°C", "").strip()
+    if clean.startswith("<=") or clean.startswith("\u2264"):
+        high = float(clean.lstrip("\u2264<=").strip())
+        return high - 100.0, high
+    if clean.startswith(">=") or clean.startswith("\u2265"):
+        return float(clean.lstrip("\u2265>=").strip()), None
     if "+" in clean:
         return float(clean.replace("+", "")), None
     if "-" in clean:
