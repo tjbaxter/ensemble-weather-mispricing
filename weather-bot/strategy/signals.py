@@ -38,6 +38,7 @@ from config.settings import (
     HARD_MIN_YES_ENTRY_PRICE,
     METAR_DANGER_POST_MINUTE,
     METAR_DANGER_PRE_MINUTE,
+    MIN_CITY_ACCURACY_THRESHOLD,
     MIN_FORECAST_CONFIDENCE,
     MIN_ORDER_USD,
     OVERROUND_REJECT_YES_THRESHOLD,
@@ -108,6 +109,41 @@ def _kelly_position_cap(bankroll: float) -> float:
 
 
 _PA_POSITIONS_PATH = Path(__file__).resolve().parents[1] / "data" / "positions_shadow_prime_alpha.json"
+_ACCURACY_CACHE_PATH = Path(__file__).resolve().parents[1] / "data" / "accuracy_rows_cache.json"
+
+# Cached city accuracy scores (computed once per process)
+_CITY_ACCURACY_CACHE: dict[str, float] = {}
+
+
+def _compute_city_accuracy(city: str) -> float:
+    """Compute historical model accuracy for a city from accuracy_rows_cache.json.
+    
+    Returns the win rate of best_ens_d1 predictions (fraction of days where
+    the ensemble correctly predicted the resolved bucket).
+    """
+    if city in _CITY_ACCURACY_CACHE:
+        return _CITY_ACCURACY_CACHE[city]
+    
+    try:
+        if not _ACCURACY_CACHE_PATH.exists():
+            return 0.0
+        raw = json.loads(_ACCURACY_CACHE_PATH.read_text(encoding="utf-8"))
+        rows = raw.get(city, [])
+        if not rows:
+            return 0.0
+        
+        wins = sum(1 for r in rows if r.get("best_ens_d1_win") is True)
+        total = sum(1 for r in rows if r.get("best_ens_d1_win") is not None)
+        
+        if total == 0:
+            return 0.0
+        
+        accuracy = wins / total
+        _CITY_ACCURACY_CACHE[city] = accuracy
+        return accuracy
+    except Exception:
+        return 0.0
+
 
 # V3 decision buffer: populated during PRIME_ALPHA processing, consumed by
 # the operational shadow runner for dashboard state persistence. Not populated
@@ -1988,6 +2024,19 @@ def generate_mk2_ace_signals(
             _is_diagnostic_only = False
             _gating_result = "allowed"
 
+        # ── City accuracy threshold filter ─────────────────────────────────
+        # Skip cities where historical model accuracy is below threshold.
+        # Still run diagnostics but block execution.
+        _city_accuracy = _compute_city_accuracy(city)
+        if _city_accuracy < MIN_CITY_ACCURACY_THRESHOLD and _city_accuracy > 0:
+            _execution_allowed = False
+            _is_diagnostic_only = True
+            _gating_result = "blocked_low_accuracy"
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: BLOCKED by accuracy filter "
+                f"(city accuracy {_city_accuracy:.1%} < {MIN_CITY_ACCURACY_THRESHOLD:.0%} threshold)"
+            )
+
         prime_plan = build_prime_alpha_plan(
             city=city,
             station_icao=station_icao,
@@ -2105,6 +2154,8 @@ def generate_mk2_ace_signals(
             "prior_signal_timestamp_source": _pa_signal_ts_source,
             "gating_result": _gating_result,
             "gating_reason": _gating_reason or None,
+            "city_accuracy": round(_city_accuracy, 4) if _city_accuracy else None,
+            "city_accuracy_threshold": MIN_CITY_ACCURACY_THRESHOLD,
         }
 
         if prime_cands and _execution_allowed:

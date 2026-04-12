@@ -216,6 +216,12 @@ TOP2_SHADOW_SPLIT_THRESHOLD = 0.65  # 2B: second/first ratio must be ≥ this to
 # Both reuse ENABLE_TOP2_SHADOWS as their on/off toggle.
 ENABLE_PURDEY_CAVENDISH = True
 
+# ── City Accuracy Filter ────────────────────────────────────────────────────
+# Skip cities where historical model ensemble accuracy is below this threshold.
+# Based on best_ens_d1_win from accuracy_rows_cache.json.
+# Wellington ~35%, Seoul ~42% → skip; Seattle ~55%, London ~56% → trade.
+MIN_CITY_ACCURACY_THRESHOLD = 0.50
+
 # Price scanner (Strategy 3) — continuous price monitoring between model runs
 PRICE_SCAN_ENABLED        = True
 PRICE_SCAN_INTERVAL       = 300      # seconds between price polls (5 min)
