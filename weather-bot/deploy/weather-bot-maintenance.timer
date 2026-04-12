@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly Weather Bot Maintenance (data retention, vacuum)
+
+[Timer]
+OnCalendar=Sun 03:00 UTC
+Persistent=true
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

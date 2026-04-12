@@ -1,0 +1,18 @@
+[Unit]
+Description=Weather Bot Maintenance Task
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=tombaxter
+WorkingDirectory=/home/tombaxter/weather-bot
+ExecStart=/home/tombaxter/weather-bot/venv/bin/python scripts/data_retention.py
+StandardOutput=append:/home/tombaxter/weather-bot/logs/maintenance.log
+StandardError=append:/home/tombaxter/weather-bot/logs/maintenance.log
+
+# Resource limits
+MemoryMax=512M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target
