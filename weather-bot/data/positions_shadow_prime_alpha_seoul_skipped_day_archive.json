@@ -1,0 +1,25 @@
+[
+  {
+    "market_id": "0xfbaf4f15b38cb723887806a24cf605e68b9c38bb3e1a590bbbbd439d51f2e5ed",
+    "token_id": "77402824764498868007831872492393760744973394558972319132913332639499202360066",
+    "side": "BUY_YES",
+    "city": "Seoul",
+    "station_icao": "RKSI",
+    "date": "2026-04-01",
+    "bucket": "16+",
+    "fill_price": 0.11,
+    "fill_size": 200.90909090909093,
+    "cost": 22.1,
+    "timestamp": "2026-03-31T11:02:45.028052+00:00",
+    "strategy": "PRIME_ALPHA",
+    "forecast_prob": 1.0,
+    "market_prob": 0.11,
+    "edge": 0.89,
+    "ev_per_bet": 202.273,
+    "spread_colour": "RED",
+    "det_spread": 5.3,
+    "model_values_json": "{\"ncep_aigfs025\":15.6,\"gfs_graphcast025\":14.3,\"ecmwf_ifs025\":12.4,\"ncep_hgefs025_ensemble_mean\":14.8,\"kma_gdps\":11.7,\"kma_seamless\":12.5,\"icon_seamless\":11.3,\"meteofrance_seamless\":10.3}",
+    "days_ahead": 1,
+    "kelly_fraction_used": 0.35
+  }
+]

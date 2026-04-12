@@ -1,0 +1,240 @@
+{
+  "generated_at_utc": "2026-04-12T22:18:45.525409+00:00",
+  "live_ts": "22:18 UTC",
+  "main_mode": "paper",
+  "strategies": [
+    {
+      "label": "\ud83e\udded Prime Alpha",
+      "strategy_key": "PRIME_ALPHA",
+      "color": "#FF6B6B",
+      "settled": {
+        "pnl": 0.0,
+        "wins": 0,
+        "losses": 0,
+        "n": 0,
+        "wr": 0.0,
+        "avg_win": 0.0,
+        "avg_loss": 0.0,
+        "staked": 0.0,
+        "roi": 0.0,
+        "provisional": 0,
+        "official": 0
+      },
+      "live": {
+        "unrealized_pnl": 0.0,
+        "open_count": 0,
+        "n_priced": 0,
+        "total_staked": 0.0,
+        "roi": 0.0
+      },
+      "detail": {
+        "positions": [],
+        "live_prices": {},
+        "live_ts": "22:18 UTC",
+        "settled_rows": []
+      }
+    }
+  ],
+  "chart": {
+    "series": [
+      {
+        "label": "\ud83e\udded Prime Alpha",
+        "strategy_key": "PRIME_ALPHA",
+        "color": "#FF6B6B",
+        "settled_points": [],
+        "live_total": null
+      }
+    ],
+    "live_point_x": "2026-04-12T22:18:45.525409+00:00",
+    "live_ts": "22:18 UTC"
+  },
+  "live_book": {
+    "rows": [
+      {
+        "City": "Buenos Aires",
+        "Date": "2026-04-13",
+        "Bucket": "23",
+        "Side": "BUY_YES",
+        "Entry": 0.14,
+        "Live": "\u2014",
+        "Cost": 7.95,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Ankara",
+        "Date": "2026-04-13",
+        "Bucket": "11",
+        "Side": "BUY_YES",
+        "Entry": 0.235,
+        "Live": "\u2014",
+        "Cost": 7.95,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Seoul",
+        "Date": "2026-04-13",
+        "Bucket": "23+",
+        "Side": "BUY_YES",
+        "Entry": 0.096,
+        "Live": "\u2014",
+        "Cost": 5.0,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Dallas",
+        "Date": "2026-04-13",
+        "Bucket": "80-81",
+        "Side": "BUY_YES",
+        "Entry": 0.167,
+        "Live": "\u2014",
+        "Cost": 5.0,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Atlanta",
+        "Date": "2026-04-14",
+        "Bucket": "82-83",
+        "Side": "BUY_YES",
+        "Entry": 0.135,
+        "Live": "\u2014",
+        "Cost": 5.0,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Buenos Aires",
+        "Date": "2026-04-13",
+        "Bucket": "25",
+        "Side": "BUY_NO",
+        "Entry": 0.635,
+        "Live": "\u2014",
+        "Cost": 7.95,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Ankara",
+        "Date": "2026-04-13",
+        "Bucket": "12",
+        "Side": "BUY_NO",
+        "Entry": 0.565,
+        "Live": "\u2014",
+        "Cost": 7.95,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "London",
+        "Date": "2026-04-13",
+        "Bucket": "15",
+        "Side": "BUY_NO",
+        "Entry": 0.595,
+        "Live": "\u2014",
+        "Cost": 5.0,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "London",
+        "Date": "2026-04-13",
+        "Bucket": "14",
+        "Side": "BUY_YES",
+        "Entry": 0.28,
+        "Live": "\u2014",
+        "Cost": 5.0,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Miami",
+        "Date": "2026-04-14",
+        "Bucket": "82-83",
+        "Side": "BUY_NO",
+        "Entry": 0.625,
+        "Live": "\u2014",
+        "Cost": 5.25,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Wellington",
+        "Date": "2026-04-13",
+        "Bucket": "20",
+        "Side": "BUY_NO",
+        "Entry": 0.585,
+        "Live": "\u2014",
+        "Cost": 5.53,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Atlanta",
+        "Date": "2026-04-14",
+        "Bucket": "84-85",
+        "Side": "BUY_NO",
+        "Entry": 0.64,
+        "Live": "\u2014",
+        "Cost": 5.0,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Toronto",
+        "Date": "2026-04-13",
+        "Bucket": "21",
+        "Side": "BUY_YES",
+        "Entry": 0.335,
+        "Live": "\u2014",
+        "Cost": 5.0,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "NYC",
+        "Date": "2026-04-13",
+        "Bucket": "74-75",
+        "Side": "BUY_YES",
+        "Entry": 0.315,
+        "Live": "\u2014",
+        "Cost": 5.0,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Seattle",
+        "Date": "2026-04-14",
+        "Bucket": "48-49",
+        "Side": "BUY_NO",
+        "Entry": 0.615,
+        "Live": "\u2014",
+        "Cost": 6.75,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Atlanta",
+        "Date": "2026-04-13",
+        "Bucket": "80-81",
+        "Side": "BUY_YES",
+        "Entry": 0.4,
+        "Live": "\u2014",
+        "Cost": 6.75,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Paris",
+        "Date": "2026-04-13",
+        "Bucket": "13",
+        "Side": "BUY_YES",
+        "Entry": 0.39,
+        "Live": "\u2014",
+        "Cost": 5.0,
+        "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Miami",
+        "Date": "2026-04-13",
+        "Bucket": "80-81",
+        "Side": "BUY_YES",
+        "Entry": 0.44,
+        "Live": "\u2014",
+        "Cost": 5.0,
+        "Unreal P&L": "\u2014"
+      }
+    ],
+    "open_count": 18,
+    "settled_count": 23,
+    "provisional_count": 0,
+    "stale_count": 0,
+    "live_ts": "22:18 UTC"
+  }
+}
