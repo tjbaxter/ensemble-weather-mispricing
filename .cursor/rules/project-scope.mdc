@@ -1,0 +1,32 @@
+---
+description: Enforce project scope — this repo is the ensemble weather mispricing bot, NOT the oil delta monitor
+alwaysApply: true
+---
+
+# Project Scope Guard
+
+This repository is **ensemble-weather-mispricing** — a weather-based prediction market bot. It has nothing to do with crude oil, Polymarket crude contracts, Databento CME CL futures, Black-Scholes call spreads, or the oil delta monitor dashboard.
+
+## If the user pastes anything about:
+
+- Oil delta monitor, crude probability dislocation monitor, CL.c.0
+- Databento live / MBP-1 / BBO-1s for crude oil
+- Polymarket crude/oil contracts (cl-above-90, etc.)
+- Black-Scholes tight call-spread fair value for oil
+- Next.js dashboard with Plotly charts for crude vs Poly probability
+- Live ingestor sidecar for oil data
+- Any file paths under `/Users/tombaxter/oil/oil-delta-monitor/`
+
+**STOP immediately.** Do not execute. Instead, tell the user:
+
+> "This looks like it belongs in the oil delta monitor project, not the weather bot. Wrong chat?"
+
+The oil delta monitor lives at `/Users/tombaxter/oil/oil-delta-monitor/` and is a separate project with its own Cursor workspace.
+
+## This repo's actual domain
+
+- Weather ensemble models (GFS, ECMWF, etc.)
+- Kalshi / weather prediction markets
+- Temperature / precipitation signals
+- City-level weather-based position management
+- Signal generation from weather forecast data

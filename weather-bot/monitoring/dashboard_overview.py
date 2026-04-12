@@ -38,82 +38,10 @@ MODEL_COLORS: dict[str, str] = {
 
 STRATEGY_SPECS: list[dict[str, str]] = [
     {
-        "label": "⚡ SINGLE",
-        "strategy_key": "SINGLE",
-        "source_kind": "main",
-        "source_value": "SINGLE",
-    },
-    {
-        "label": "🪜 LADDER",
-        "strategy_key": "LADDER",
-        "source_kind": "main",
-        "source_value": "LADDER",
-    },
-    {
-        "label": "🎯 CONVICTION",
-        "strategy_key": "CONVICTION",
-        "source_kind": "main",
-        "source_value": "CONVICTION",
-    },
-    {
-        "label": "2A Equal",
-        "strategy_key": "TOP2_EQUAL",
-        "source_kind": "shadow",
-        "source_value": "shadow_2a",
-    },
-    {
-        "label": "2B Cond",
-        "strategy_key": "TOP2_COND",
-        "source_kind": "shadow",
-        "source_value": "shadow_2b",
-    },
-    {
-        "label": "2C Prop",
-        "strategy_key": "TOP2_PROP",
-        "source_kind": "shadow",
-        "source_value": "shadow_2c",
-    },
-    {
-        "label": "🎯 PURDEY",
-        "strategy_key": "PURDEY_MK1",
-        "source_kind": "shadow",
-        "source_value": "shadow_purdey",
-    },
-    {
-        "label": "🌿 CAVENDISH",
-        "strategy_key": "CAVENDISH_MK1",
-        "source_kind": "shadow",
-        "source_value": "shadow_cavendish",
-    },
-    {
-        "label": "🎯 PURDEY MK2",
-        "strategy_key": "PURDEY_MK2",
-        "source_kind": "shadow",
-        "source_value": "shadow_purdey2",
-    },
-    {
-        "label": "🌱 CAVENDISH MK3",
-        "strategy_key": "CAVENDISH_MK3",
-        "source_kind": "shadow",
-        "source_value": "shadow_cavendish3",
-    },
-    {
-        "label": "💎 True Alpha",
-        "strategy_key": "TRUE_ALPHA",
-        "source_kind": "shadow",
-        "source_value": "shadow_true_alpha",
-    },
-    {
         "label": "🧭 Prime Alpha",
         "strategy_key": "PRIME_ALPHA",
         "source_kind": "shadow",
         "source_value": "shadow_prime_alpha",
-    },
-    {
-        "label": "🎲 Props Kelly",
-        "strategy_key": "PROPS_KELLY",
-        "source_kind": "shadow",
-        "source_value": "shadow_props_kelly",
     },
 ]
 
