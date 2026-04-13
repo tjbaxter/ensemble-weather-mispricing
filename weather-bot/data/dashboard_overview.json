@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-04-12T22:18:45.525409+00:00",
-  "live_ts": "22:18 UTC",
+  "generated_at_utc": "2026-04-13T08:27:06.027101+00:00",
+  "live_ts": "08:27 UTC",
   "main_mode": "paper",
   "strategies": [
     {
@@ -30,7 +30,7 @@
       "detail": {
         "positions": [],
         "live_prices": {},
-        "live_ts": "22:18 UTC",
+        "live_ts": "08:27 UTC",
         "settled_rows": []
       }
     }
@@ -45,8 +45,8 @@
         "live_total": null
       }
     ],
-    "live_point_x": "2026-04-12T22:18:45.525409+00:00",
-    "live_ts": "22:18 UTC"
+    "live_point_x": "2026-04-13T08:27:06.027101+00:00",
+    "live_ts": "08:27 UTC"
   },
   "live_book": {
     "rows": [
@@ -232,9 +232,9 @@
       }
     ],
     "open_count": 18,
-    "settled_count": 23,
+    "settled_count": 0,
     "provisional_count": 0,
-    "stale_count": 0,
-    "live_ts": "22:18 UTC"
+    "stale_count": 23,
+    "live_ts": "08:27 UTC"
   }
 }
