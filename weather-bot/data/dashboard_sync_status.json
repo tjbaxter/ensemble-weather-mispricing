@@ -28,7 +28,7 @@
     "logs/shadow_prime_alpha/resolved.csv",
     "logs/shadow_true_alpha/resolved.csv"
   ],
-  "last_fast_sync_utc": "2026-04-19 12:31:32 UTC",
+  "last_fast_sync_utc": "2026-04-19 16:09:32 UTC",
   "recovery_sync": true,
   "source": "vm_api_manual_refresh"
 }
