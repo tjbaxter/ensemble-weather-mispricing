@@ -381,6 +381,42 @@
         "meteofrance_arpege_world": 18.2
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 18.9,
+        "gfs_graphcast025": 20.7,
+        "icon_global": 20.0,
+        "icon_seamless": 20.0,
+        "jma_seamless": 19.4,
+        "meteofrance_arpege_world": 19.7
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 19.4,
+        "gfs_graphcast025": 20.9,
+        "icon_global": 20.5,
+        "icon_seamless": 20.5,
+        "jma_seamless": 20.4,
+        "meteofrance_arpege_world": 19.7
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 15.3,
+        "gfs_graphcast025": 15.8,
+        "icon_global": 14.6,
+        "icon_seamless": 13.9,
+        "jma_seamless": 16.4,
+        "meteofrance_arpege_world": 14.3
+      },
+      "spread": null
     }
   },
   "Atlanta": {
@@ -852,6 +888,45 @@
         "ncep_nbm_conus": 86.9
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 84.0,
+        "gem_global": 84.2,
+        "gem_seamless": 84.1,
+        "gfs_seamless": 85.3,
+        "icon_seamless": 85.0,
+        "ncep_aigfs025": 80.0,
+        "ncep_nbm_conus": 85.4
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 89.0,
+        "gem_global": 86.8,
+        "gem_seamless": 86.0,
+        "gfs_seamless": 90.2,
+        "icon_seamless": 86.8,
+        "ncep_aigfs025": 82.9,
+        "ncep_nbm_conus": 87.6
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 86.9,
+        "gem_global": 85.4,
+        "gem_seamless": 83.9,
+        "gfs_seamless": 86.8,
+        "icon_seamless": 85.7,
+        "ncep_aigfs025": 82.5,
+        "ncep_nbm_conus": 87.8
+      },
+      "spread": null
     }
   },
   "Austin": {
@@ -1029,6 +1104,45 @@
         "icon_seamless": 84.1,
         "ncep_aigfs025": 82.2,
         "ncep_nbm_conus": 83.3
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 84.3,
+        "gem_seamless": 90.2,
+        "gfs_graphcast025": 82.5,
+        "gfs_seamless": 88.5,
+        "icon_seamless": 87.2,
+        "ncep_aigfs025": 84.5,
+        "ncep_nbm_conus": 86.9
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 85.5,
+        "gem_seamless": 92.4,
+        "gfs_graphcast025": 81.9,
+        "gfs_seamless": 89.8,
+        "icon_seamless": 87.0,
+        "ncep_aigfs025": 82.6,
+        "ncep_nbm_conus": 87.5
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 74.5,
+        "gem_seamless": 80.9,
+        "gfs_graphcast025": 71.2,
+        "gfs_seamless": 77.9,
+        "icon_seamless": 72.9,
+        "ncep_aigfs025": 73.1,
+        "ncep_nbm_conus": 74.0
       },
       "spread": null
     }
@@ -1211,6 +1325,45 @@
         "ncep_aigfs025": 22.4
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "cma_grapes_global": 20.5,
+        "ecmwf_ifs025": 19.9,
+        "gfs_graphcast025": 23.0,
+        "gfs_seamless": 25.0,
+        "icon_seamless": 20.5,
+        "jma_seamless": 23.4,
+        "ncep_aigfs025": 20.9
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "cma_grapes_global": 25.1,
+        "ecmwf_ifs025": 23.9,
+        "gfs_graphcast025": 23.8,
+        "gfs_seamless": 24.6,
+        "icon_seamless": 23.6,
+        "jma_seamless": 26.2,
+        "ncep_aigfs025": 22.8
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "cma_grapes_global": 25.5,
+        "ecmwf_ifs025": 25.7,
+        "gfs_graphcast025": 27.0,
+        "gfs_seamless": 29.9,
+        "icon_seamless": 26.9,
+        "jma_seamless": 29.6,
+        "ncep_aigfs025": 25.2
+      },
+      "spread": null
     }
   },
   "Boston": {
@@ -1341,6 +1494,36 @@
         "gfs_seamless": 79.0,
         "icon_seamless": 88.8,
         "ncep_nbm_conus": 71.7
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 73.1,
+        "gfs_seamless": 66.6,
+        "icon_seamless": 90.8,
+        "ncep_nbm_conus": 60.2
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 67.9,
+        "gfs_seamless": 70.2,
+        "icon_seamless": 85.0,
+        "ncep_nbm_conus": 61.1
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 51.9,
+        "gfs_seamless": 51.1,
+        "icon_seamless": 53.1,
+        "ncep_nbm_conus": 53.4
       },
       "spread": null
     }
@@ -1825,6 +2008,45 @@
         "ukmo_seamless": 21.2
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "best_match": 23.1,
+        "ecmwf_ifs025": 22.0,
+        "gfs_seamless": 21.5,
+        "icon_seamless": 23.1,
+        "meteofrance_seamless": 19.6,
+        "ncep_aigfs025": 22.0,
+        "ukmo_seamless": 21.6
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "best_match": 24.1,
+        "ecmwf_ifs025": 23.2,
+        "gfs_seamless": 23.2,
+        "icon_seamless": 24.1,
+        "meteofrance_seamless": 22.8,
+        "ncep_aigfs025": 25.1,
+        "ukmo_seamless": 22.8
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "best_match": 25.9,
+        "ecmwf_ifs025": 25.6,
+        "gfs_seamless": 24.4,
+        "icon_seamless": 25.9,
+        "meteofrance_seamless": 24.5,
+        "ncep_aigfs025": 25.9,
+        "ukmo_seamless": 23.7
+      },
+      "spread": null
     }
   },
   "Chengdu": {
@@ -2004,6 +2226,45 @@
         "icon_seamless": 23.0,
         "jma_seamless": 23.6,
         "ncep_aigfs025": 21.1
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "cma_grapes_global": 25.7,
+        "ecmwf_ifs025": 27.1,
+        "gfs_graphcast025": 24.3,
+        "gfs_seamless": 20.8,
+        "icon_seamless": 22.6,
+        "jma_seamless": 25.3,
+        "ncep_aigfs025": 23.2
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "cma_grapes_global": 26.3,
+        "ecmwf_ifs025": 28.2,
+        "gfs_graphcast025": 26.6,
+        "gfs_seamless": 26.7,
+        "icon_seamless": 26.5,
+        "jma_seamless": 29.0,
+        "ncep_aigfs025": 27.4
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "cma_grapes_global": 25.1,
+        "ecmwf_ifs025": 28.2,
+        "gfs_graphcast025": 27.1,
+        "gfs_seamless": 26.5,
+        "icon_seamless": 27.8,
+        "jma_seamless": 27.2,
+        "ncep_aigfs025": 27.5
       },
       "spread": null
     }
@@ -2496,6 +2757,45 @@
         "ncep_nbm_conus": 68.9
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "best_match": 77.0,
+        "ecmwf_ifs025": 74.0,
+        "gem_seamless": 68.7,
+        "gfs_seamless": 77.0,
+        "icon_seamless": 70.4,
+        "ncep_aigfs025": 71.4,
+        "ncep_nbm_conus": 71.8
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "best_match": 81.8,
+        "ecmwf_ifs025": 71.4,
+        "gem_seamless": 69.1,
+        "gfs_seamless": 81.8,
+        "icon_seamless": 78.5,
+        "ncep_aigfs025": 82.7,
+        "ncep_nbm_conus": 73.9
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "best_match": 63.3,
+        "ecmwf_ifs025": 63.7,
+        "gem_seamless": 65.3,
+        "gfs_seamless": 63.3,
+        "icon_seamless": 66.7,
+        "ncep_aigfs025": 65.0,
+        "ncep_nbm_conus": 66.9
+      },
+      "spread": null
     }
   },
   "Chongqing": {
@@ -2675,6 +2975,45 @@
         "icon_seamless": 20.4,
         "jma_seamless": 21.5,
         "ncep_aigfs025": 20.4
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "cma_grapes_global": 24.7,
+        "ecmwf_ifs025": 26.2,
+        "gfs_graphcast025": 24.2,
+        "gfs_seamless": 22.3,
+        "icon_seamless": 22.2,
+        "jma_seamless": 22.9,
+        "ncep_aigfs025": 23.5
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "cma_grapes_global": 23.9,
+        "ecmwf_ifs025": 26.1,
+        "gfs_graphcast025": 25.3,
+        "gfs_seamless": 25.7,
+        "icon_seamless": 26.1,
+        "jma_seamless": 25.2,
+        "ncep_aigfs025": 24.9
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "cma_grapes_global": 27.0,
+        "ecmwf_ifs025": 28.8,
+        "gfs_graphcast025": 28.1,
+        "gfs_seamless": 24.9,
+        "icon_seamless": 28.1,
+        "jma_seamless": 25.7,
+        "ncep_aigfs025": 28.1
       },
       "spread": null
     }
@@ -3173,6 +3512,45 @@
         "ncep_nbm_conus": 78.2
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 83.6,
+        "gem_regional": 84.5,
+        "gem_seamless": 84.5,
+        "gfs_seamless": 87.0,
+        "icon_seamless": 85.2,
+        "ncep_aigfs025": 83.4,
+        "ncep_nbm_conus": 86.1
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 82.2,
+        "gem_regional": 85.1,
+        "gem_seamless": 85.1,
+        "gfs_seamless": 80.0,
+        "icon_seamless": 82.6,
+        "ncep_aigfs025": 80.0,
+        "ncep_nbm_conus": 82.6
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 74.8,
+        "gem_regional": 79.6,
+        "gem_seamless": 79.6,
+        "gfs_seamless": 73.5,
+        "icon_seamless": 74.9,
+        "ncep_aigfs025": 74.6,
+        "ncep_nbm_conus": 74.4
+      },
+      "spread": null
     }
   },
   "Denver": {
@@ -3303,6 +3681,36 @@
         "gfs_seamless": 64.1,
         "icon_seamless": 64.7,
         "ncep_nbm_conus": 65.8
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 74.0,
+        "gfs_seamless": 71.5,
+        "icon_seamless": 73.7,
+        "ncep_nbm_conus": 73.1
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 58.3,
+        "gfs_seamless": 58.7,
+        "icon_seamless": 56.9,
+        "ncep_nbm_conus": 55.4
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 54.5,
+        "gfs_seamless": 56.8,
+        "icon_seamless": 60.1,
+        "ncep_nbm_conus": 54.2
       },
       "spread": null
     }
@@ -3471,6 +3879,42 @@
         "icon_seamless": 27.4,
         "jma_seamless": 28.7,
         "ncep_aigfs025": 29.8
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 27.7,
+        "gfs_graphcast025": 30.3,
+        "gfs_seamless": 24.9,
+        "icon_seamless": 27.5,
+        "jma_seamless": 28.5,
+        "ncep_aigfs025": 29.5
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 27.4,
+        "gfs_graphcast025": 29.5,
+        "gfs_seamless": 25.2,
+        "icon_seamless": 27.1,
+        "jma_seamless": 28.7,
+        "ncep_aigfs025": 28.7
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 28.0,
+        "gfs_graphcast025": 29.9,
+        "gfs_seamless": 26.9,
+        "icon_seamless": 27.8,
+        "jma_seamless": 28.8,
+        "ncep_aigfs025": 29.6
       },
       "spread": null
     }
@@ -3650,6 +4094,45 @@
         "icon_seamless": 86.1,
         "ncep_aigfs025": 81.4,
         "ncep_nbm_conus": 83.5
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 83.8,
+        "gem_seamless": 92.5,
+        "gfs_graphcast025": 83.5,
+        "gfs_seamless": 88.6,
+        "icon_seamless": 88.1,
+        "ncep_aigfs025": 82.9,
+        "ncep_nbm_conus": 86.2
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 81.5,
+        "gem_seamless": 89.7,
+        "gfs_graphcast025": 82.8,
+        "gfs_seamless": 84.5,
+        "icon_seamless": 85.9,
+        "ncep_aigfs025": 81.0,
+        "ncep_nbm_conus": 84.1
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 82.1,
+        "gem_seamless": 91.5,
+        "gfs_graphcast025": 80.6,
+        "gfs_seamless": 86.5,
+        "icon_seamless": 83.0,
+        "ncep_aigfs025": 80.5,
+        "ncep_nbm_conus": 83.2
       },
       "spread": null
     }
@@ -4264,17 +4747,65 @@
       "spread": 1.9
     },
     "2026-04-15": {
-      "logged_at": "2026-04-12T19:14:00.135695+00:00",
+      "logged_at": "2026-04-13T19:10:02.582886+00:00",
       "preds": {
-        "dmi_seamless": 16.0,
-        "ecmwf_ifs025": 16.8,
-        "icon_seamless": 14.8,
-        "meteofrance_seamless": 15.5,
-        "ncep_aigfs025": 14.1,
-        "ukmo_global_deterministic_10km": 16.0,
-        "ukmo_seamless": 16.0
+        "dmi_seamless": 15.7,
+        "ecmwf_ifs025": 16.9,
+        "icon_seamless": 17.4,
+        "meteofrance_arome_france": 16.1,
+        "meteofrance_arome_france_hd": 16.3,
+        "meteofrance_seamless": 16.3,
+        "ncep_aigfs025": 14.7,
+        "ukmo_global_deterministic_10km": 16.6,
+        "ukmo_seamless": 16.7,
+        "ukmo_uk_deterministic_2km": 16.7
       },
-      "spread": 1.2
+      "spread": 1.7
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-14T19:10:01.549261+00:00",
+      "preds": {
+        "dmi_seamless": 16.7,
+        "ecmwf_ifs025": 17.0,
+        "icon_seamless": 17.1,
+        "meteofrance_arome_france": 16.7,
+        "meteofrance_arome_france_hd": 17.2,
+        "meteofrance_seamless": 17.2,
+        "ncep_aigfs025": 15.7,
+        "ukmo_global_deterministic_10km": 15.5,
+        "ukmo_seamless": 16.3,
+        "ukmo_uk_deterministic_2km": 16.3
+      },
+      "spread": 0.5
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-15T19:10:02.620984+00:00",
+      "preds": {
+        "dmi_seamless": 18.4,
+        "ecmwf_ifs025": 18.0,
+        "icon_seamless": 17.3,
+        "meteofrance_arome_france": 17.8,
+        "meteofrance_arome_france_hd": 18.3,
+        "meteofrance_seamless": 18.3,
+        "ncep_aigfs025": 16.1,
+        "ukmo_global_deterministic_10km": 17.6,
+        "ukmo_seamless": 17.6,
+        "ukmo_uk_deterministic_2km": 17.6
+      },
+      "spread": 1.1
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "dmi_seamless": 17.5,
+        "ecmwf_ifs025": 17.5,
+        "icon_seamless": 16.9,
+        "meteofrance_seamless": 17.6,
+        "ncep_aigfs025": 15.6,
+        "ukmo_global_deterministic_10km": 15.8,
+        "ukmo_seamless": 15.8
+      },
+      "spread": 0.7
     }
   },
   "Los Angeles": {
@@ -4453,6 +4984,45 @@
         "icon_seamless": 67.4,
         "ncep_aigfs025": 69.8,
         "ncep_nbm_conus": 66.5
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 76.3,
+        "gem_seamless": 73.5,
+        "gfs_graphcast025": 64.9,
+        "gfs_seamless": 68.1,
+        "icon_seamless": 67.1,
+        "ncep_aigfs025": 67.3,
+        "ncep_nbm_conus": 66.4
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 79.8,
+        "gem_seamless": 72.8,
+        "gfs_graphcast025": 72.0,
+        "gfs_seamless": 71.9,
+        "icon_seamless": 73.0,
+        "ncep_aigfs025": 73.2,
+        "ncep_nbm_conus": 69.1
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 85.4,
+        "gem_seamless": 78.1,
+        "gfs_graphcast025": 76.2,
+        "gfs_seamless": 71.4,
+        "icon_seamless": 72.7,
+        "ncep_aigfs025": 75.4,
+        "ncep_nbm_conus": 72.4
       },
       "spread": null
     }
@@ -4639,6 +5209,48 @@
         "ncep_aigfs025": 37.9
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 40.3,
+        "gfs_graphcast025": 40.6,
+        "gfs_seamless": 42.8,
+        "icon_global": 40.6,
+        "icon_seamless": 40.6,
+        "jma_seamless": 41.7,
+        "meteofrance_arpege_world": 42.4,
+        "ncep_aigfs025": 38.2
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 41.2,
+        "gfs_graphcast025": 40.9,
+        "gfs_seamless": 41.8,
+        "icon_global": 41.2,
+        "icon_seamless": 41.2,
+        "jma_seamless": 42.8,
+        "meteofrance_arpege_world": 42.3,
+        "ncep_aigfs025": 37.6
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 41.7,
+        "gfs_graphcast025": 42.3,
+        "gfs_seamless": 44.5,
+        "icon_global": 41.8,
+        "icon_seamless": 41.8,
+        "jma_seamless": 44.0,
+        "meteofrance_arpege_world": 43.8,
+        "ncep_aigfs025": 39.1
+      },
+      "spread": null
     }
   },
   "Madrid": {
@@ -4821,6 +5433,48 @@
         "meteofrance_seamless": 23.3,
         "ncep_aigfs025": 22.5,
         "ukmo_seamless": 21.8
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "dmi_seamless": 25.4,
+        "ecmwf_ifs025": 25.4,
+        "gfs_seamless": 24.5,
+        "icon_seamless": 25.0,
+        "meteofrance_arpege_world": 25.3,
+        "meteofrance_seamless": 25.3,
+        "ncep_aigfs025": 24.4,
+        "ukmo_seamless": 23.7
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "dmi_seamless": 26.8,
+        "ecmwf_ifs025": 26.8,
+        "gfs_seamless": 25.0,
+        "icon_seamless": 26.0,
+        "meteofrance_arpege_world": 26.9,
+        "meteofrance_seamless": 26.7,
+        "ncep_aigfs025": 26.0,
+        "ukmo_seamless": 25.8
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "dmi_seamless": 28.0,
+        "ecmwf_ifs025": 28.0,
+        "gfs_seamless": 27.1,
+        "icon_seamless": 27.2,
+        "meteofrance_arpege_world": 28.5,
+        "meteofrance_seamless": 28.2,
+        "ncep_aigfs025": 26.9,
+        "ukmo_seamless": 26.7
       },
       "spread": null
     }
@@ -5355,6 +6009,51 @@
         "ncep_nbm_conus": 79.6
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 81.1,
+        "gem_global": 82.3,
+        "gem_regional": 84.7,
+        "gem_seamless": 84.7,
+        "gfs_graphcast025": 81.1,
+        "gfs_seamless": 82.0,
+        "icon_seamless": 83.3,
+        "ncep_aigfs025": 82.4,
+        "ncep_nbm_conus": 81.2
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 81.9,
+        "gem_global": 84.2,
+        "gem_regional": 85.4,
+        "gem_seamless": 85.4,
+        "gfs_graphcast025": 82.9,
+        "gfs_seamless": 83.1,
+        "icon_seamless": 84.8,
+        "ncep_aigfs025": 84.0,
+        "ncep_nbm_conus": 83.5
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 82.8,
+        "gem_global": 84.7,
+        "gem_regional": 86.2,
+        "gem_seamless": 86.2,
+        "gfs_graphcast025": 83.5,
+        "gfs_seamless": 85.3,
+        "icon_seamless": 85.2,
+        "ncep_aigfs025": 86.1,
+        "ncep_nbm_conus": 84.5
+      },
+      "spread": null
     }
   },
   "Milan": {
@@ -5533,6 +6232,45 @@
         "meteofrance_seamless": 19.4,
         "ncep_aigfs025": 19.7,
         "ukmo_seamless": 20.8
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "dmi_seamless": 22.6,
+        "ecmwf_ifs025": 22.5,
+        "icon_eu": 23.0,
+        "icon_seamless": 23.0,
+        "meteofrance_seamless": 21.5,
+        "ncep_aigfs025": 22.4,
+        "ukmo_seamless": 22.6
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "dmi_seamless": 22.3,
+        "ecmwf_ifs025": 22.6,
+        "icon_eu": 23.2,
+        "icon_seamless": 23.2,
+        "meteofrance_seamless": 23.1,
+        "ncep_aigfs025": 22.5,
+        "ukmo_seamless": 22.6
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "dmi_seamless": 22.8,
+        "ecmwf_ifs025": 22.7,
+        "icon_eu": 22.4,
+        "icon_seamless": 22.4,
+        "meteofrance_seamless": 24.1,
+        "ncep_aigfs025": 23.6,
+        "ukmo_seamless": 23.8
       },
       "spread": null
     }
@@ -5717,6 +6455,48 @@
         "meteofrance_seamless": 14.2,
         "ncep_aigfs025": 14.1,
         "ukmo_seamless": 17.4
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "dmi_seamless": 16.9,
+        "ecmwf_ifs025": 17.0,
+        "icon_eu": 17.1,
+        "icon_seamless": 17.1,
+        "knmi_seamless": 16.9,
+        "meteofrance_seamless": 16.3,
+        "ncep_aigfs025": 16.4,
+        "ukmo_seamless": 17.5
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "dmi_seamless": 18.3,
+        "ecmwf_ifs025": 18.6,
+        "icon_eu": 19.0,
+        "icon_seamless": 19.0,
+        "knmi_seamless": 18.3,
+        "meteofrance_seamless": 18.1,
+        "ncep_aigfs025": 19.3,
+        "ukmo_seamless": 19.0
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "dmi_seamless": 19.3,
+        "ecmwf_ifs025": 19.7,
+        "icon_eu": 19.3,
+        "icon_seamless": 19.3,
+        "knmi_seamless": 19.3,
+        "meteofrance_seamless": 19.3,
+        "ncep_aigfs025": 21.2,
+        "ukmo_seamless": 19.2
       },
       "spread": null
     }
@@ -6221,13 +7001,49 @@
       "spread": null
     },
     "2026-04-15": {
-      "logged_at": "2026-04-12T19:14:00.135695+00:00",
+      "logged_at": "2026-04-13T19:10:02.582886+00:00",
       "preds": {
-        "gem_seamless": 89.4,
-        "gfs_graphcast025": 85.0,
-        "icon_seamless": 87.0,
-        "ncep_aigfs025": 86.3,
-        "ncep_nbm_conus": 83.9
+        "gem_hrdps_continental": 60.9,
+        "gem_seamless": 89.8,
+        "gfs_graphcast025": 85.7,
+        "icon_seamless": 86.1,
+        "ncep_aigfs025": 85.9,
+        "ncep_nbm_conus": 83.8
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-14T19:10:01.549261+00:00",
+      "preds": {
+        "gem_hrdps_continental": 60.3,
+        "gem_seamless": 79.3,
+        "gfs_graphcast025": 78.8,
+        "icon_seamless": 82.2,
+        "ncep_aigfs025": 80.3,
+        "ncep_nbm_conus": 83.0
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-15T19:10:02.620984+00:00",
+      "preds": {
+        "gem_hrdps_continental": 70.4,
+        "gem_seamless": 81.5,
+        "gfs_graphcast025": 78.7,
+        "icon_seamless": 81.4,
+        "ncep_aigfs025": 78.5,
+        "ncep_nbm_conus": 76.5
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "gem_seamless": 65.1,
+        "gfs_graphcast025": 61.4,
+        "icon_seamless": 67.2,
+        "ncep_aigfs025": 62.0,
+        "ncep_nbm_conus": 64.9
       },
       "spread": null
     }
@@ -6804,6 +7620,48 @@
         "ukmo_seamless": 17.8
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "dmi_seamless": 16.9,
+        "ecmwf_ifs025": 17.4,
+        "icon_seamless": 18.0,
+        "jma_seamless": 17.4,
+        "meteofrance_seamless": 19.1,
+        "metno_seamless": 16.9,
+        "ncep_aigfs025": 17.1,
+        "ukmo_seamless": 17.3
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "dmi_seamless": 18.3,
+        "ecmwf_ifs025": 18.6,
+        "icon_seamless": 20.0,
+        "jma_seamless": 18.0,
+        "meteofrance_seamless": 20.1,
+        "metno_seamless": 18.3,
+        "ncep_aigfs025": 19.1,
+        "ukmo_seamless": 17.8
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "dmi_seamless": 21.0,
+        "ecmwf_ifs025": 21.5,
+        "icon_seamless": 23.1,
+        "jma_seamless": 15.9,
+        "meteofrance_seamless": 21.9,
+        "metno_seamless": 21.0,
+        "ncep_aigfs025": 17.6,
+        "ukmo_seamless": 20.4
+      },
+      "spread": null
     }
   },
   "San Francisco": {
@@ -6984,6 +7842,45 @@
         "ncep_nbm_conus": 62.2
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 65.6,
+        "gem_seamless": 61.4,
+        "gfs_graphcast025": 64.7,
+        "gfs_seamless": 61.8,
+        "icon_seamless": 63.6,
+        "ncep_aigfs025": 65.6,
+        "ncep_nbm_conus": 64.3
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 64.1,
+        "gem_seamless": 63.1,
+        "gfs_graphcast025": 66.5,
+        "gfs_seamless": 68.7,
+        "icon_seamless": 64.1,
+        "ncep_aigfs025": 70.1,
+        "ncep_nbm_conus": 66.7
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 64.2,
+        "gem_seamless": 64.7,
+        "gfs_graphcast025": 67.7,
+        "gfs_seamless": 69.8,
+        "icon_seamless": 60.6,
+        "ncep_aigfs025": 69.3,
+        "ncep_nbm_conus": 66.7
+      },
+      "spread": null
     }
   },
   "Sao Paulo": {
@@ -7114,6 +8011,36 @@
         "gem_global": 30.3,
         "gfs_seamless": 28.0,
         "icon_seamless": 26.2
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 28.4,
+        "gem_global": 30.0,
+        "gfs_seamless": 29.1,
+        "icon_seamless": 27.4
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 31.1,
+        "gem_global": 31.8,
+        "gfs_seamless": 29.0,
+        "icon_seamless": 27.9
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 30.5,
+        "gem_global": 32.2,
+        "gfs_seamless": 28.0,
+        "icon_seamless": 27.8
       },
       "spread": null
     }
@@ -7644,6 +8571,45 @@
         "ncep_nbm_conus": 46.7
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "dmi_seamless": 55.7,
+        "ecmwf_ifs025": 53.5,
+        "gem_seamless": 53.2,
+        "gfs_seamless": 54.6,
+        "icon_seamless": 53.6,
+        "knmi_seamless": 55.7,
+        "ncep_nbm_conus": 53.3
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "dmi_seamless": 54.6,
+        "ecmwf_ifs025": 52.7,
+        "gem_seamless": 54.2,
+        "gfs_seamless": 54.3,
+        "icon_seamless": 56.2,
+        "knmi_seamless": 54.6,
+        "ncep_nbm_conus": 55.1
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "dmi_seamless": 65.6,
+        "ecmwf_ifs025": 64.3,
+        "gem_seamless": 60.1,
+        "gfs_seamless": 64.4,
+        "icon_seamless": 61.5,
+        "knmi_seamless": 65.6,
+        "ncep_nbm_conus": 62.8
+      },
+      "spread": null
     }
   },
   "Seoul": {
@@ -8159,6 +9125,42 @@
         "ncep_hgefs025_ensemble_mean": 21.5
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 22.6,
+        "gfs_graphcast025": 24.3,
+        "icon_seamless": 20.9,
+        "meteofrance_seamless": 18.8,
+        "ncep_aigfs025": 23.5,
+        "ncep_hgefs025_ensemble_mean": 23.0
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 17.4,
+        "gfs_graphcast025": 15.7,
+        "icon_seamless": 16.1,
+        "meteofrance_seamless": 14.5,
+        "ncep_aigfs025": 17.2,
+        "ncep_hgefs025_ensemble_mean": 16.9
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 19.5,
+        "gfs_graphcast025": 22.4,
+        "icon_seamless": 20.0,
+        "meteofrance_seamless": 17.7,
+        "ncep_aigfs025": 22.7,
+        "ncep_hgefs025_ensemble_mean": 21.5
+      },
+      "spread": null
     }
   },
   "Shanghai": {
@@ -8338,6 +9340,44 @@
         "icon_seamless": 18.5,
         "jma_seamless": 15.1,
         "ncep_aigfs025": 19.4
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "cma_grapes_global": 18.6,
+        "ecmwf_ifs025": 17.9,
+        "gfs_graphcast025": 17.7,
+        "gfs_seamless": 19.5,
+        "icon_seamless": 16.2,
+        "jma_seamless": 16.0,
+        "ncep_aigfs025": 17.6
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "cma_grapes_global": 18.9,
+        "ecmwf_ifs025": 20.4,
+        "gfs_graphcast025": 20.7,
+        "gfs_seamless": 20.4,
+        "icon_seamless": 17.9,
+        "jma_seamless": 16.1,
+        "ncep_aigfs025": 20.2
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 19.2,
+        "gfs_graphcast025": 18.6,
+        "gfs_seamless": 18.7,
+        "icon_seamless": 17.6,
+        "jma_seamless": 16.0,
+        "ncep_aigfs025": 18.4
       },
       "spread": null
     }
@@ -8520,6 +9560,45 @@
         "ncep_aigfs025": 30.4
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "cma_grapes_global": 27.4,
+        "ecmwf_ifs025": 28.2,
+        "gfs_graphcast025": 32.2,
+        "gfs_seamless": 30.0,
+        "icon_seamless": 26.5,
+        "jma_seamless": 28.6,
+        "ncep_aigfs025": 30.0
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "cma_grapes_global": 27.7,
+        "ecmwf_ifs025": 27.0,
+        "gfs_graphcast025": 30.4,
+        "gfs_seamless": 31.2,
+        "icon_seamless": 26.4,
+        "jma_seamless": 28.8,
+        "ncep_aigfs025": 28.7
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "cma_grapes_global": 30.4,
+        "ecmwf_ifs025": 28.2,
+        "gfs_graphcast025": 31.4,
+        "gfs_seamless": 32.9,
+        "icon_seamless": 28.1,
+        "jma_seamless": 28.8,
+        "ncep_aigfs025": 30.1
+      },
+      "spread": null
     }
   },
   "Singapore": {
@@ -8685,6 +9764,42 @@
         "gfs_seamless": 31.6,
         "icon_seamless": 32.0,
         "jma_seamless": 29.0,
+        "ncep_aigfs025": 29.6
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 30.2,
+        "gfs_graphcast025": 32.1,
+        "gfs_seamless": 31.3,
+        "icon_seamless": 32.1,
+        "jma_seamless": 28.9,
+        "ncep_aigfs025": 31.1
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 29.3,
+        "gfs_graphcast025": 32.1,
+        "gfs_seamless": 31.6,
+        "icon_seamless": 31.1,
+        "jma_seamless": 28.7,
+        "ncep_aigfs025": 30.7
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 29.7,
+        "gfs_graphcast025": 31.3,
+        "gfs_seamless": 31.3,
+        "icon_seamless": 32.0,
+        "jma_seamless": 28.7,
         "ncep_aigfs025": 29.6
       },
       "spread": null
@@ -8869,6 +9984,44 @@
         "ncep_aigfs025": 28.6
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "cma_grapes_global": 28.7,
+        "ecmwf_ifs025": 29.3,
+        "gfs_graphcast025": 27.7,
+        "gfs_seamless": 27.8,
+        "icon_seamless": 27.9,
+        "jma_seamless": 26.0,
+        "ncep_aigfs025": 28.3
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "cma_grapes_global": 27.3,
+        "ecmwf_ifs025": 27.7,
+        "gfs_graphcast025": 27.7,
+        "gfs_seamless": 27.9,
+        "icon_seamless": 27.9,
+        "jma_seamless": 26.9,
+        "ncep_aigfs025": 28.3
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "cma_grapes_global": 24.3,
+        "ecmwf_ifs025": 26.3,
+        "gfs_graphcast025": 24.0,
+        "gfs_seamless": 25.7,
+        "icon_seamless": 24.5,
+        "jma_seamless": 23.6
+      },
+      "spread": null
     }
   },
   "Tel Aviv": {
@@ -9038,6 +10191,45 @@
         "jma_seamless": 34.0,
         "meteofrance_arpege_world": 33.0,
         "ncep_aigfs025": 34.4
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 34.4,
+        "gfs_seamless": 34.4,
+        "icon_global": 33.6,
+        "icon_seamless": 35.4,
+        "jma_seamless": 34.5,
+        "meteofrance_arpege_world": 34.5,
+        "ncep_aigfs025": 36.5
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 36.8,
+        "gfs_seamless": 34.3,
+        "icon_global": 32.1,
+        "icon_seamless": 34.2,
+        "jma_seamless": 30.6,
+        "meteofrance_arpege_world": 32.4,
+        "ncep_aigfs025": 34.1
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 26.6,
+        "gfs_seamless": 24.8,
+        "icon_global": 24.2,
+        "icon_seamless": 25.1,
+        "jma_seamless": 24.4,
+        "meteofrance_arpege_world": 27.7,
+        "ncep_aigfs025": 26.8
       },
       "spread": null
     }
@@ -9219,6 +10411,45 @@
         "jma_gsm": 19.8,
         "jma_seamless": 20.3,
         "ncep_aigfs025": 19.6
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 19.9,
+        "gfs_graphcast025": 19.0,
+        "gfs_seamless": 20.5,
+        "icon_seamless": 24.8,
+        "jma_gsm": 21.0,
+        "jma_seamless": 21.7,
+        "ncep_aigfs025": 18.3
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 17.2,
+        "gfs_graphcast025": 17.0,
+        "gfs_seamless": 18.6,
+        "icon_seamless": 18.8,
+        "jma_gsm": 16.5,
+        "jma_seamless": 17.2,
+        "ncep_aigfs025": 19.1
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 21.3,
+        "gfs_graphcast025": 20.4,
+        "gfs_seamless": 20.1,
+        "icon_seamless": 21.9,
+        "jma_gsm": 19.9,
+        "jma_seamless": 19.5,
+        "ncep_aigfs025": 20.4
       },
       "spread": null
     }
@@ -9794,6 +11025,48 @@
         "ncep_nbm_conus": 19.0
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "dmi_seamless": 23.2,
+        "ecmwf_ifs025": 23.9,
+        "gem_global": 17.3,
+        "gem_regional": 22.7,
+        "gfs_seamless": 18.1,
+        "meteofrance_arpege_world": 22.0,
+        "ncep_aigfs025": 20.0,
+        "ncep_nbm_conus": 18.6
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "dmi_seamless": 19.1,
+        "ecmwf_ifs025": 19.1,
+        "gem_global": 16.0,
+        "gem_regional": 16.1,
+        "gfs_seamless": 19.4,
+        "meteofrance_arpege_world": 17.4,
+        "ncep_aigfs025": 20.5,
+        "ncep_nbm_conus": 16.8
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "dmi_seamless": 18.0,
+        "ecmwf_ifs025": 17.7,
+        "gem_global": 17.6,
+        "gem_regional": 18.9,
+        "gfs_seamless": 16.8,
+        "meteofrance_arpege_world": 15.7,
+        "ncep_aigfs025": 17.3,
+        "ncep_nbm_conus": 16.7
+      },
+      "spread": null
     }
   },
   "Warsaw": {
@@ -9976,6 +11249,48 @@
         "meteofrance_seamless": 9.5,
         "ncep_aigfs025": 14.3,
         "ukmo_seamless": 15.8
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "dmi_seamless": 15.4,
+        "ecmwf_ifs025": 16.8,
+        "gfs_seamless": 14.0,
+        "icon_seamless": 18.1,
+        "knmi_seamless": 15.4,
+        "meteofrance_seamless": 15.4,
+        "ncep_aigfs025": 13.4,
+        "ukmo_seamless": 16.3
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "dmi_seamless": 15.1,
+        "ecmwf_ifs025": 15.2,
+        "gfs_seamless": 13.2,
+        "icon_seamless": 14.6,
+        "knmi_seamless": 15.1,
+        "meteofrance_seamless": 12.9,
+        "ncep_aigfs025": 12.5,
+        "ukmo_seamless": 14.2
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "dmi_seamless": 17.4,
+        "ecmwf_ifs025": 17.3,
+        "gfs_seamless": 14.4,
+        "icon_seamless": 17.4,
+        "knmi_seamless": 17.4,
+        "meteofrance_seamless": 15.5,
+        "ncep_aigfs025": 14.4,
+        "ukmo_seamless": 16.7
       },
       "spread": null
     }
@@ -10280,6 +11595,36 @@
         "ukmo_seamless": 17.8
       },
       "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "ecmwf_ifs025": 16.0,
+        "gfs_seamless": 16.9,
+        "icon_seamless": 17.3,
+        "ukmo_seamless": 17.2
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "ecmwf_ifs025": 16.8,
+        "gfs_seamless": 16.5,
+        "icon_seamless": 17.7,
+        "ukmo_seamless": 17.2
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "ecmwf_ifs025": 15.9,
+        "gfs_seamless": 16.6,
+        "icon_seamless": 17.6,
+        "ukmo_seamless": 18.1
+      },
+      "spread": null
     }
   },
   "Wuhan": {
@@ -10459,6 +11804,45 @@
         "icon_seamless": 21.2,
         "jma_seamless": 22.7,
         "ncep_aigfs025": 21.6
+      },
+      "spread": null
+    },
+    "2026-04-16": {
+      "logged_at": "2026-04-13T19:10:16.054426+00:00",
+      "preds": {
+        "cma_grapes_global": 23.8,
+        "ecmwf_ifs025": 24.6,
+        "gfs_graphcast025": 21.7,
+        "gfs_seamless": 22.8,
+        "icon_seamless": 21.7,
+        "jma_seamless": 22.5,
+        "ncep_aigfs025": 22.4
+      },
+      "spread": null
+    },
+    "2026-04-17": {
+      "logged_at": "2026-04-14T19:10:16.050770+00:00",
+      "preds": {
+        "cma_grapes_global": 26.0,
+        "ecmwf_ifs025": 26.5,
+        "gfs_graphcast025": 26.6,
+        "gfs_seamless": 27.1,
+        "icon_seamless": 26.6,
+        "jma_seamless": 29.2,
+        "ncep_aigfs025": 25.2
+      },
+      "spread": null
+    },
+    "2026-04-18": {
+      "logged_at": "2026-04-15T19:10:18.356808+00:00",
+      "preds": {
+        "cma_grapes_global": 26.8,
+        "ecmwf_ifs025": 27.1,
+        "gfs_graphcast025": 27.3,
+        "gfs_seamless": 28.7,
+        "icon_seamless": 27.3,
+        "jma_seamless": 30.1,
+        "ncep_aigfs025": 26.8
       },
       "spread": null
     }
