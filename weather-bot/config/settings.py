@@ -200,11 +200,6 @@ LADDER_MIN_EDGE = 0.08
 # actually outperform the single-bucket live strategy net of the extra capital spent.
 ENABLE_TOP2_SHADOWS = True
 
-# D+2 Exploratory regime — off by default.
-# When enabled, allows D+2 diagnostic-only planning even when no prior-day
-# signal is available. Execution is still blocked; only planning proceeds.
-# Tight constraints: >=10% edge, price <= 10 cents, hard size cap.
-ENABLE_EXPLORATORY_D2: bool = os.getenv("ENABLE_EXPLORATORY_D2", "").lower() in ("1", "true", "yes")
 TOP2_SHADOW_MIN_PROB = 0.10         # second bucket must have ≥ 10% model probability to qualify
 TOP2_SHADOW_SPLIT_THRESHOLD = 0.65  # 2B: second/first ratio must be ≥ this to count as "split"
 
