@@ -116,6 +116,10 @@ _ACCURACY_CACHE_PATH = Path(__file__).resolve().parents[1] / "data" / "accuracy_
 # latest hourly cache rebuild without needing a process restart.
 _CITY_ACCURACY_CACHE: dict[str, float] = {}
 _CITY_ACCURACY_CACHE_MTIME: float = 0.0
+# Separate cache for recency-windowed accuracy, keyed by (city, days).
+# Shares the mtime sentinel above so both caches invalidate together when the
+# underlying accuracy_rows_cache.json is rewritten.
+_RECENT_CITY_ACCURACY_CACHE: dict[tuple[str, int], float] = {}
 
 
 def _compute_city_accuracy(city: str) -> float:
@@ -150,6 +154,64 @@ def _compute_city_accuracy(city: str) -> float:
 
         accuracy = wins / total
         _CITY_ACCURACY_CACHE[city] = accuracy
+        return accuracy
+    except Exception:
+        return 0.0
+
+
+def _compute_recent_city_accuracy(city: str, days: int = 14) -> float:
+    """Compute recency-weighted city accuracy over the last ``days`` days.
+
+    Mirrors ``_compute_city_accuracy`` but filters rows to those whose
+    ``date`` field falls within the last ``days`` days of today (UTC).
+    Requires at least 5 scored rows in the window; otherwise returns 0.0
+    (i.e. defaults to blocking the gate).
+    """
+    global _CITY_ACCURACY_CACHE_MTIME
+
+    try:
+        if not _ACCURACY_CACHE_PATH.exists():
+            return 0.0
+        current_mtime = _ACCURACY_CACHE_PATH.stat().st_mtime
+        # Share mtime sentinel with _compute_city_accuracy; invalidate both.
+        if current_mtime != _CITY_ACCURACY_CACHE_MTIME:
+            _CITY_ACCURACY_CACHE.clear()
+            _RECENT_CITY_ACCURACY_CACHE.clear()
+            _CITY_ACCURACY_CACHE_MTIME = current_mtime
+
+        cache_key = (city, int(days))
+        if cache_key in _RECENT_CITY_ACCURACY_CACHE:
+            return _RECENT_CITY_ACCURACY_CACHE[cache_key]
+
+        raw = json.loads(_ACCURACY_CACHE_PATH.read_text(encoding="utf-8"))
+        rows = raw.get(city, [])
+        if not rows:
+            _RECENT_CITY_ACCURACY_CACHE[cache_key] = 0.0
+            return 0.0
+
+        today = datetime.now(UTC).date()
+        cutoff = today - timedelta(days=int(days))
+
+        def _in_window(row: dict) -> bool:
+            raw_date = row.get("date")
+            if not isinstance(raw_date, str):
+                return False
+            try:
+                row_date = _date.fromisoformat(raw_date[:10])
+            except ValueError:
+                return False
+            return cutoff <= row_date <= today
+
+        windowed = [r for r in rows if _in_window(r)]
+        scored = [r for r in windowed if r.get("best_ens_d1_win") is not None]
+
+        if len(scored) < 5:
+            _RECENT_CITY_ACCURACY_CACHE[cache_key] = 0.0
+            return 0.0
+
+        wins = sum(1 for r in scored if r.get("best_ens_d1_win") is True)
+        accuracy = wins / len(scored)
+        _RECENT_CITY_ACCURACY_CACHE[cache_key] = accuracy
         return accuracy
     except Exception:
         return 0.0
@@ -2035,14 +2097,18 @@ def generate_mk2_ace_signals(
             _gating_result = "allowed"
 
         # ── City accuracy threshold filter ─────────────────────────────────
-        # Skip cities where historical model accuracy is below threshold.
+        # Skip cities where RECENT (14d) model accuracy is below threshold.
+        # Gate decision uses the recency-weighted window; lifetime accuracy
+        # is retained for logging/diagnostics only.
         # Still run diagnostics but block execution.
-        # Note: 0% accuracy (no wins) should also be blocked.
-        _city_accuracy = _compute_city_accuracy(city)
-        _accuracy_pass = _city_accuracy >= MIN_CITY_ACCURACY_THRESHOLD
+        # Note: 0% accuracy (no wins, or <5 scored rows in window) is blocked.
+        _city_accuracy_recent = _compute_recent_city_accuracy(city, days=14)
+        _city_accuracy_lifetime = _compute_city_accuracy(city)
+        _accuracy_pass = _city_accuracy_recent >= MIN_CITY_ACCURACY_THRESHOLD
         _log.info(
             f"PRIME_ALPHA {city} {date_str}: accuracy_gate "
-            f"city_accuracy={_city_accuracy:.3f} "
+            f"recent_14d={_city_accuracy_recent:.3f} "
+            f"lifetime={_city_accuracy_lifetime:.3f} "
             f"threshold={MIN_CITY_ACCURACY_THRESHOLD:.2f} "
             f"result={'pass' if _accuracy_pass else 'block'}"
         )
@@ -2052,7 +2118,7 @@ def generate_mk2_ace_signals(
             _gating_result = "blocked_low_accuracy"
             _log.info(
                 f"PRIME_ALPHA {city} {date_str}: BLOCKED by accuracy filter "
-                f"(city accuracy {_city_accuracy:.1%} < {MIN_CITY_ACCURACY_THRESHOLD:.0%} threshold)"
+                f"(recent 14d accuracy {_city_accuracy_recent:.1%} < {MIN_CITY_ACCURACY_THRESHOLD:.0%} threshold)"
             )
 
         # ── Betting window filter ─────────────────────────────────────────────
@@ -2216,7 +2282,24 @@ def generate_mk2_ace_signals(
             "prior_signal_timestamp_source": _pa_signal_ts_source,
             "gating_result": _gating_result,
             "gating_reason": _gating_reason or None,
-            "city_accuracy": round(_city_accuracy, 4) if _city_accuracy else None,
+            # Accuracy payload fields:
+            # - ``city_accuracy_recent_14d``: the recency-windowed value the
+            #   PRIME_ALPHA gate actually decides on.
+            # - ``city_accuracy_lifetime``: the lifetime value, emitted for
+            #   diagnostics and divergence tracking.
+            # - ``city_accuracy``: preserved for downstream back-compat and
+            #   still points at the LIFETIME value (unchanged historical
+            #   semantics). Do not change this mapping without auditing
+            #   every reader.
+            "city_accuracy_recent_14d": (
+                round(_city_accuracy_recent, 4) if _city_accuracy_recent else None
+            ),
+            "city_accuracy_lifetime": (
+                round(_city_accuracy_lifetime, 4) if _city_accuracy_lifetime else None
+            ),
+            "city_accuracy": (
+                round(_city_accuracy_lifetime, 4) if _city_accuracy_lifetime else None
+            ),
             "city_accuracy_threshold": MIN_CITY_ACCURACY_THRESHOLD,
             "betting_window": _betting_window_info,
         }
