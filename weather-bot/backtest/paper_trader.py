@@ -77,9 +77,15 @@ def _persist_v3_dashboard_state(new_decisions: dict[str, dict]) -> None:
     }
     try:
         if _V3_STATE_PATH.exists():
-            state = _json.loads(_V3_STATE_PATH.read_text(encoding="utf-8"))
+            loaded = _json.loads(_V3_STATE_PATH.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                state.update(loaded)
     except Exception:
         pass
+
+    # Ensure required keys exist after loading (fix KeyError on legacy files)
+    state.setdefault("decisions", {})
+    state.setdefault("latest_by_city", {})
 
     for key, decision in new_decisions.items():
         state["decisions"][key] = decision
