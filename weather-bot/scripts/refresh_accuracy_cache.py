@@ -228,7 +228,14 @@ def refresh_city(
 
         if bucket_style == "range_2f":
             lbl, low, high, bottom_thresh, top_thresh = pm_entry
-            row: dict = {"date": dt, "resolved": lbl}
+            row: dict = {
+                "date": dt,
+                "resolved": lbl,
+                "range_low": low,
+                "range_high": high,
+                "bottom_thresh": bottom_thresh,
+                "top_thresh": top_thresh,
+            }
         else:
             lbl, res_int, is_plus = pm_entry[:3]
             row = {"date": dt, "resolved": lbl, "res_int": res_int, "is_plus": is_plus}

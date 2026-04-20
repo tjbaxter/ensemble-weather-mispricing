@@ -5677,8 +5677,14 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
         comm_entry = comm_log.get(date_str)
         _accu_comm = comm_entry.get("accu") if comm_entry else None
         _wu_comm   = comm_entry.get("wu")   if comm_entry else None
-        row_d["🔶 AccuWeather"] = (fmt_val(_hround(_accu_comm * 10) / 10)) if _accu_comm is not None else "—"
-        row_d["🔷 Weather.com"] = (fmt_val(_hround(_wu_comm   * 10) / 10)) if _wu_comm   is not None else "—"
+        def _live_comm_cell(v: float | None) -> str:
+            if v is None:
+                return "—"
+            rv = _hround(v * 10) / 10
+            w = _score(rv)
+            return f"{fmt_val(rv)} {'✅' if w else '❌'}"
+        row_d["🔶 AccuWeather"] = _live_comm_cell(_accu_comm)
+        row_d["🔷 Weather.com"] = _live_comm_cell(_wu_comm)
 
         for col_label, mk in active_models.items():
             val = all_preds.get(mk)
@@ -5758,14 +5764,30 @@ padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
                 if val is None:
                     return "—"
                 rounded = _hround(val * 10) / 10
-                # Determine win against the resolved bucket (reuse compute_win logic inline)
                 resolved_entry = cfg.get("polymarket", {}).get(r["date"])
-                if resolved_entry and cfg.get("bucket_style", "exact_1c") != "range_2f":
-                    _, res_int, is_plus = resolved_entry if len(resolved_entry) == 3 else (resolved_entry[0], resolved_entry[1], False)
-                    won = _wins(rounded, res_int, is_plus)
-                    marker = " ✅" if won else " ❌"
-                else:
-                    marker = ""
+                marker = ""
+                if resolved_entry:
+                    bstyle = cfg.get("bucket_style", "exact_1c")
+                    if bstyle == "range_2f" and len(resolved_entry) >= 3:
+                        # range_2f tuple: (label, lo, hi, bottom_thresh, top_thresh)
+                        # ≥X: lo=X, hi=None → win if rounded >= lo
+                        # ≤X: lo=None, hi=X → win if rounded <= hi
+                        # A-B: lo=A, hi=B   → win if lo <= rounded <= hi
+                        _lo = resolved_entry[1]
+                        _hi = resolved_entry[2]
+                        if _lo is not None and _hi is not None:
+                            won = _lo <= rounded <= _hi
+                        elif _lo is not None:
+                            won = rounded >= _lo
+                        elif _hi is not None:
+                            won = rounded <= _hi
+                        else:
+                            won = False
+                        marker = " ✅" if won else " ❌"
+                    else:
+                        _, res_int, is_plus = resolved_entry if len(resolved_entry) == 3 else (resolved_entry[0], resolved_entry[1], False)
+                        won = _wins(rounded, res_int, is_plus)
+                        marker = " ✅" if won else " ❌"
                 return f"{fmt_val(rounded)}{marker}"
 
             row_d["🔶 AccuWeather"] = _comm_cell(accu_logged)
