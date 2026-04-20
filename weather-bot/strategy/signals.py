@@ -2037,8 +2037,16 @@ def generate_mk2_ace_signals(
         # ── City accuracy threshold filter ─────────────────────────────────
         # Skip cities where historical model accuracy is below threshold.
         # Still run diagnostics but block execution.
+        # Note: 0% accuracy (no wins) should also be blocked.
         _city_accuracy = _compute_city_accuracy(city)
-        if _city_accuracy < MIN_CITY_ACCURACY_THRESHOLD and _city_accuracy > 0:
+        _accuracy_pass = _city_accuracy >= MIN_CITY_ACCURACY_THRESHOLD
+        _log.info(
+            f"PRIME_ALPHA {city} {date_str}: accuracy_gate "
+            f"city_accuracy={_city_accuracy:.3f} "
+            f"threshold={MIN_CITY_ACCURACY_THRESHOLD:.2f} "
+            f"result={'pass' if _accuracy_pass else 'block'}"
+        )
+        if not _accuracy_pass:
             _execution_allowed = False
             _is_diagnostic_only = True
             _gating_result = "blocked_low_accuracy"
