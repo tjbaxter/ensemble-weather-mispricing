@@ -1951,6 +1951,11 @@ def generate_mk2_ace_signals(
         # closed-but-resolved market won't appear there.  We combine
         # `prior_group` (active) with `_pa_prior_mode` (resolution data)
         # to classify.
+        # Prior-day gate required for D+0 and D+1 bets.
+        # D+0: need yesterday's result to update streaks
+        # D+1: need today's result (which provisional detection can provide
+        #      via temperature physics + market consensus)
+        # D+2+: blocked entirely (streak data stale — see blocked_d2_stale_data)
         _prior_signal_required = (days_ahead <= 1)
 
         # Prior market existence: combine three evidence sources:
@@ -2013,23 +2018,18 @@ def generate_mk2_ace_signals(
                 f"(status={_prior_market_status}, mode={_pa_prior_mode}, "
                 f"reason={_gating_reason})"
             )
-        elif not _prior_signal_required and not _prior_signal_valid:
-            if ENABLE_EXPLORATORY_D2:
-                _execution_allowed = False
-                _is_diagnostic_only = True
-                _gating_result = "blocked"
-                _log.info(
-                    f"PRIME_ALPHA {city} {date_str}: D+{days_ahead} exploratory "
-                    f"(planning only, no execution)"
-                )
-            else:
-                _execution_allowed = False
-                _is_diagnostic_only = True
-                _gating_result = "blocked"
-                _log.info(
-                    f"PRIME_ALPHA {city} {date_str}: D+{days_ahead} no prior signal, "
-                    f"ENABLE_EXPLORATORY_D2=off, skipping"
-                )
+        elif not _prior_signal_required:
+            # D+2+ bets: streak/prior-day signal is likely stale at this
+            # horizon (prior-day market often still unresolved when bet is
+            # placed). Keep full diagnostics, block order placement.
+            _execution_allowed = False
+            _is_diagnostic_only = True
+            _gating_result = "blocked_d2_stale_data"
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: D+2+ execution blocked "
+                f"(days_ahead>=2, prior_status={_prior_market_status}, "
+                f"mode={_pa_prior_mode})"
+            )
         else:
             _execution_allowed = True
             _is_diagnostic_only = False
