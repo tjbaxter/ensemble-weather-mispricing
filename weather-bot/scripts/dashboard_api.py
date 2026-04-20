@@ -10,9 +10,9 @@ import os
 import re
 import secrets
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path, PurePosixPath
-from typing import Final
+from typing import Any, Final
 
 from aiohttp import web
 
@@ -21,8 +21,39 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from monitoring.dashboard_overview import build_dashboard_overview_payload  # noqa: E402
+from data.wu_observations import fetch_wu_observed_max  # noqa: E402
 
 SETTLEMENT_STATUS_PATH = ROOT / "data" / "settlement_status.json"
+MODEL_SNAPSHOT_LOG_PATH = ROOT / "data" / "model_snapshot_log.json"
+COMMERCIAL_FORECAST_LOG_PATH = ROOT / "data" / "commercial_forecast_log.json"
+ACCURACY_CACHE_PATH = ROOT / "data" / "accuracy_rows_cache.json"
+
+# All tradeable cities with live weather stations
+LIVE_WEATHER_CITIES: dict[str, dict[str, Any]] = {
+    "Ankara": {"icao": "LTAC", "unit": "C"},
+    "Atlanta": {"icao": "KATL", "unit": "F"},
+    "Buenos Aires": {"icao": "SAEZ", "unit": "C"},
+    "Chicago": {"icao": "KORD", "unit": "F"},
+    "Dallas": {"icao": "KDFW", "unit": "F"},
+    "London": {"icao": "EGLC", "unit": "C"},
+    "Miami": {"icao": "KMIA", "unit": "F"},
+    "New York": {"icao": "KLGA", "unit": "F"},
+    "Paris": {"icao": "LFPG", "unit": "C"},
+    "Seattle": {"icao": "KSEA", "unit": "F"},
+    "Seoul": {"icao": "RKSI", "unit": "C"},
+    "Toronto": {"icao": "CYYZ", "unit": "C"},
+    "Wellington": {"icao": "NZWN", "unit": "C"},
+}
+
+# Key models to show in forecasts
+DISPLAY_MODELS = [
+    "meteofrance_arome_france",
+    "icon_seamless",
+    "ecmwf_ifs025",
+    "ncep_aigfs025",
+    "gfs_graphcast025",
+    "dmi_seamless",
+]
 
 DATA_FILE_RE: Final = re.compile(r"^data/[^/]+\.(json|csv)$")
 LOG_FILE_RE: Final = re.compile(
@@ -163,7 +194,12 @@ def _dashboard_overview_payload(app: web.Application) -> dict:
 
 @web.middleware
 async def auth_middleware(request: web.Request, handler):
+    # Public endpoints that don't require auth
     if request.path == "/health" and _public_health():
+        return await handler(request)
+    if request.path == "/raw/data/live_weather.json":
+        return await handler(request)
+    if request.path == "/raw/data/dashboard_overview.json":
         return await handler(request)
 
     token = _api_token()
@@ -207,6 +243,150 @@ async def logs_index(_: web.Request) -> web.Response:
     return web.json_response({"files": files, "generated_at": datetime.now(UTC).isoformat()})
 
 
+def _build_live_weather_payload() -> dict[str, Any]:
+    """Build aggregated live weather data for all tradeable cities."""
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+    today_str = date.today().isoformat()
+    
+    # Load model snapshot log
+    model_snapshots: dict = {}
+    if MODEL_SNAPSHOT_LOG_PATH.exists():
+        try:
+            model_snapshots = json.loads(MODEL_SNAPSHOT_LOG_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    
+    # Load commercial forecasts
+    commercial_log: dict = {}
+    if COMMERCIAL_FORECAST_LOG_PATH.exists():
+        try:
+            commercial_log = json.loads(COMMERCIAL_FORECAST_LOG_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    
+    # Load accuracy cache
+    accuracy_cache: dict = {}
+    if ACCURACY_CACHE_PATH.exists():
+        try:
+            accuracy_cache = json.loads(ACCURACY_CACHE_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    
+    cities_data: dict[str, dict] = {}
+    
+    for city, cfg in LIVE_WEATHER_CITIES.items():
+        icao = cfg["icao"]
+        unit = cfg["unit"]
+        
+        # 1. Live station data
+        live_station: dict[str, Any] = {
+            "current_temp": None,
+            "today_max": None,
+            "n_readings": 0,
+            "last_reading_utc": None,
+            "station_id": None,
+            "unit": unit,
+        }
+        try:
+            wu_data = fetch_wu_observed_max(icao)
+            if wu_data:
+                live_station["current_temp"] = wu_data.get("latest_temp")
+                live_station["today_max"] = wu_data.get("running_max")
+                live_station["n_readings"] = wu_data.get("n_obs", 0)
+                live_station["last_reading_utc"] = wu_data.get("last_obs_utc")
+                live_station["station_id"] = wu_data.get("station_id")
+        except Exception:
+            pass
+        
+        # 2. Model forecasts for tomorrow
+        model_forecasts: dict[str, Any] = {
+            "target_date": tomorrow,
+            "models": {},
+            "spread": None,
+            "spread_color": "UNKNOWN",
+        }
+        city_snapshots = model_snapshots.get(city, {})
+        tomorrow_preds = city_snapshots.get(tomorrow, {}).get("preds", {})
+        
+        if tomorrow_preds:
+            # Get key model forecasts
+            for model in DISPLAY_MODELS:
+                if model in tomorrow_preds and tomorrow_preds[model] is not None:
+                    model_forecasts["models"][model] = round(float(tomorrow_preds[model]), 1)
+            
+            # Calculate spread (max - min)
+            all_vals = [v for v in tomorrow_preds.values() if v is not None]
+            if all_vals:
+                spread = max(all_vals) - min(all_vals)
+                model_forecasts["spread"] = round(spread, 1)
+                # Spread thresholds: ≤1°C for Celsius, ≤2°F for Fahrenheit
+                threshold = 1.0 if unit == "C" else 2.0
+                model_forecasts["spread_color"] = "GREEN" if spread <= threshold else "RED"
+        
+        # 3. Commercial forecasts for tomorrow
+        commercial: dict[str, Any] = {
+            "accuweather": None,
+            "weather_com": None,
+            "target_date": tomorrow,
+        }
+        city_commercial = commercial_log.get(city, {})
+        if tomorrow in city_commercial:
+            entry = city_commercial[tomorrow]
+            commercial["accuweather"] = entry.get("accu")
+            commercial["weather_com"] = entry.get("wu")
+        
+        # 4. Accuracy stats
+        accuracy: dict[str, Any] = {
+            "best_model": None,
+            "best_accuracy_pct": None,
+            "market_days": 0,
+            "city_accuracy_pct": None,
+        }
+        city_accuracy_rows = accuracy_cache.get(city, [])
+        if city_accuracy_rows:
+            accuracy["market_days"] = len(city_accuracy_rows)
+            
+            # Calculate city-level accuracy (best_ens_d1_win)
+            wins = sum(1 for r in city_accuracy_rows if r.get("best_ens_d1_win") is True)
+            total = sum(1 for r in city_accuracy_rows if r.get("best_ens_d1_win") is not None)
+            if total > 0:
+                accuracy["city_accuracy_pct"] = round(100 * wins / total, 1)
+            
+            # Find best individual model
+            model_wins: dict[str, tuple[int, int]] = {}
+            for row in city_accuracy_rows:
+                for key in row:
+                    if key.endswith("_d1_win") and row[key] is not None:
+                        model = key.replace("_d1_win", "")
+                        if model not in model_wins:
+                            model_wins[model] = (0, 0)
+                        w, t = model_wins[model]
+                        model_wins[model] = (w + (1 if row[key] else 0), t + 1)
+            
+            if model_wins:
+                best_model = max(model_wins.items(), key=lambda x: x[1][0] / x[1][1] if x[1][1] > 0 else 0)
+                model_name, (w, t) = best_model
+                if t > 0:
+                    accuracy["best_model"] = model_name
+                    accuracy["best_accuracy_pct"] = round(100 * w / t, 1)
+        
+        cities_data[city] = {
+            "icao": icao,
+            "unit": unit,
+            "live_station": live_station,
+            "model_forecasts": model_forecasts,
+            "commercial_forecasts": commercial,
+            "accuracy": accuracy,
+        }
+    
+    return {
+        "generated_at": datetime.now(UTC).isoformat(),
+        "target_date": tomorrow,
+        "today": today_str,
+        "cities": cities_data,
+    }
+
+
 def _cache_freshness_payload() -> dict:
     """Return mtime-based freshness info for key data caches."""
     files = {
@@ -235,6 +415,8 @@ async def raw_file(request: web.Request) -> web.Response:
         return web.json_response(_dashboard_overview_payload(request.app))
     if rel_path == "data/cache_freshness.json":
         return web.json_response(_cache_freshness_payload())
+    if rel_path == "data/live_weather.json":
+        return web.json_response(_build_live_weather_payload())
 
     rel_path, abs_path = _resolve_rel_path(raw_target)
     try:
