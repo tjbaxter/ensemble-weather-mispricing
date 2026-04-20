@@ -111,33 +111,43 @@ def _kelly_position_cap(bankroll: float) -> float:
 _PA_POSITIONS_PATH = Path(__file__).resolve().parents[1] / "data" / "positions_shadow_prime_alpha.json"
 _ACCURACY_CACHE_PATH = Path(__file__).resolve().parents[1] / "data" / "accuracy_rows_cache.json"
 
-# Cached city accuracy scores (computed once per process)
+# Cached city accuracy scores. Invalidated when the underlying
+# accuracy_rows_cache.json file mtime changes so the bot always reflects the
+# latest hourly cache rebuild without needing a process restart.
 _CITY_ACCURACY_CACHE: dict[str, float] = {}
+_CITY_ACCURACY_CACHE_MTIME: float = 0.0
 
 
 def _compute_city_accuracy(city: str) -> float:
     """Compute historical model accuracy for a city from accuracy_rows_cache.json.
-    
+
     Returns the win rate of best_ens_d1 predictions (fraction of days where
     the ensemble correctly predicted the resolved bucket).
     """
-    if city in _CITY_ACCURACY_CACHE:
-        return _CITY_ACCURACY_CACHE[city]
-    
+    global _CITY_ACCURACY_CACHE_MTIME
+
     try:
         if not _ACCURACY_CACHE_PATH.exists():
             return 0.0
+        current_mtime = _ACCURACY_CACHE_PATH.stat().st_mtime
+        if current_mtime != _CITY_ACCURACY_CACHE_MTIME:
+            _CITY_ACCURACY_CACHE.clear()
+            _CITY_ACCURACY_CACHE_MTIME = current_mtime
+
+        if city in _CITY_ACCURACY_CACHE:
+            return _CITY_ACCURACY_CACHE[city]
+
         raw = json.loads(_ACCURACY_CACHE_PATH.read_text(encoding="utf-8"))
         rows = raw.get(city, [])
         if not rows:
             return 0.0
-        
+
         wins = sum(1 for r in rows if r.get("best_ens_d1_win") is True)
         total = sum(1 for r in rows if r.get("best_ens_d1_win") is not None)
-        
+
         if total == 0:
             return 0.0
-        
+
         accuracy = wins / total
         _CITY_ACCURACY_CACHE[city] = accuracy
         return accuracy
