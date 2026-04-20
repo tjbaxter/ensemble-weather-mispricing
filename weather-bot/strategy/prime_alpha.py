@@ -89,15 +89,25 @@ BIMODAL_GAP_C = 2.0
 BIMODAL_GAP_F = 3.0
 
 # ── Provisional Prior-Day Resolution ────────────────────────────────────────────
-PROVISIONAL_EARLY_LOCAL_HOUR = 17
-PROVISIONAL_LATE_LOCAL_HOUR = 20
-PROVISIONAL_COOLOFF_C = 2.0
-PROVISIONAL_COOLOFF_F = 3.5
-PROVISIONAL_MAX_STABLE_MINUTES = 60
-PROVISIONAL_MARKET_CONFIDENCE = 0.985
-PROVISIONAL_RUNNERUP_MAX = 0.015
-PROVISIONAL_MIN_POLLS = 3
-PROVISIONAL_POLL_SPACING_SEC = 600
+# These thresholds control when we can determine the prior day's result BEFORE
+# official Polymarket resolution. Two detection methods:
+#   1. Temperature physics: temp dropped from max + evening time = max locked
+#   2. Market consensus: any bucket at 98%+ = market knows the answer
+#
+# Settings made aggressive to enable D+1 betting during optimal windows.
+PROVISIONAL_EARLY_LOCAL_HOUR = 16      # Start checking at 4pm local (was 17)
+PROVISIONAL_LATE_LOCAL_HOUR = 19       # Relaxed mode at 7pm local (was 20)
+PROVISIONAL_COOLOFF_C = 1.5            # 1.5°C drop from max (was 2.0)
+PROVISIONAL_COOLOFF_F = 2.5            # 2.5°F drop from max (was 3.5)
+PROVISIONAL_MAX_STABLE_MINUTES = 20    # Max stable for 20 min (was 60)
+PROVISIONAL_MARKET_CONFIDENCE = 0.98   # 98% market consensus (was 98.5%)
+PROVISIONAL_RUNNERUP_MAX = 0.02        # Runner-up max 2% (was 1.5%)
+PROVISIONAL_MIN_POLLS = 2              # Need 2 readings (was 3)
+PROVISIONAL_POLL_SPACING_SEC = 300     # 5 min between polls (was 10 min)
+
+# Fast-path: if ANY bucket hits this threshold, skip all other checks
+# 95% is high enough to be confident, low enough to trigger reliably
+MARKET_CONSENSUS_INSTANT_THRESHOLD = 0.95
 
 # ── Model Family Definitions ───────────────────────────────────────────────────
 # Only merge models that are empirically near-identical (duplicate signals).
@@ -1231,7 +1241,23 @@ def get_effective_prior_resolved_bucket(
         result["prior_signal_timestamp_source"] = _off_src
         return result
 
-    # 3. Source-confirmed provisional
+    # 2.5 FAST-PATH: Market consensus alone (98%+ on any bucket)
+    # If the market has decided, we know the answer - no need for WU/stability
+    if prior_day_market_prices:
+        sorted_prices = sorted(
+            prior_day_market_prices.items(), key=lambda kv: kv[1], reverse=True
+        )
+        if sorted_prices:
+            dominant_bucket, dominant_price = sorted_prices[0]
+            if dominant_price >= MARKET_CONSENSUS_INSTANT_THRESHOLD:
+                result["bucket"] = str(dominant_bucket)
+                result["mode"] = "market_consensus"
+                result["confidence"] = round(dominant_price, 4)
+                result["signal_available_at_utc"] = _dt.now(_tz.utc).isoformat()
+                result["prior_signal_timestamp_source"] = "market_consensus_instant"
+                return result
+
+    # 3. Source-confirmed provisional (WU + market confirmation)
     station_cfg = STATIONS.get(station_icao, {})
     tz_name = station_cfg.get("timezone")
     unit = str(station_cfg.get("resolution_unit", "F"))
