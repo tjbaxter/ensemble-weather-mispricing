@@ -8,6 +8,7 @@ from dataclasses import dataclass, asdict
 from datetime import UTC, date as _date, datetime, timedelta
 from pathlib import Path
 
+from config.bet_timing import get_betting_window
 from config.cities import STATIONS
 from config.settings import (
     ALPHA_THRESHOLD,
@@ -2055,6 +2056,50 @@ def generate_mk2_ace_signals(
                 f"(city accuracy {_city_accuracy:.1%} < {MIN_CITY_ACCURACY_THRESHOLD:.0%} threshold)"
             )
 
+        # ── Betting window filter ─────────────────────────────────────────────
+        # Only place bets during optimal windows per city to capture edge
+        # before market repricing. Still run diagnostics but block execution.
+        _betting_window_info: dict | None = None
+        if _execution_allowed:
+            _window_cfg = get_betting_window(city)
+            if _window_cfg:
+                _now_utc = datetime.now(UTC)
+                _current_hour = _now_utc.hour + _now_utc.minute / 60.0
+                _earliest = _window_cfg["earliest_bet_utc"]
+                _latest = _window_cfg["latest_bet_utc"]
+
+                # Handle windows that cross midnight
+                if _latest < _earliest:
+                    _in_window = _current_hour >= _earliest or _current_hour <= _latest
+                else:
+                    _in_window = _earliest <= _current_hour <= _latest
+
+                _betting_window_info = {
+                    "earliest_utc": _earliest,
+                    "latest_utc": _latest,
+                    "current_utc": round(_current_hour, 2),
+                    "in_window": _in_window,
+                    "cluster": _window_cfg.get("cluster"),
+                }
+
+                if not _in_window:
+                    _execution_allowed = False
+                    _is_diagnostic_only = True
+                    _gating_result = "blocked_outside_window"
+                    if _current_hour < _earliest:
+                        _wait_min = (_earliest - _current_hour) * 60
+                        _log.info(
+                            f"PRIME_ALPHA {city} {date_str}: BLOCKED outside betting window "
+                            f"(current={_current_hour:.1f}UTC, window={_earliest:.1f}-{_latest:.1f}UTC, "
+                            f"wait {_wait_min:.0f}min)"
+                        )
+                    else:
+                        _log.info(
+                            f"PRIME_ALPHA {city} {date_str}: BLOCKED outside betting window "
+                            f"(current={_current_hour:.1f}UTC, window={_earliest:.1f}-{_latest:.1f}UTC, "
+                            f"window closed)"
+                        )
+
         prime_plan = build_prime_alpha_plan(
             city=city,
             station_icao=station_icao,
@@ -2174,6 +2219,7 @@ def generate_mk2_ace_signals(
             "gating_reason": _gating_reason or None,
             "city_accuracy": round(_city_accuracy, 4) if _city_accuracy else None,
             "city_accuracy_threshold": MIN_CITY_ACCURACY_THRESHOLD,
+            "betting_window": _betting_window_info,
         }
 
         if prime_cands and _execution_allowed:
