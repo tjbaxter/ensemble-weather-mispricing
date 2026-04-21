@@ -20,6 +20,7 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from config.settings import PRIME_ALPHA_ALLOW_GAUSSIAN_FALLBACK
 from data.probability import parse_bucket_bounds
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -924,12 +925,15 @@ def build_prime_alpha_plan(
             else:
                 notes.append("pass_no_nearby_bucket")
         else:
-            notes.append("fallback=gaussian_topk")
-            ranked_buckets = sorted(bucket_probs.items(), key=lambda x: -x[1])
-            selected = [b for b, p in ranked_buckets
-                        if p >= MIN_BUCKET_PROB][:smart_max_buckets]
-            if not selected and ranked_buckets:
-                selected = [ranked_buckets[0][0]]
+            if PRIME_ALPHA_ALLOW_GAUSSIAN_FALLBACK:
+                notes.append("fallback=gaussian_topk")
+                ranked_buckets = sorted(bucket_probs.items(), key=lambda x: -x[1])
+                selected = [b for b, p in ranked_buckets
+                            if p >= MIN_BUCKET_PROB][:smart_max_buckets]
+                if not selected and ranked_buckets:
+                    selected = [ranked_buckets[0][0]]
+            else:
+                notes.append("layer_a_empty_no_fallback")
 
     selected = sorted(selected, key=_bucket_sort_key)
     sel_info["selected"] = selected

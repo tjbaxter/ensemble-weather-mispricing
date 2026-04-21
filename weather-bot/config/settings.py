@@ -217,6 +217,10 @@ ENABLE_PURDEY_CAVENDISH = True
 # Wellington ~35%, Seoul ~42% → skip; Seattle ~55%, London ~56% → trade.
 MIN_CITY_ACCURACY_THRESHOLD = 0.50
 
+# Kill switch for the Gaussian top-K fallback when Layer A returns empty.
+# Default False (disabled) — skip the fallback and produce no bet.
+PRIME_ALPHA_ALLOW_GAUSSIAN_FALLBACK = False
+
 # Price scanner (Strategy 3) — continuous price monitoring between model runs
 PRICE_SCAN_ENABLED        = True
 PRICE_SCAN_INTERVAL       = 300      # seconds between price polls (5 min)

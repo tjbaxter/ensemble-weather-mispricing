@@ -2180,6 +2180,15 @@ def generate_mk2_ace_signals(
         prime_context["prior_resolution_mode"] = _pa_prior_mode
         prime_context["prior_resolution_bucket"] = _pa_prior_bucket
 
+        if (
+            not prime_plan.selected_buckets
+            and "layer_a_empty_no_fallback" in prime_plan.notes
+        ):
+            _log.info(
+                f"PRIME_ALPHA {city} {date_str}: no bet, "
+                f"Layer A empty and gaussian fallback disabled"
+            )
+
         prime_cands: list[dict] = []
         if slots_remaining == 0:
             prime_plan.selected_buckets = []
