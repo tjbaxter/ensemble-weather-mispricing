@@ -1,8 +1,8 @@
 {
-  "active_candidates": 893,
+  "active_candidates": 1911,
   "last_error": "",
-  "last_heartbeat_utc": "2026-04-19T16:09:18.463053+00:00",
-  "last_success_utc": "2026-04-19T16:09:18.463053+00:00",
+  "last_heartbeat_utc": "2026-04-21T09:59:12.436681+00:00",
+  "last_success_utc": "2026-04-21T09:59:12.436681+00:00",
   "live_reconciliation": {
     "enabled": false,
     "reason": "wallet_not_configured"
@@ -10,6 +10,6 @@
   "official_rows": 0,
   "service": "settlement_watcher",
   "source": "polymarket+official-resolver",
-  "tracked_positions": 1362,
-  "watcher_rows": 688
+  "tracked_positions": 2382,
+  "watcher_rows": 1397
 }
