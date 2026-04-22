@@ -1,10 +1,50 @@
 {
-  "generated_at_utc": "2026-04-22T17:38:50.935261+00:00",
+  "generated_at_utc": "2026-04-13T08:27:06.027101+00:00",
   "live_ts": "08:27 UTC",
   "main_mode": "paper",
-  "strategies": [],
+  "strategies": [
+    {
+      "label": "\ud83e\udded Prime Alpha",
+      "strategy_key": "PRIME_ALPHA",
+      "color": "#FF6B6B",
+      "settled": {
+        "pnl": 0.0,
+        "wins": 0,
+        "losses": 0,
+        "n": 0,
+        "wr": 0.0,
+        "avg_win": 0.0,
+        "avg_loss": 0.0,
+        "staked": 0.0,
+        "roi": 0.0,
+        "provisional": 0,
+        "official": 0
+      },
+      "live": {
+        "unrealized_pnl": 0.0,
+        "open_count": 0,
+        "n_priced": 0,
+        "total_staked": 0.0,
+        "roi": 0.0
+      },
+      "detail": {
+        "positions": [],
+        "live_prices": {},
+        "live_ts": "08:27 UTC",
+        "settled_rows": []
+      }
+    }
+  ],
   "chart": {
-    "series": [],
+    "series": [
+      {
+        "label": "\ud83e\udded Prime Alpha",
+        "strategy_key": "PRIME_ALPHA",
+        "color": "#FF6B6B",
+        "settled_points": [],
+        "live_total": null
+      }
+    ],
     "live_point_x": "2026-04-13T08:27:06.027101+00:00",
     "live_ts": "08:27 UTC"
   },

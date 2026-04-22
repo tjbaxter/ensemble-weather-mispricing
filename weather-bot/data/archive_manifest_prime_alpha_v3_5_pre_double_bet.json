@@ -1,0 +1,20 @@
+{
+  "archive_tag": "v3_5_pre_double_bet",
+  "created_at": "2026-04-22T17:39:02.567204+00:00",
+  "reason": "Full PRIME_ALPHA data wipe ahead of V3.5 double-bet strategy deployment",
+  "files": {
+    "positions": "positions_shadow_prime_alpha_v3_5_pre_double_bet_archive.json",
+    "settlement_snapshot": "settlement_snapshot_v3_5_pre_double_bet_archive.json",
+    "settlement_summary": "settlement_summary_v3_5_pre_double_bet_archive.json",
+    "dashboard_overview": "dashboard_overview_v3_5_pre_double_bet_archive.json",
+    "resolved_csv": "resolved_prime_alpha_v3_5_pre_double_bet_archive.csv",
+    "shadow_log": "shadow_prime_alpha_resolved_v3_5_pre_double_bet_archive.csv"
+  },
+  "prior_archive": "archive_manifest_prime_alpha_v3_3_pre_toronto_fix.json",
+  "wiped_counts": {
+    "open_positions": 12,
+    "settled_bets": 13,
+    "resolved_csv_rows": 12
+  },
+  "rollback_instructions": "Copy archive files back to their canonical filenames: cp data/<archive_file> data/<canonical_name>"
+}
