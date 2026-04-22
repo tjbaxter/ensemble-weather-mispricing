@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-22T17:38:50.934550+00:00",
+  "generated_at": "2026-04-21T09:59:12.436681+00:00",
   "strategies": [
     {
       "half_wins": 0,
@@ -66,6 +66,17 @@
       "strategy": "CAVENDISH_MK3",
       "trades": 839,
       "wins": 150
+    },
+    {
+      "half_wins": 0,
+      "losses": 12,
+      "mode": "paper",
+      "official": 9,
+      "pnl_usd": 16.7871,
+      "provisional": 0,
+      "strategy": "PRIME_ALPHA",
+      "trades": 13,
+      "wins": 1
     },
     {
       "half_wins": 0,
