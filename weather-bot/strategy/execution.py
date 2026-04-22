@@ -1,11 +1,11 @@
-"""Prime Alpha V3.2 Execution Layer.
+"""Prime Alpha V3.5 Execution Layer.
 
 Separates MODEL SELECTION (which buckets are live candidates) from
 TRADE EXECUTION (which candidates are actually worth buying at current prices).
 
-The V3 deterministic selector outputs 1-3 candidate buckets.
-This module filters that down to 1-2 (rarely 3) execution buckets
-based on per-bucket edge, structural priority, and market prices.
+V3.5: Layer B always outputs exactly 2 candidate buckets (center + adjacent).
+This module passes both through — the combined package edge check in
+signals.py decides whether the pair is worth trading.
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ THIRD_BUCKET_MIN_EDGE = 0.05
 THIRD_BUCKET_MAX_PRICE = 0.18
 THIRD_BUCKET_MIN_REGIME = 0.35
 
-SECOND_BUCKET_MIN_EDGE = 0.00
+SECOND_BUCKET_MIN_EDGE = -1.0  # V3.5: always pass both buckets; package edge decides
 MAIN_BUCKET_MIN_EDGE = 0.00
 
 CENTER_PRIORITY_BONUS = 0.02

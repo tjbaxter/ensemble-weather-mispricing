@@ -80,7 +80,7 @@ COMMERCIAL_PROMOTE_LOOKBACK = 5
 COMMERCIAL_PROMOTE_MIN_HITS = 3
 COMMERCIAL_PROMOTE_MAX_WEIGHT = 0.10
 
-PRIME_ALPHA_MAX_BUCKETS = 3
+PRIME_ALPHA_MAX_BUCKETS = 2
 MIN_BUCKET_PROB = 0.05
 FALLBACK_MAX_DISTANCE_F = 2.0
 FALLBACK_MAX_DISTANCE_C = 1.0
@@ -755,40 +755,11 @@ def build_prime_alpha_plan(
                     }
 
     # ── Deterministic bucket selection ──────────────────────────────────────
+    # V3.5: Always exactly 2 buckets — center + best adjacent.
+    # Single-bucket prediction is borderline unprofitable; the temperature
+    # almost always lands in one of two neighbouring buckets.  By covering
+    # both we capture the physical uncertainty while keeping package cost low.
     selected: list[str] = []
-
-    # ── Smart bucket count: determine how many buckets based on consensus ──
-    # Strong consensus (single model on streak, or tight cluster) → 1 bucket
-    # Moderate spread → 2 buckets
-    # Wide spread / bridge case → 3 buckets (max)
-    smart_max_buckets = PRIME_ALPHA_MAX_BUCKETS  # default 3
-
-    if working_set and working_center is not None:
-        working_forecasts = [core_families[f]["forecast"] for f in working_set
-                             if f not in suppressed]
-        if working_forecasts:
-            forecast_spread = max(working_forecasts) - min(working_forecasts)
-            spread_threshold_tight = 1.0 if not is_f else 2.0  # 1°C or 2°F
-            spread_threshold_moderate = 2.0 if not is_f else 4.0  # 2°C or 4°F
-
-            # Single model on hot streak → 1 bucket (strong signal)
-            if len(working_set) == 1 and max_streak >= 3:
-                smart_max_buckets = 1
-                notes.append(f"smart_single_streak={max_streak}")
-            # Tight consensus (all within 1°C) → 1 bucket
-            elif forecast_spread <= spread_threshold_tight:
-                smart_max_buckets = 1
-                notes.append(f"smart_tight_consensus={forecast_spread:.1f}")
-            # Moderate spread (within 2°C) → 2 buckets
-            elif forecast_spread <= spread_threshold_moderate:
-                smart_max_buckets = 2
-                notes.append(f"smart_moderate_spread={forecast_spread:.1f}")
-            # Wide spread → use full 3 (bridge case)
-            else:
-                smart_max_buckets = 3
-                notes.append(f"smart_bridge_spread={forecast_spread:.1f}")
-
-    sel_info["smart_max_buckets"] = smart_max_buckets
 
     if bimodal_selected:
         selected = [
@@ -804,136 +775,57 @@ def build_prime_alpha_plan(
             selected.append(center_bucket)
             center_idx = _bucket_index(center_bucket, ordered_buckets)
 
-            # Lower anchor: strongest recent-winner bucket below center
-            lower_anchor = None
-            lower_anchor_fam = None
-            best_lower_w = -1.0
-            for fam in recent_winners:
-                if fam in high_outlier_winners:
-                    continue
-                fc = core_families[fam]["forecast"]
-                b = _forecast_to_bucket(fc, ordered_buckets, unit)
-                if b is None or b == center_bucket:
-                    continue
-                b_idx = _bucket_index(b, ordered_buckets)
-                if b_idx < 0 or b_idx >= center_idx:
-                    continue
-                w = family_weights.get(fam, 0)
-                if w > best_lower_w:
-                    best_lower_w = w
-                    lower_anchor = b
-                    lower_anchor_fam = fam
+            # Pick the best adjacent bucket (immediately above or below).
+            adj_lower = (ordered_buckets[center_idx - 1]
+                         if center_idx > 0 else None)
+            adj_upper = (ordered_buckets[center_idx + 1]
+                         if center_idx < len(ordered_buckets) - 1 else None)
 
-            if lower_anchor and lower_anchor not in selected:
-                selected.append(lower_anchor)
-                sel_info["lower_anchor"] = {
-                    "bucket": lower_anchor, "family": lower_anchor_fam}
-
-            # Bridge: fill one-bucket gaps (only if smart_max allows)
-            if len(selected) >= 2 and len(selected) < smart_max_buckets:
-                sel_sorted = sorted(selected, key=lambda b: _bucket_sort_key(b))
-                for i in range(len(sel_sorted) - 1):
-                    if len(selected) >= smart_max_buckets:
-                        break
-                    idx_a = _bucket_index(sel_sorted[i], ordered_buckets)
-                    idx_b = _bucket_index(sel_sorted[i + 1], ordered_buckets)
-                    gap = idx_b - idx_a
-                    if gap == 2:
-                        bridge = ordered_buckets[idx_a + 1]
-                        if bridge not in selected:
-                            selected.append(bridge)
-                            sel_info["bridge"] = bridge
-
-            # Upper anchor: only if ≥2 working set families support it
-            # and it's not a lone outlier (and smart_max allows)
-            if len(selected) < smart_max_buckets:
-                upper_anchor = None
-                for fam in working_set:
-                    if fam in high_outlier_winners:
-                        continue
-                    fc = core_families[fam]["forecast"]
-                    b = _forecast_to_bucket(fc, ordered_buckets, unit)
-                    if b is None or b in selected:
-                        continue
-                    b_idx = _bucket_index(b, ordered_buckets)
-                    if b_idx < 0 or b_idx <= center_idx:
-                        continue
-                    supporters = [
-                        f2 for f2 in working_set if f2 not in high_outlier_winners
-                        and _forecast_to_bucket(
-                            core_families[f2]["forecast"],
-                            ordered_buckets, unit) == b]
-                    if len(supporters) >= UPPER_SUPPORT_MIN_FAMILIES:
-                        upper_anchor = b
-                        sel_info["upper_anchor"] = {
-                            "bucket": b, "families": supporters}
-                        break
-                if upper_anchor and upper_anchor not in selected:
-                    selected.append(upper_anchor)
-
-            # Fill remaining from working-set-supported buckets near center
-            # (only if smart_max_buckets allows more)
-            while len(selected) < smart_max_buckets:
-                fill_buckets: dict[str, int] = {}
-                for fam in working_set:
-                    if fam in high_outlier_winners:
-                        continue
-                    b = _forecast_to_bucket(
-                        core_families[fam]["forecast"], ordered_buckets, unit)
-                    if b and b not in selected:
-                        fill_buckets[b] = fill_buckets.get(b, 0) + 1
-
-                if not fill_buckets:
-                    wc = working_center or 0.0
-                    for b, p in sorted(bucket_probs.items(),
-                                       key=lambda x: -x[1]):
-                        if b not in selected and p >= MIN_BUCKET_PROB:
-                            fill_buckets[b] = 0
-
-                if not fill_buckets:
-                    break
-
-                best = min(
-                    fill_buckets.items(),
-                    key=lambda x: (
-                        abs(_bucket_sort_key(x[0]) - (working_center or 0)),
-                        -x[1],
-                        -bucket_probs.get(x[0], 0),
-                    ),
+            def _adjacent_score(bucket: str) -> tuple[int, float, float]:
+                support = sum(
+                    1 for f in working_set
+                    if _forecast_to_bucket(
+                        core_families[f]["forecast"],
+                        ordered_buckets, unit) == bucket
                 )
-                selected.append(best[0])
+                center_mid = _resolved_midpoint(center_bucket)
+                adj_mid = _resolved_midpoint(bucket)
+                lean = 0.0
+                if (center_mid is not None and adj_mid is not None
+                        and working_center is not None):
+                    if adj_mid > center_mid and working_center > center_mid:
+                        lean = 1.0
+                    elif adj_mid < center_mid and working_center < center_mid:
+                        lean = 1.0
+                prob = bucket_probs.get(bucket, 0.0)
+                return (support, lean, prob)
 
-    # ── Fallback: if selection layer couldn't decide ────────────────────────
+            adj_candidates = [(b, _adjacent_score(b))
+                              for b in (adj_lower, adj_upper) if b is not None]
+            if adj_candidates:
+                best_adj, adj_sc = max(adj_candidates, key=lambda x: x[1])
+                selected.append(best_adj)
+                sel_info["adjacent_bucket"] = {
+                    "bucket": best_adj,
+                    "model_support": adj_sc[0],
+                    "lean_bonus": adj_sc[1],
+                    "gaussian_prob": round(adj_sc[2], 4),
+                }
+                if len(adj_candidates) == 2:
+                    other = [c for c in adj_candidates if c[0] != best_adj][0]
+                    sel_info["adjacent_runner_up"] = {
+                        "bucket": other[0],
+                        "model_support": other[1][0],
+                        "lean_bonus": other[1][1],
+                        "gaussian_prob": round(other[1][2], 4),
+                    }
+                notes.append(f"double_bet={center_bucket}+{best_adj}")
+
     if not selected:
-        if working_center is not None and working_set:
-            _fb_max = FALLBACK_MAX_DISTANCE_F if is_f else FALLBACK_MAX_DISTANCE_C
-            ranked_buckets = sorted(bucket_probs.items(), key=lambda x: -x[1])
-            for b, p in ranked_buckets:
-                if p < MIN_BUCKET_PROB:
-                    continue
-                if len(selected) >= smart_max_buckets:
-                    break
-                b_mid = _resolved_midpoint(b)
-                if b_mid is not None and abs(b_mid - working_center) > _fb_max:
-                    notes.append(
-                        f"gaussian_skip={b}(dist={abs(b_mid - working_center):.1f})"
-                    )
-                    continue
-                selected.append(b)
-            if selected:
-                notes.append("fallback=gaussian_filtered")
-            else:
-                notes.append("pass_no_nearby_bucket")
+        if not working_set and not strong_streak:
+            notes.append("layer_a_empty_no_fallback")
         else:
-            if PRIME_ALPHA_ALLOW_GAUSSIAN_FALLBACK:
-                notes.append("fallback=gaussian_topk")
-                ranked_buckets = sorted(bucket_probs.items(), key=lambda x: -x[1])
-                selected = [b for b, p in ranked_buckets
-                            if p >= MIN_BUCKET_PROB][:smart_max_buckets]
-                if not selected and ranked_buckets:
-                    selected = [ranked_buckets[0][0]]
-            else:
-                notes.append("layer_a_empty_no_fallback")
+            notes.append("pass_no_center_bucket")
 
     selected = sorted(selected, key=_bucket_sort_key)
     sel_info["selected"] = selected
@@ -980,7 +872,7 @@ def build_prime_alpha_plan(
     return PrimeAlphaPlan(
         city=city, station_icao=station_icao, target_date=target_date,
         prior_date=prior_date, prior_resolved_bucket=prior_bucket_label,
-        trust_source="v3_anchor_bridge" if resolved_history else "v3_no_history",
+        trust_source="v3.5_double_bet" if resolved_history else "v3.5_no_history",
         fallback_used=None, trusted_models=trusted_models_list,
         fallback_models=[], trusted_flagship=False,
         trust_scores=trust_compat, current_display_by_source=display_by,
