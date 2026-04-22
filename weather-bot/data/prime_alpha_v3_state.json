@@ -1,0 +1,8 @@
+{
+  "version": "v3.5",
+  "reset_date": "2026-04-22",
+  "reset_at_utc": "2026-04-22T17:46:19.696735Z",
+  "reset_reason": "V3.5 always-two-bucket strategy deployment",
+  "latest_by_city": {},
+  "decisions": {}
+}
