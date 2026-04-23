@@ -2175,6 +2175,7 @@ def generate_mk2_ace_signals(
             unit=str(STATIONS.get(station_icao, {}).get("resolution_unit", "F")),
             model_weights=model_weights,
             prior_resolved_bucket=_pa_prior_bucket,
+            tradeable_buckets=set(cand_by_bucket.keys()),
         )
         prime_context = prime_plan.to_strategy_context()
         prime_context["prior_resolution_mode"] = _pa_prior_mode
