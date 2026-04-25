@@ -2175,6 +2175,7 @@ def generate_mk2_ace_signals(
             unit=str(STATIONS.get(station_icao, {}).get("resolution_unit", "F")),
             model_weights=model_weights,
             prior_resolved_bucket=_pa_prior_bucket,
+            tradeable_buckets=set(cand_by_bucket.keys()),
         )
         prime_context = prime_plan.to_strategy_context()
         prime_context["prior_resolution_mode"] = _pa_prior_mode
@@ -2222,6 +2223,27 @@ def generate_mk2_ace_signals(
                 )
                 continue
             prime_cands.append(cand)
+
+        # ── V3.5.3: Orphaned-adjacent guard ────────────────────────────
+        # When the center bucket is untradeable (e.g. market already at
+        # 90%+), the adjacent bet has no independent value — it's a hedge
+        # leg without a core position.  Skip the city entirely.
+        _center_from_plan = (prime_plan.selection_layer or {}).get(
+            "center_bucket")
+        if _center_from_plan and prime_cands:
+            _surviving_buckets = {c["bucket"] for c in prime_cands}
+            if _center_from_plan not in _surviving_buckets:
+                _log.info(
+                    "PRIME_ALPHA %s %s: SKIP — center bucket %s is "
+                    "untradeable (price-guarded), refusing orphaned "
+                    "adjacent bet on %s",
+                    city, date_str, _center_from_plan,
+                    [c["bucket"] for c in prime_cands],
+                )
+                prime_plan.notes.append(
+                    f"center_untradeable_skip:{_center_from_plan}"
+                )
+                prime_cands = []
 
         # ── Execution layer: gate → filter → size ──────────────────────
         # If the gate blocked execution, keep candidate_buckets for
