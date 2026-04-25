@@ -30,3 +30,4 @@ weather-bot/logs/*
 
 # CV notes — local only
 weather-bot/CV_QUANT_NOTES.md
+weather-bot/logs/deep/signal_eval_*.jsonl

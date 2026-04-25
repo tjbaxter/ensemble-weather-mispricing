@@ -319,6 +319,7 @@ def build_prime_alpha_plan(
     model_weights: dict[str, float] | None = None,
     trust_overrides: dict[str, bool | None] | None = None,
     prior_resolved_bucket: str | None = None,
+    tradeable_buckets: set[str] | None = None,
 ) -> PrimeAlphaPlan:
     snapshot_preds = _load_snapshot_log_preds(city, target_date)
     if snapshot_preds:
@@ -800,10 +801,22 @@ def build_prime_alpha_plan(
                 prob = bucket_probs.get(bucket, 0.0)
                 return (support, lean, prob)
 
-            adj_candidates = [(b, _adjacent_score(b))
-                              for b in (adj_lower, adj_upper) if b is not None]
-            if adj_candidates:
-                best_adj, adj_sc = max(adj_candidates, key=lambda x: x[1])
+            adj_all = [(b, _adjacent_score(b))
+                       for b in (adj_lower, adj_upper) if b is not None]
+
+            if tradeable_buckets is not None:
+                adj_tradeable = [(b, sc) for b, sc in adj_all
+                                 if b in tradeable_buckets]
+                adj_pick = adj_tradeable
+                if not adj_pick:
+                    notes.append(
+                        "adjacent_none_tradeable:"
+                        + ",".join(b for b, _ in adj_all))
+            else:
+                adj_pick = list(adj_all)
+
+            if adj_pick:
+                best_adj, adj_sc = max(adj_pick, key=lambda x: x[1])
                 selected.append(best_adj)
                 sel_info["adjacent_bucket"] = {
                     "bucket": best_adj,
@@ -811,14 +824,25 @@ def build_prime_alpha_plan(
                     "lean_bonus": adj_sc[1],
                     "gaussian_prob": round(adj_sc[2], 4),
                 }
-                if len(adj_candidates) == 2:
-                    other = [c for c in adj_candidates if c[0] != best_adj][0]
-                    sel_info["adjacent_runner_up"] = {
+                others = [c for c in adj_all if c[0] != best_adj]
+                if others:
+                    other = others[0]
+                    runner_info: dict[str, Any] = {
                         "bucket": other[0],
                         "model_support": other[1][0],
                         "lean_bonus": other[1][1],
                         "gaussian_prob": round(other[1][2], 4),
                     }
+                    if (tradeable_buckets is not None
+                            and other[0] not in tradeable_buckets):
+                        runner_info["not_tradeable"] = True
+                    sel_info["adjacent_runner_up"] = runner_info
+
+                model_best = max(adj_all, key=lambda x: x[1])[0]
+                if model_best != best_adj:
+                    notes.append(
+                        f"adjacent_swap:{model_best}→{best_adj}"
+                        f"(not_tradeable)")
                 notes.append(f"double_bet={center_bucket}+{best_adj}")
 
     if not selected:
