@@ -807,10 +807,13 @@ def build_prime_alpha_plan(
             if tradeable_buckets is not None:
                 adj_tradeable = [(b, sc) for b, sc in adj_all
                                  if b in tradeable_buckets]
+                adj_pick = adj_tradeable
+                if not adj_pick:
+                    notes.append(
+                        "adjacent_none_tradeable:"
+                        + ",".join(b for b, _ in adj_all))
             else:
-                adj_tradeable = list(adj_all)
-
-            adj_pick = adj_tradeable if adj_tradeable else adj_all
+                adj_pick = list(adj_all)
 
             if adj_pick:
                 best_adj, adj_sc = max(adj_pick, key=lambda x: x[1])
