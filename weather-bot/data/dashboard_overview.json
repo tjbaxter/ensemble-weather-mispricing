@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-04-25T09:00:02.738755+00:00",
-  "live_ts": "09:00 UTC",
+  "generated_at_utc": "2026-04-25T09:06:38.338716+00:00",
+  "live_ts": "09:06 UTC",
   "main_mode": "paper",
   "strategies": [
     {
@@ -30,13 +30,13 @@
       "detail": {
         "positions": [],
         "live_prices": {},
-        "live_ts": "09:00 UTC",
+        "live_ts": "09:06 UTC",
         "settled_rows": []
       },
       "v3_meta": {
-        "version": "v3.5",
-        "reset_date": "2026-04-22",
-        "reset_at_utc": "2026-04-22T20:10:00+00:00",
+        "version": "v3.5.3",
+        "reset_date": "2026-04-25",
+        "reset_at_utc": "2026-04-25T09:06:23+00:00",
         "latest_by_city": {}
       }
     }
@@ -51,8 +51,8 @@
         "live_total": null
       }
     ],
-    "live_point_x": "2026-04-25T09:00:02.738755+00:00",
-    "live_ts": "09:00 UTC"
+    "live_point_x": "2026-04-25T09:06:38.338716+00:00",
+    "live_ts": "09:06 UTC"
   },
   "live_book": {
     "rows": [
@@ -295,12 +295,22 @@
         "Live": "\u2014",
         "Cost": 5.0,
         "Unreal P&L": "\u2014"
+      },
+      {
+        "City": "Paris",
+        "Date": "2026-04-26",
+        "Bucket": "21",
+        "Side": "BUY_YES",
+        "Entry": 0.21,
+        "Live": "\u2014",
+        "Cost": 6.42,
+        "Unreal P&L": "\u2014"
       }
     ],
-    "open_count": 24,
+    "open_count": 25,
     "settled_count": 0,
     "provisional_count": 0,
     "stale_count": 0,
-    "live_ts": "09:00 UTC"
+    "live_ts": "09:06 UTC"
   }
 }
