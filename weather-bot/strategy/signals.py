@@ -1776,6 +1776,17 @@ def generate_mk2_ace_signals(
         top1 = ranked[0]
         top2 = ranked[1] if len(ranked) >= 2 else None
 
+        # V3.5.4: Price-only tradeable set for prime_alpha adjacent selection.
+        # cand_by_bucket excludes buckets whose MK2_ACE weighted_prob < 1%,
+        # but prime_alpha's adjacent only needs a buyable contract.
+        _price_tradeable: set[str] = set()
+        for _b, _binfo in all_buckets.items():
+            _bp = float(_binfo.get("price", 0) or 0)
+            if (_binfo.get("yes_token_id")
+                    and _bp >= HARD_MIN_YES_ENTRY_PRICE
+                    and _bp <= _d_max):
+                _price_tradeable.add(_b)
+
         def _kelly_for(cand: dict) -> float:
             """Independent Kelly size for a single bet."""
             wp_ = cand["model_prob"]
@@ -2175,7 +2186,7 @@ def generate_mk2_ace_signals(
             unit=str(STATIONS.get(station_icao, {}).get("resolution_unit", "F")),
             model_weights=model_weights,
             prior_resolved_bucket=_pa_prior_bucket,
-            tradeable_buckets=set(cand_by_bucket.keys()),
+            tradeable_buckets=_price_tradeable,
         )
         prime_context = prime_plan.to_strategy_context()
         prime_context["prior_resolution_mode"] = _pa_prior_mode
@@ -2204,6 +2215,31 @@ def generate_mk2_ace_signals(
         for bucket in prime_plan.selected_buckets:
             cand = cand_by_bucket.get(bucket)
             if cand is None:
+                # V3.5.4: Synthesize candidate for price-tradeable buckets
+                # that MK2_ACE rejected (e.g. low weighted_prob).  Prime
+                # alpha selected this bucket deliberately — use its own
+                # probability estimate.
+                _binfo = all_buckets.get(bucket)
+                if _binfo and bucket in _price_tradeable:
+                    _bp = float(_binfo.get("price", 0) or 0)
+                    _tid = _binfo.get("yes_token_id", "")
+                    _pa_prob = prime_plan.bucket_probabilities.get(bucket, 0.0)
+                    cand = {
+                        "bucket": bucket,
+                        "token_id": _tid,
+                        "condition_id": bucket_to_condition.get(bucket, ""),
+                        "model_prob": _pa_prob,
+                        "market_prob": _bp,
+                        "edge": _pa_prob - _bp,
+                        "n_models": models_in_bucket(det_model_values, bucket),
+                    }
+                    _log.info(
+                        "PRIME_ALPHA %s %s: synthesized candidate for %s "
+                        "(price=%.3f, pa_prob=%.4f, not in MK2_ACE ranked)",
+                        city, date_str, bucket, _bp, _pa_prob,
+                    )
+                    prime_cands.append(cand)
+                    continue
                 _log_signal_eval(
                     strategy="PRIME_ALPHA",
                     city=city,

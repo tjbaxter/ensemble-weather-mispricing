@@ -54,9 +54,9 @@ import json as _json
 import tempfile
 
 _V3_STATE_PATH = Path(__file__).resolve().parent.parent / "data" / "prime_alpha_v3_state.json"
-_V3_RESET_DATE = "2026-04-22"
-_V3_RESET_AT_UTC = "2026-04-22T20:10:00+00:00"
-_V3_VERSION = "v3.5.3"
+_V3_RESET_DATE = "2026-04-25"
+_V3_RESET_AT_UTC = "2026-04-25T08:53:11+00:00"
+_V3_VERSION = "v3.5.4"
 _v3_state_log = logging.getLogger("weather-bot.v3_state")
 
 
