@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
 import sys
 import urllib.parse
@@ -34,9 +35,11 @@ from data.metar import parse_metar_temp
 
 POLYMARKET_CACHE_PATH = ROOT / "data" / "polymarket_cache.json"
 REPORT_PATH = ROOT / "data" / "resolution_source_parity.json"
-WEATHERCOM_KEY = "e1f10a1e78da46f5b10a1e78da96f525"
+WEATHERCOM_KEY = os.environ.get("WU_OBS_KEY", "")
 WEATHERCOM_URL = "https://api.weather.com/v1/location/{station}/observations/historical.json"
 AWC_METAR_URL = "https://aviationweather.gov/api/data/metar"
+if not WEATHERCOM_KEY:
+    raise RuntimeError("WU_OBS_KEY not set in environment (see weather-bot/.env.example)")
 
 
 def _normalize_city_name(name: str) -> str:

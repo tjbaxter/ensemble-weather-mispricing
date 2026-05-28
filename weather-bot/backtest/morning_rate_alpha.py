@@ -32,6 +32,7 @@ For each resolved London date:
 import json
 import time
 import math
+import os
 import sys
 from datetime import datetime, timezone, date
 from pathlib import Path
@@ -44,8 +45,10 @@ ROOT         = Path(__file__).resolve().parents[2]
 CACHE_PATH   = ROOT / "weather-bot" / "data" / "accuracy_rows_cache.json"
 OBS_CACHE    = ROOT / "weather-bot" / "data" / "morning_obs_cache.json"
 
-WU_OBS_KEY   = "e1f10a1e78da46f5b10a1e78da96f525"
+WU_OBS_KEY   = os.environ.get("WU_OBS_KEY", "")
 WU_OBS_URL   = "https://api.weather.com/v1/location/{station}/observations/historical.json"
+if not WU_OBS_KEY:
+    raise RuntimeError("WU_OBS_KEY not set in environment (see weather-bot/.env.example)")
 STATION      = "EGLC:9:GB"
 UNITS        = "m"  # metric
 
